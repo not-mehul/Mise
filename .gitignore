@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Vite build output
+dist/
+
+# Signing material — never commit keystores or their passwords
+*.jks
+*.keystore
+keystore.properties
+
+# Build outputs — publish APKs/AABs as GitHub Release assets instead
+*.apk
+*.aab
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Environment
+.env
+.env.local
+
+# Test output
+test-results/
+playwright-report/
