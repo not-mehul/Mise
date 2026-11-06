@@ -1,0 +1,92 @@
+apply plugin: 'com.android.application'
+
+// The version comes from the release tag (.github/workflows/release.yml):
+// `-PmiseVersion=1.2.3` gives versionName 1.2.3 and versionCode 10203, so
+// codes always rise. Without the property it is 0.0.0 with a code of 1.
+def miseVersion = (findProperty('miseVersion') ?: '').toString().replaceFirst(/^v/, '')
+if (!(miseVersion ==~ /\d+\.\d+\.\d+/)) miseVersion = '0.0.0'
+def miseVersionCode = Math.max(1, miseVersion.tokenize('.').collect { it as int }
+    .with { it[0] * 10000 + it[1] * 100 + it[2] })
+
+// The release key, read from android/keystore.properties (gitignored; see
+// keystore.properties.example) or the MISE_KEYSTORE… environment that the
+// release workflow sets from repository secrets (RELEASING.md). Every
+// release must be signed with the same key, or Android refuses the update.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def signingValue = { String key, String env ->
+    def value = keystoreProperties.getProperty(key) ?: System.getenv(env)
+    value?.trim() ?: null
+}
+def releaseStoreFile = signingValue('storeFile', 'MISE_KEYSTORE')
+def releaseStorePassword = signingValue('storePassword', 'MISE_KEYSTORE_PASSWORD')
+def releaseKeyAlias = signingValue('keyAlias', 'MISE_KEY_ALIAS')
+def releaseKeyPassword = signingValue('keyPassword', 'MISE_KEY_PASSWORD')
+def canSign = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it != null }
+
+android {
+    namespace = "io.github.notmehul.mise"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId = "io.github.notmehul.mise"
+        minSdk = rootProject.ext.minSdkVersion
+        targetSdk = rootProject.ext.targetSdkVersion
+        versionCode = miseVersionCode
+        versionName = miseVersion
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    androidResources {
+        // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+        // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+    signingConfigs {
+        release {
+            if (canSign) {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            // R8: shrinks and optimises code, then drops unused resources.
+            // Capacitor and its plugins ship the keep rules the bridge needs.
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (canSign) {
+                signingConfig = signingConfigs.release
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    def versions = rootProject.ext
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:${versions.androidxAppCompatVersion}"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:${versions.androidxCoordinatorLayoutVersion}"
+    implementation "androidx.core:core-splashscreen:${versions.coreSplashScreenVersion}"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:${versions.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${versions.androidxJunitVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${versions.androidxEspressoCoreVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-web:${versions.androidxEspressoCoreVersion}"
+    androidTestImplementation "androidx.test:core:${versions.androidxTestVersion}"
+    androidTestImplementation "androidx.test:runner:${versions.androidxTestVersion}"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
