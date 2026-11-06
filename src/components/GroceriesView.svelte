@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '../i18n/index.svelte';
-  import EmptyState from './EmptyState.svelte';
+  import EmptyState from './ui/EmptyState.svelte';
 </script>
 
 <div id="viewGroceries" role="tabpanel" aria-labelledby="tabGroceries">

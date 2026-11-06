@@ -21,12 +21,23 @@ The plan has six phases, each one pull request:
 
 | Phase | What it adds | State |
 | --- | --- | --- |
-| 1. Scaffold | App shell, tabs, theme, languages, CI, APK release workflow | This |
-| 2. Collection | Recipe model, ingredient parser, scaling, paste and write import, recipe page, search, collections, backups | Next |
-| 3. Cooking mode | One step per screen, timers, keep-awake, volume keys, read aloud | |
+| 1. Scaffold | App shell, tabs, theme, languages, CI, APK release workflow | Done |
+| 2. Collection | Recipe model, ingredient parser, scaling, paste and write import, recipe page, search, collections, backups | Done |
+| 3. Cooking mode | One step per screen, timers, keep-awake, volume keys, read aloud | Next |
 | 4. Groceries | List from recipes with merging, aisles, staples, sharing | |
 | 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | |
 | 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | |
+
+## How a recipe is read
+
+Pasted text goes through `src/import/text.ts`. It finds the title, servings and
+times, then the ingredients and method by their headings (in English, Spanish,
+French and German) or, without headings, by the shape of each line. Each
+ingredient line is split into quantity, unit, item and note
+(`src/domain/ingredient.ts`), which is what makes scaling and the metric/US
+switch work; the line as written is always kept. Durations in steps become
+timers. Lines the parser can't place are shown under *Unsorted* on the review
+screen, and nothing is saved until you press *Save recipe*.
 
 ## Links from the other apps
 
@@ -72,7 +83,7 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | Job | Covers |
 | --- | --- |
 | Lint, typecheck, unit tests | `npm run check` and a production build |
-| End-to-end | Playwright: tabs, theme and language across a reload, axe in both themes |
+| End-to-end | Playwright: paste and write recipes, the Unsorted list, scaling, search, collections, delete and undo, backup and restore, theme and language, axe in both themes |
 | Android build | Debug, R8-minified release and test APKs, Android lint |
 | Android emulator (API 36, 37) | Espresso-Web test driving the real WebView, then a launch smoke test of the minified release build. API 37 is non-blocking, as in Ledger |
 
@@ -81,10 +92,13 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | Path | What it is |
 | --- | --- |
 | `src/App.svelte`, `src/main.ts` | Shell and bootstrap |
-| `src/components/` | The Recipes, Groceries and Settings views |
-| `src/domain/` | Plain data and rules, no UI (settings now; recipes, ingredients and units next) |
-| `src/state/` | Settings and UI state (tabs, toast, the Android back stack) |
-| `src/platform/` | `links.ts`, `mise://` intake, theme and system bars |
+| `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Groceries and Settings; `ui/` holds Sheet, Modal and EmptyState |
+| `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, settings |
+| `src/import/` | Readers that turn something shared into a recipe draft; `text.ts` reads pasted text and captions |
+| `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos |
+| `src/state/` | The library, settings, export/import/backups, and UI state (screens, toast, the Android back stack) |
+| `src/lib/` | Backups (.zip with fflate) and Markdown |
+| `src/platform/` | `links.ts`, `mise://` intake, files out, sharing, photo downscaling, theme and system bars |
 | `src/i18n/` | English, Spanish, French and German; `en.ts` is the reference and a unit test checks the others |
 | `src/styles/app.css` | Imports `dusk-dawn/tokens.css` and `dusk-dawn/components.css` first, then Mise's layout |
 | `tests/unit`, `tests/e2e` | Vitest and Playwright |
