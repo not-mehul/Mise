@@ -34,7 +34,9 @@ public class MiseAppTest {
 
             scenario.recreate();
 
-            waitForText(Locator.ID, "tabRecipes", "Recipes");
+            // A recreated activity reloads the page, which opens on Recipes.
+            // (Tab labels are set in caps by CSS, and getText returns them as shown.)
+            waitForText(Locator.CSS_SELECTOR, "#viewRecipes .empty-title", "No recipes yet");
         }
     }
 
