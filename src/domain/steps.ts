@@ -82,3 +82,16 @@ export function formatDuration(seconds: number): string {
   if (s && !h) parts.push(`${s} s`);
   return parts.join(' ') || '0 s';
 }
+
+/** A step's text cut around its timers, so the durations can be marked. */
+export function stepPieces(step: Pick<Step, 'text' | 'timers'>): { text: string; timer?: number }[] {
+  const out: { text: string; timer?: number }[] = [];
+  let at = 0;
+  step.timers.forEach((timer, i) => {
+    if (timer.start > at) out.push({ text: step.text.slice(at, timer.start) });
+    out.push({ text: step.text.slice(timer.start, timer.end), timer: i });
+    at = timer.end;
+  });
+  if (at < step.text.length) out.push({ text: step.text.slice(at) });
+  return out;
+}

@@ -5,6 +5,7 @@
 // text, so what the person typed is what is kept.
 // ============================================================
 
+import { normaliseLog, type CookEntry } from './cook';
 import { newId, parseIngredient, stripListMarker, type IngredientGroup } from './ingredient';
 import { findTimers, linkIngredients, type Step } from './steps';
 
@@ -33,6 +34,8 @@ export interface Recipe {
   collectionIds: string[];
   notes: string;
   photoId: string | null;
+  /** Each time it was cooked, newest first. */
+  log: CookEntry[];
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +134,7 @@ export function draftToRecipe(draft: RecipeDraft, existing: Recipe | undefined, 
     collectionIds: draft.collectionIds,
     notes: draft.notes.trim(),
     photoId: draft.photoId,
+    log: existing?.log ?? [],
     createdAt: existing?.createdAt ?? stamp,
     updatedAt: stamp,
   };
@@ -215,6 +219,7 @@ export function normaliseRecipe(value: unknown): Recipe | null {
     collectionIds: Array.isArray(v.collectionIds) ? v.collectionIds.filter((t): t is string => typeof t === 'string') : [],
     notes: typeof v.notes === 'string' ? v.notes : '',
     photoId: typeof v.photoId === 'string' ? v.photoId : null,
+    log: normaliseLog(v.log),
     createdAt: typeof v.createdAt === 'string' ? v.createdAt : stamp,
     updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : stamp,
   };

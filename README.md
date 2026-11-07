@@ -23,10 +23,27 @@ The plan has six phases, each one pull request:
 | --- | --- | --- |
 | 1. Scaffold | App shell, tabs, theme, languages, CI, APK release workflow | Done |
 | 2. Collection | Recipe model, ingredient parser, scaling, paste and write import, recipe page, search, collections, backups | Done |
-| 3. Cooking mode | One step per screen, timers, keep-awake, volume keys, read aloud | Next |
-| 4. Groceries | List from recipes with merging, aisles, staples, sharing | |
+| 3. Cooking mode | One step per screen, mise en place, timers, keep-awake, volume keys, read aloud, cook log | Done |
+| 4. Groceries | List from recipes with merging, aisles, staples, sharing | Next |
 | 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | |
 | 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | |
+
+## Cooking mode
+
+*Start cooking* on a recipe opens it full screen at the servings and units you
+chose. A *mise en place* page lists everything to gather, then each step gets
+its own screen in large type with the ingredients it names underneath. Move
+with the buttons, a sideways swipe, a tap on the outer edge, the arrow keys or,
+on Android, the volume keys (down is next). *All steps* jumps anywhere.
+
+A duration in a step is a *Start* button. Timers run side by side, stay pinned
+at the top of the app until you clear them, and ring with a system
+notification at the moment they end (`src/state/timers.svelte.ts`), so they
+work with the phone locked or Mise closed. The screen stays on while cooking
+mode is open, and *Read steps aloud* speaks each step with the phone's voice.
+Close and come back within four hours to pick up at the same step. The last
+page marks the recipe as cooked, with an optional rating and note, in the
+recipe's cook log.
 
 ## How a recipe is read
 

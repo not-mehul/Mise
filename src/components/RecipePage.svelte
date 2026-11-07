@@ -1,8 +1,9 @@
 <script lang="ts">
   import { showIngredient, type UnitMode } from '../domain/ingredient';
   import { recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
-  import { formatDuration } from '../domain/steps';
-  import { locale, t, type MessageKey } from '../i18n/index.svelte';
+  import { formatDuration, stepPieces } from '../domain/steps';
+  import type { CookEntry } from '../domain/cook';
+  import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { shareText } from '../platform/share';
   import { library } from '../state/library.svelte';
   import { recipeMarkdown } from '../state/transfer';
@@ -28,19 +29,6 @@
     { value: 'us', key: 'recipe.unitsUs' },
   ];
 
-  /** The step's text cut around its timers, so durations can be marked. */
-  function pieces(text: string, timers: Recipe['steps'][number]['timers']) {
-    const out: { text: string; seconds?: number }[] = [];
-    let at = 0;
-    for (const timer of timers) {
-      if (timer.start > at) out.push({ text: text.slice(at, timer.start) });
-      out.push({ text: text.slice(timer.start, timer.end), seconds: timer.seconds });
-      at = timer.end;
-    }
-    if (at < text.length) out.push({ text: text.slice(at) });
-    return out;
-  }
-
   async function share() {
     const result = await shareText(recipe.title, recipeMarkdown(recipe));
     if (result === 'copied') ui.notify(t('recipe.copied'), 'success');
@@ -52,6 +40,18 @@
     ui.show({ kind: 'list' });
     ui.notify(t('recipe.deleted', { title }), 'info', { label: t('action.undo'), run: () => void undo(), dismissed: () => void forget() });
   }
+
+  function cook() {
+    ui.show({ kind: 'cook', id: recipe.id, servings: base ? servings : 1, units });
+  }
+
+  async function removeEntry(entry: CookEntry) {
+    const before = recipe.log;
+    await library.setLog(recipe.id, before.filter((e) => e !== entry));
+    ui.notify(t('log.deleted'), 'info', { label: t('action.undo'), run: () => void library.setLog(recipe.id, before) });
+  }
+
+  const day = (iso: string) => new Date(iso).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
   async function addCollection() {
     const c = await library.addCollection(newCollection);
@@ -76,6 +76,7 @@
       {#if recipe.prepMinutes}<span>{t('recipe.prep')} {t('recipe.minutes', { count: recipe.prepMinutes })}</span>{/if}
       {#if recipe.cookMinutes}<span>{t('recipe.cook')} {t('recipe.minutes', { count: recipe.cookMinutes })}</span>{/if}
       {#if total && total !== recipe.cookMinutes}<span>{t('recipe.total')} {t('recipe.minutes', { count: total })}</span>{/if}
+      {#if recipe.log.length}<span id="cookedCount">{t('log.count', { count: recipe.log.length })} · {t('log.last', { when: relativeTime(recipe.log[0]!.at) })}</span>{/if}
     </p>
     {#if recipe.tags.length}
       <div class="chip-row">
@@ -85,6 +86,13 @@
   </header>
 
   <div class="btn-row actions">
+    {#if recipe.steps.length}
+      <button type="button" class="btn btn-primary" id="btnCook" onclick={cook}>
+        <!-- Lucide "chef-hat" -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" /><path d="M6 17h12" /></svg>
+        {t('cook.start')}
+      </button>
+    {/if}
     <button type="button" class="btn btn-secondary" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
     <button type="button" class="btn btn-muted" id="btnShare" onclick={share}>{t('recipe.share')}</button>
     <button type="button" class="btn btn-muted" id="btnDelete" onclick={remove}>{t('recipe.delete')}</button>
@@ -139,8 +147,8 @@
       <ol class="steps">
         {#each recipe.steps as step (step.id)}
           <li>
-            {#each pieces(step.text, step.timers) as piece, pi (pi)}
-              {#if piece.seconds}<span class="timer" title={t('recipe.timer', { time: formatDuration(piece.seconds) })}>{piece.text}</span>{:else}{piece.text}{/if}
+            {#each stepPieces(step) as piece, pi (pi)}
+              {#if piece.timer !== undefined}<span class="timer" title={t('recipe.timer', { time: formatDuration(step.timers[piece.timer]!.seconds) })}>{piece.text}</span>{:else}{piece.text}{/if}
             {/each}
           </li>
         {/each}
@@ -152,6 +160,25 @@
     <section class="panel" aria-labelledby="notesHead">
       <div class="section-head"><h3 id="notesHead">{t('recipe.notes')}</h3></div>
       <p class="notes">{recipe.notes}</p>
+    </section>
+  {/if}
+
+  {#if recipe.log.length}
+    <section class="panel" aria-labelledby="logHead">
+      <div class="section-head"><h3 id="logHead">{t('log.title')}</h3></div>
+      <ul class="cook-log" id="cookLog">
+        {#each recipe.log as entry (entry.at)}
+          <li>
+            <div class="log-head">
+              <span class="t-data-small">{day(entry.at)}</span>
+              {#if entry.servings}<span class="t-data-small dim">{t('log.servings', { count: entry.servings })}</span>{/if}
+              {#if entry.rating}<span class="stars" role="img" aria-label={t('cook.ratingValue', { count: entry.rating })}>{'★'.repeat(entry.rating)}<span class="dim">{'★'.repeat(5 - entry.rating)}</span></span>{/if}
+              <button type="button" class="btn btn-muted log-delete" aria-label={t('log.delete', { date: day(entry.at) })} onclick={() => removeEntry(entry)}>{t('recipe.delete')}</button>
+            </div>
+            {#if entry.note}<p class="log-note">{entry.note}</p>{/if}
+          </li>
+        {/each}
+      </ul>
     </section>
   {/if}
 
@@ -319,6 +346,36 @@
   }
   .collections {
     margin-bottom: var(--space-4);
+  }
+  .cook-log {
+    list-style: none;
+  }
+  .cook-log li {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-faint);
+  }
+  .log-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    color: var(--text-strong);
+  }
+  .dim {
+    color: var(--text-faint);
+  }
+  .stars {
+    color: var(--accent-amber);
+    letter-spacing: 0.05em;
+  }
+  .log-delete {
+    margin-left: auto;
+  }
+  .log-note {
+    margin-top: var(--space-2);
+    color: var(--text-strong);
+    white-space: pre-line;
+    line-height: 1.5;
   }
   .new-collection {
     display: flex;

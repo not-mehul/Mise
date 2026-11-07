@@ -4,6 +4,7 @@
 // ============================================================
 
 import { db, type Photo } from '../data/db';
+import type { CookEntry } from '../domain/cook';
 import { newId } from '../domain/ingredient';
 import { draftToRecipe, normaliseRecipe, type Collection, type Recipe, type RecipeDraft } from '../domain/recipe';
 
@@ -55,6 +56,26 @@ class Library {
     const next = { ...current, ...patch };
     await db.recipes.put($state.snapshot(next) as Recipe);
     this.recipes = this.recipes.map((r) => (r.id === id ? next : r));
+  }
+
+  /**
+   * Sets a recipe's cook log. It counts as a change to the recipe, so the
+   * newer copy wins when a backup is merged in.
+   */
+  async setLog(id: string, log: CookEntry[], now = new Date()): Promise<void> {
+    const current = this.get(id);
+    if (!current) return;
+    const next: Recipe = { ...current, log: [...log].sort((a, b) => b.at.localeCompare(a.at)), updatedAt: now.toISOString() };
+    await db.recipes.put($state.snapshot(next) as Recipe);
+    this.recipes = [next, ...this.recipes.filter((r) => r.id !== id)];
+  }
+
+  /** Adds a time it was cooked to the recipe's log. */
+  async logCook(id: string, entry: Omit<CookEntry, 'at'>, now = new Date()): Promise<void> {
+    const current = this.get(id);
+    if (!current) return;
+    const clean: CookEntry = { at: now.toISOString(), servings: entry.servings, rating: entry.rating, note: entry.note.trim().slice(0, 2000) };
+    await this.setLog(id, [clean, ...current.log], now);
   }
 
   /**

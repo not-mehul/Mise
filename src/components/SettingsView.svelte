@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { LanguageSetting, ThemeSetting } from '../domain/settings';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
+  import { volumeKeysAvailable } from '../platform/device';
   import { isNative } from '../platform/output';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
   import { backupNow, exportAs, importFile } from '../state/transfer';
   import { ui } from '../state/ui.svelte';
+  import Switch from './ui/Switch.svelte';
 
   const THEMES: { value: ThemeSetting; key: MessageKey }[] = [
     { value: 'system', key: 'settings.themeSystem' },
@@ -86,6 +88,17 @@
   </div>
 
   <div class="panel">
+    <div class="section-head"><h2>{t('settings.cooking')}</h2></div>
+    <div class="switches">
+      <Switch id="switchReadAloud" checked={settings.current.readAloud} label={t('settings.readAloud')} hint={t('settings.readAloudHint')} onchange={(on) => settings.update({ readAloud: on })} />
+      {#if volumeKeysAvailable}
+        <Switch id="switchVolumeKeys" checked={settings.current.volumeKeys} label={t('settings.volumeKeys')} hint={t('settings.volumeKeysHint')} onchange={(on) => settings.update({ volumeKeys: on })} />
+      {/if}
+    </div>
+    <p class="t-hint">{t('settings.cookingHint')}</p>
+  </div>
+
+  <div class="panel">
     <div class="section-head"><h2>{t('data.collections')}</h2></div>
     {#if library.collections.length}
       <ul class="collections">
@@ -158,6 +171,9 @@
   }
   .collections {
     list-style: none;
+  }
+  .switches {
+    margin-bottom: var(--space-3);
   }
   .collections li {
     display: flex;
