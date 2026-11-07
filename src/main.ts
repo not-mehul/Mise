@@ -12,6 +12,7 @@ import { listenForShares, readShare } from './platform/shared';
 import { applyTheme } from './platform/theme.svelte';
 import { groceries } from './state/groceries.svelte';
 import { library } from './state/library.svelte';
+import { plan } from './state/plan.svelte';
 import { settings } from './state/settings.svelte';
 import { autoBackupIfDue } from './state/transfer';
 import { ui } from './state/ui.svelte';
@@ -24,7 +25,7 @@ async function start(): Promise<void> {
   await setLocale(language === 'system' ? detectLocale() : language).catch(() => undefined);
 
   mount(App, { target: document.getElementById('app')! });
-  await Promise.all([library.init(), groceries.init()]);
+  await Promise.all([library.init(), groceries.init(), plan.init()]);
 
   if (isNative) {
     // Android back: close the topmost overlay, then return to Recipes, then exit (style.md §14).

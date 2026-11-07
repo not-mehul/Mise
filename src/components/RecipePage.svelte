@@ -7,9 +7,11 @@
   import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { shareText } from '../platform/share';
   import { library } from '../state/library.svelte';
+  import { plan } from '../state/plan.svelte';
   import { recipeMarkdown } from '../state/transfer';
   import { ui } from '../state/ui.svelte';
   import AddGroceries from './AddGroceries.svelte';
+  import PlanDayPicker from './PlanDayPicker.svelte';
   import Thumb from './Thumb.svelte';
 
   let { recipe }: { recipe: Recipe } = $props();
@@ -24,6 +26,7 @@
   let have = $state<Record<string, boolean>>({});
   let newCollection = $state('');
   let adding = $state(false);
+  let planning = $state(false);
   const total = $derived(totalTime(recipe));
 
   const UNIT_MODES: { value: UnitMode; key: MessageKey }[] = [
@@ -41,7 +44,7 @@
     const title = recipe.title;
     const { undo, forget } = await library.remove(recipe.id);
     ui.show({ kind: 'list' });
-    ui.notify(t('recipe.deleted', { title }), 'info', { label: t('action.undo'), run: () => void undo(), dismissed: () => void forget() });
+    ui.notify(t('recipe.deleted', { title }), 'info', { label: t('action.undo'), run: () => void undo(), dismissed: () => void forget().then(() => plan.forgetRecipe(recipe.id)) });
   }
 
   function cook() {
@@ -102,6 +105,7 @@
         {t('cook.start')}
       </button>
     {/if}
+    <button type="button" class="btn btn-secondary" id="btnPlan" onclick={() => (planning = true)}>{t('plan.planIt')}</button>
     {#if recipe.groups.length}
       <button type="button" class="btn btn-secondary" id="btnAddGroceries" onclick={() => (adding = true)}>{t('groceries.addFromRecipe')}</button>
     {/if}
@@ -235,8 +239,12 @@
   {/if}
 </article>
 
+{#if planning}
+  <PlanDayPicker {recipe} servings={base ? servings : null} onclose={() => (planning = false)} />
+{/if}
+
 {#if adding}
-  <AddGroceries {recipe} {factor} {units} onclose={() => (adding = false)} />
+  <AddGroceries sources={[{ recipe, factor }]} {units} onclose={() => (adding = false)} />
 {/if}
 
 <style>

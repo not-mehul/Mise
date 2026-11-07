@@ -2,6 +2,7 @@
   import { TabRail, ThemeToggle, Toast } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
+  import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import TimerTray from './components/TimerTray.svelte';
@@ -14,6 +15,7 @@
 
   const TABS: { id: Tab; dom: string; panel: string; key: MessageKey }[] = [
     { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes' },
+    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan' },
     { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries' },
     { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings' },
   ];
@@ -76,6 +78,8 @@
       <div class="timers-pinned"><TimerTray showRecipe /></div>
       {#if ui.tab === 'recipes'}
         <RecipesView />
+      {:else if ui.tab === 'plan'}
+        <PlanView />
       {:else if ui.tab === 'groceries'}
         <GroceriesView />
       {:else}

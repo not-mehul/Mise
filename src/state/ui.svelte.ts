@@ -6,7 +6,7 @@ import type { MiseLink } from '../platform/incoming';
 import type { Incoming } from '../platform/shared';
 import { t } from '../i18n/index.svelte';
 
-export type Tab = 'recipes' | 'groceries' | 'settings';
+export type Tab = 'recipes' | 'plan' | 'groceries' | 'settings';
 
 /** What the Recipes tab shows: the list, one recipe, the editor, or cooking mode over everything. */
 export type Screen =
