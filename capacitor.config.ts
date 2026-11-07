@@ -13,6 +13,11 @@ const config: CapacitorConfig = {
     minWebViewVersion: 111,
   },
   plugins: {
+    LocalNotifications: {
+      // res/drawable/ic_stat_mise.xml, tinted --accent-amber (Dusk).
+      smallIcon: 'ic_stat_mise',
+      iconColor: '#d4a574',
+    },
     SystemBars: {
       // index.html opts into edge-to-edge with viewport-fit=cover; the CSS
       // pads the layout with env(safe-area-inset-*).

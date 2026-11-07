@@ -29,6 +29,23 @@ describe('the library', () => {
     expect(library.get(saved.id)?.groups[0]!.items).toHaveLength(3);
   });
 
+  it('logs each cook, newest first, and keeps the log through edits and reloads', async () => {
+    const saved = await library.save(draft('Pancakes'));
+    await library.logCook(saved.id, { servings: 2, rating: 4, note: '  Less sugar  ' }, new Date('2026-01-01T10:00:00Z'));
+    await library.logCook(saved.id, { servings: null, rating: null, note: '' }, new Date('2026-02-01T10:00:00Z'));
+    const logged = library.get(saved.id)!;
+    expect(logged.log.map((e) => e.at)).toEqual(['2026-02-01T10:00:00.000Z', '2026-01-01T10:00:00.000Z']);
+    expect(logged.log[1]).toEqual({ at: '2026-01-01T10:00:00.000Z', servings: 2, rating: 4, note: 'Less sugar' });
+    expect(logged.updatedAt).toBe('2026-02-01T10:00:00.000Z');
+
+    await library.save({ ...recipeToDraft(logged), title: 'Fluffy pancakes' });
+    await library.init();
+    expect(library.get(saved.id)?.log).toHaveLength(2);
+
+    await library.setLog(saved.id, logged.log.slice(1));
+    expect(library.get(saved.id)?.log).toHaveLength(1);
+  });
+
   it('deletes with undo', async () => {
     const saved = await library.save(draft('Soup'));
     const { undo } = await library.remove(saved.id);

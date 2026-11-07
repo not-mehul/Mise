@@ -1,15 +1,17 @@
 // Navigation and transient UI state shared between components.
 
+import type { UnitMode } from '../domain/ingredient';
 import type { RecipeDraft } from '../domain/recipe';
 import type { MiseLink } from '../platform/incoming';
 
 export type Tab = 'recipes' | 'groceries' | 'settings';
 
-/** What the Recipes tab shows: the list, one recipe, or the editor. */
+/** What the Recipes tab shows: the list, one recipe, the editor, or cooking mode over everything. */
 export type Screen =
   | { kind: 'list' }
   | { kind: 'recipe'; id: string }
-  | { kind: 'editor'; draft: RecipeDraft; mode: 'check' | 'edit' | 'write' };
+  | { kind: 'editor'; draft: RecipeDraft; mode: 'check' | 'edit' | 'write' }
+  | { kind: 'cook'; id: string; servings: number; units: UnitMode };
 export type ToastKind = 'success' | 'error' | 'info';
 
 export interface ToastAction {
@@ -156,6 +158,10 @@ class UiState {
     const close = this.closers.pop();
     if (close) {
       close();
+      return true;
+    }
+    if (this.tab === 'recipes' && this.screen.kind === 'cook') {
+      this.openRecipe(this.screen.id);
       return true;
     }
     if (this.tab === 'recipes' && this.screen.kind === 'editor') {

@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
 
 /**
  * Drives the real app (WebView + native bridge) on a device or emulator:
- * the page loads, the tabs switch, and the app survives being recreated
+ * the page loads, the tabs switch, the native plugins are there, and the app survives being recreated
  * (rotation, a theme change, coming back from the background).
  */
 @RunWith(AndroidJUnit4.class)
@@ -31,6 +31,8 @@ public class MiseAppTest {
             waitForText(Locator.CSS_SELECTOR, "#viewGroceries .empty-title", "Nothing to buy");
             onWebView().withElement(findElement(Locator.ID, "tabSettings")).perform(webClick());
             waitForText(Locator.CSS_SELECTOR, "#viewSettings h2", "Appearance");
+            // The switch shows only when MainActivity registered the volume keys plugin.
+            waitForText(Locator.CSS_SELECTOR, "#switchVolumeKeys .switch-label", "Volume keys turn steps");
 
             scenario.recreate();
 

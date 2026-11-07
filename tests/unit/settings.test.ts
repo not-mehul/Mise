@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS, normaliseSettings } from '../../src/domain/settings';
 
 describe('settings', () => {
   it('keeps valid values', () => {
-    expect(normaliseSettings({ theme: 'light', language: 'fr' })).toEqual({ theme: 'light', language: 'fr' });
+    expect(normaliseSettings({ theme: 'light', language: 'fr', readAloud: true })).toEqual({ theme: 'light', language: 'fr', readAloud: true, volumeKeys: true });
   });
 
   it('replaces anything unknown with the default', () => {
