@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { gzipSync, strToU8, zipSync } from 'fflate';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../src/data/db';
 import { emptyDraft } from '../../src/domain/recipe';
 import { readRecipeFile } from '../../src/import/files';
@@ -80,5 +80,19 @@ describe('recipe files from elsewhere', () => {
     const file = await readRecipeFile(strToU8(JSON.stringify(mealie)));
     expect(file.kind === 'recipes' && file.recipes[0]!.draft).toMatchObject({ title: 'Dal', servings: '4', ingredients: '200 g red lentils\n1 onion', steps: 'Simmer 20 minutes.' });
     await expect(readRecipeFile(strToU8('{"hello":1}'))).rejects.toThrow();
+  });
+});
+
+describe('recipe files shared from another app', () => {
+  it('waits for Import before adding several recipes', async () => {
+    const { importBytes } = await import('../../src/state/transfer.svelte');
+    const { ui } = await import('../../src/state/ui.svelte');
+    const { sharedFile } = await import('../../src/platform/shared');
+    const list = [{ name: 'A', recipeIngredient: ['1 egg'], recipeInstructions: 'Fry.' }, { name: 'B', recipeIngredient: ['1 pear'], recipeInstructions: 'Eat.' }];
+    const shared = sharedFile({ file: { name: 'r.json', data: btoa(JSON.stringify(list)) } })!;
+    expect(await importBytes(shared.bytes, shared.name, true)).toBeNull();
+    expect(library.recipes).toEqual([]);
+    ui.toast!.action!.run();
+    await vi.waitFor(() => expect(library.recipes.map((r) => r.title).sort()).toEqual(['A', 'B']));
   });
 });

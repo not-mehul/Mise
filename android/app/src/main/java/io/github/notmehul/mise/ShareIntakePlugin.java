@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.OpenableColumns;
 import android.util.Base64;
 import androidx.exifinterface.media.ExifInterface;
 import com.getcapacitor.JSArray;
@@ -26,7 +28,9 @@ import java.util.concurrent.Executors;
 
 /**
  * "Share to Mise" from other apps: a link or caption (SEND text/plain), one
- * photo (SEND image/*) or several (SEND_MULTIPLE image/*). The share waits
+ * photo (SEND image/*) or several (SEND_MULTIPLE image/*), or a recipe file
+ * (a Mise backup or shared recipe, a Paprika export, schema.org JSON), sent
+ * or opened with Mise (SEND or VIEW of a content:// file). The share waits
  * here until the page asks for it (getPending), and later shares while Mise
  * is open are sent as a "shared" event. Photos are scaled down and turned
  * upright here, because content:// files can't be read from the page.
@@ -37,6 +41,8 @@ public class ShareIntakePlugin extends Plugin {
 
     static final int MAX_IMAGES = 10;
     static final int MAX_SIDE = 2000;
+    /** A recipe file larger than this is refused rather than read into memory. */
+    static final int MAX_FILE = 64 * 1024 * 1024;
 
     /** Marks a launch intent as read. An extra, not a changed action, so the intent still matches what launched it. */
     static final String READ = "io.github.notmehul.mise.SHARE_READ";
@@ -90,14 +96,25 @@ public class ShareIntakePlugin extends Plugin {
     private static boolean isShare(Intent intent) {
         if (intent == null) return false;
         String action = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(action)) return isFile(intent.getData());
         return Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action);
+    }
+
+    /** A file opened with Mise; mise:// links are the App plugin's. */
+    private static boolean isFile(Uri uri) {
+        return uri != null && ("content".equals(uri.getScheme()) || "file".equals(uri.getScheme()));
     }
 
     private JSObject read(Intent intent) {
         if (intent == null) return null;
         String action = intent.getAction();
         String type = intent.getType();
+        if (Intent.ACTION_VIEW.equals(action)) return isFile(intent.getData()) ? file(intent.getData()) : null;
         if (type == null || !(Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action))) return null;
+        if (!type.startsWith("image/") && !type.startsWith("text/")) {
+            List<Uri> files = uris(intent, action);
+            return files.isEmpty() ? null : file(files.get(0));
+        }
         JSObject share = new JSObject();
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
         String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
@@ -133,6 +150,40 @@ public class ShareIntakePlugin extends Plugin {
             if (uri != null) out.add(uri);
         }
         return out;
+    }
+
+    /** A recipe file, as {file: {name, data}} with the bytes in base64, or null. */
+    private JSObject file(Uri uri) {
+        ContentResolver resolver = getContext().getContentResolver();
+        String name = "";
+        try (Cursor cursor = resolver.query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst() && !cursor.isNull(0)) name = cursor.getString(0);
+        } catch (RuntimeException ignored) {
+            // No name: the page tells the formats apart by their contents.
+        }
+        if (name.isEmpty() && uri.getLastPathSegment() != null) name = uri.getLastPathSegment();
+        try (InputStream in = resolver.openInputStream(uri)) {
+            if (in == null) return null;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[64 * 1024];
+            int n;
+            while ((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+                if (out.size() > MAX_FILE) {
+                    Logger.warn("ShareIntake", "A shared file was too large to read");
+                    return null;
+                }
+            }
+            JSObject file = new JSObject();
+            file.put("name", name);
+            file.put("data", Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP));
+            JSObject share = new JSObject();
+            share.put("file", file);
+            return share;
+        } catch (IOException | SecurityException | OutOfMemoryError e) {
+            Logger.warn("ShareIntake", "Could not read a shared file: " + e.getMessage());
+            return null;
+        }
     }
 
     /** The photo as an upright JPEG no longer than MAX_SIDE, base64, or null. */

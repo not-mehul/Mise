@@ -135,9 +135,9 @@ const en = {
   'data.saved': 'Saved to {path}',
   'data.ready': 'Ready to share',
   'data.exportFailed': 'Couldn’t export. Your recipes are unaffected; try again.',
-  'data.importNone': 'That file has no Mise recipes in it.',
+  'data.importNone': 'That file has no recipes in it.',
   'data.imported': 'Imported: {added} new, {updated} updated',
-  'data.importFailed': 'Couldn’t read that file. Choose a Mise backup (.zip or .json).',
+  'data.importFailed': 'Couldn’t read that file. Choose a Mise backup or recipe, a Paprika export or recipe JSON.',
   'data.collections': 'Collections',
   'data.collectionsEmpty': 'None yet. Add one from a recipe’s page.',
   'data.deleteCollection': 'Delete {name}',
@@ -309,6 +309,8 @@ const en = {
   'recipe.shareFile': 'Send as a file',
   'data.importAny': 'Import a file',
   'data.importAnyHint': 'A Mise backup or recipe (.zip, .json), a Paprika export (.paprikarecipes) or schema.org recipe JSON from Mealie and other apps. Backups merge, and the newest copy of each recipe wins.',
+  'data.sharedFile': 'Recipes in that file: {count}. Add them to Mise?',
+  'action.import': 'Import',
 } as const;
 
 export default en;

@@ -130,9 +130,9 @@ const fr: Messages = {
   'data.saved': "Enregistré dans {path}",
   'data.ready': "Prêt à partager",
   'data.exportFailed': "Impossible d’exporter. Vos recettes ne sont pas touchées ; réessayez.",
-  'data.importNone': "Ce fichier ne contient pas de recettes Mise.",
+  'data.importNone': 'Ce fichier ne contient aucune recette.',
   'data.imported': "Importé : {added} nouvelles, {updated} mises à jour",
-  'data.importFailed': "Impossible de lire ce fichier. Choisissez une sauvegarde Mise (.zip ou .json).",
+  'data.importFailed': 'Impossible de lire ce fichier. Choisissez une sauvegarde ou une recette Mise, un export Paprika ou un JSON de recettes.',
   'data.collections': "Collections",
   'data.collectionsEmpty': "Aucune pour l’instant. Ajoutez-en une depuis la page d’une recette.",
   'data.deleteCollection': "Supprimer {name}",
@@ -303,6 +303,8 @@ const fr: Messages = {
   'recipe.shareFile': 'Envoyer en fichier',
   'data.importAny': 'Importer un fichier',
   'data.importAnyHint': 'Une sauvegarde ou une recette Mise (.zip, .json), un export Paprika (.paprikarecipes) ou du JSON de recettes schema.org depuis Mealie et d’autres apps. Les sauvegardes fusionnent, la copie la plus récente de chaque recette l’emporte.',
+  'data.sharedFile': 'Recettes dans ce fichier : {count}. Les ajouter à Mise ?',
+  'action.import': 'Importer',
 };
 
 export default fr;

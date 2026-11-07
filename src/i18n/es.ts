@@ -130,9 +130,9 @@ const es: Messages = {
   'data.saved': "Guardado en {path}",
   'data.ready': "Listo para compartir",
   'data.exportFailed': "No se pudo exportar. Tus recetas no se han visto afectadas; inténtalo de nuevo.",
-  'data.importNone': "Ese archivo no tiene recetas de Mise.",
+  'data.importNone': 'Ese archivo no tiene recetas.',
   'data.imported': "Importado: {added} nuevas, {updated} actualizadas",
-  'data.importFailed': "No se pudo leer ese archivo. Elige una copia de Mise (.zip o .json).",
+  'data.importFailed': 'No se pudo leer ese archivo. Elige una copia o receta de Mise, una exportación de Paprika o un JSON de recetas.',
   'data.collections': "Colecciones",
   'data.collectionsEmpty': "Ninguna todavía. Añade una desde la página de una receta.",
   'data.deleteCollection': "Eliminar {name}",
@@ -303,6 +303,8 @@ const es: Messages = {
   'recipe.shareFile': 'Enviar como archivo',
   'data.importAny': 'Importar un archivo',
   'data.importAnyHint': 'Una copia o receta de Mise (.zip, .json), una exportación de Paprika (.paprikarecipes) o JSON de recetas schema.org de Mealie y otras apps. Las copias se combinan y gana la versión más reciente de cada receta.',
+  'data.sharedFile': 'Recetas en ese archivo: {count}. ¿Añadirlas a Mise?',
+  'action.import': 'Importar',
 };
 
 export default es;

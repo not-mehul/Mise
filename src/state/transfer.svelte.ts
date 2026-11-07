@@ -109,7 +109,19 @@ export async function exportAs(format: ExportFormat): Promise<{ message: string;
  * JSON, a recipe shared from another Mise) open for checking when there is one, and
  * are saved straight away when there are several.
  */
-export async function importBytes(bytes: Uint8Array, name = ''): Promise<{ message: string; ok: boolean }> {
+/**
+ * Reads a recipe file. One recipe opens to check before it is saved. With `ask` (a file shared
+ * or opened from another app), a file of several recipes waits for Import on a toast instead of
+ * merging straight away; the result is then null.
+ */
+export async function importBytes(bytes: Uint8Array, name = '', ask = false): Promise<{ message: string; ok: boolean } | null> {
+  const later = (count: number) => {
+    ui.notify(t('data.sharedFile', { count }), 'info', {
+      label: t('action.import'),
+      run: () => void importBytes(bytes, name).then((r) => r && ui.notify(r.message, r.ok ? 'success' : 'error')),
+    });
+    return null;
+  };
   try {
     const { readRecipeFile } = await import('../import/files');
     const file = await readRecipeFile(bytes, name);
@@ -127,6 +139,7 @@ export async function importBytes(bytes: Uint8Array, name = ''): Promise<{ messa
         ui.edit({ ...recipeToDraft(recipe), id: null, photoIds }, 'check');
         return { message: t('data.openedRecipe', { title: recipe.title }), ok: true };
       }
+      if (ask) return later(data.recipes.length);
       const s = await mergeBackup(data);
       return { message: t('data.imported', { added: s.added, updated: s.updated }), ok: true };
     }
@@ -136,6 +149,7 @@ export async function importBytes(bytes: Uint8Array, name = ''): Promise<{ messa
       ui.edit(draft, 'check');
       return { message: t('data.openedRecipe', { title: draft.title }), ok: true };
     }
+    if (ask) return later(file.recipes.length);
     let added = 0;
     for (const { draft, photo } of file.recipes) {
       if (!draft.title.trim() || (!draft.ingredients.trim() && !draft.steps.trim())) continue;
@@ -151,7 +165,7 @@ export async function importBytes(bytes: Uint8Array, name = ''): Promise<{ messa
 }
 
 export async function importFile(file: File): Promise<{ message: string; ok: boolean }> {
-  return importBytes(new Uint8Array(await file.arrayBuffer()), file.name);
+  return (await importBytes(new Uint8Array(await file.arrayBuffer()), file.name))!;
 }
 
 /** One recipe as a small Mise file (.zip with its photos), through the share sheet; another Mise opens it. */

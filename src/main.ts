@@ -8,14 +8,14 @@ import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
 import { isNative } from './platform/output';
-import { listenForShares, readShare } from './platform/shared';
+import { listenForShares, readShare, sharedFile } from './platform/shared';
 import { applyTheme } from './platform/theme.svelte';
 import { groceries } from './state/groceries.svelte';
 import { library } from './state/library.svelte';
 import { plan } from './state/plan.svelte';
 import { tombstones } from './state/tombstones';
 import { settings } from './state/settings.svelte';
-import { autoBackupIfDue } from './state/transfer.svelte';
+import { autoBackupIfDue, importBytes } from './state/transfer.svelte';
 import { ui } from './state/ui.svelte';
 import './styles/app.css';
 
@@ -39,6 +39,11 @@ async function start(): Promise<void> {
     void listenForLinks((link) => ui.openLink(link));
     // "Share to Mise" from other apps: a link, a caption or photos.
     void listenForShares((share) => {
+      const file = sharedFile(share);
+      if (file) {
+        void importBytes(file.bytes, file.name, true).then((r) => r && ui.notify(r.message, r.ok ? 'success' : 'error'));
+        return;
+      }
       const incoming = readShare(share);
       if (incoming) ui.importFrom(incoming);
     });
