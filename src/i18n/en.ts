@@ -11,7 +11,6 @@ const en = {
   'recipes.label': 'Your recipes',
   'recipes.emptyTitle': 'No recipes yet',
   'recipes.emptyBody': 'Share a recipe to Mise from Instagram, a website or your photos, or paste it in. You check it before it is saved.',
-  'recipes.count': { one: '{count} recipe', other: '{count} recipes' },
 
   'recipes.search': 'Search recipes, ingredients or #tags',
   'recipes.new': 'New recipe',
@@ -261,6 +260,11 @@ const en = {
   'action.cancel': 'Cancel',
   'action.undo': 'Undo',
   'toast.saveFailed': 'Couldn’t save that change. Try again.',
+  'timer.noAlarm': 'Notifications are off, so timers can’t ring while the screen is off. Turn them on for Mise in the phone’s settings.',
+  'editor.discarded': 'Recipe not saved',
+  'editor.shareWaiting': 'Save or cancel this recipe first. What you shared opens next.',
+  'new.linkFromApp': 'Another app sent this link. Read it?',
+  'action.add': 'Add',
 } as const;
 
 export default en;

@@ -50,10 +50,11 @@ class Library {
     return recipe;
   }
 
-  async update(id: string, patch: Partial<Pick<Recipe, 'collectionIds' | 'notes' | 'tags'>>): Promise<void> {
+  /** A change to the recipe, so it counts as newer when a backup is merged in (like setLog). */
+  async update(id: string, patch: Partial<Pick<Recipe, 'collectionIds' | 'notes' | 'tags'>>, now = new Date()): Promise<void> {
     const current = this.get(id);
     if (!current) return;
-    const next = { ...current, ...patch };
+    const next = { ...current, ...patch, updatedAt: now.toISOString() };
     await db.recipes.put($state.snapshot(next) as Recipe);
     this.recipes = this.recipes.map((r) => (r.id === id ? next : r));
   }
@@ -111,15 +112,28 @@ class Library {
     return collection;
   }
 
-  async removeCollection(id: string): Promise<void> {
+  /** Deletes a collection (its recipes are kept) and returns what puts it back, members and all. */
+  async removeCollection(id: string, now = new Date()): Promise<() => Promise<void>> {
+    const collection = this.collections.find((c) => c.id === id);
+    if (!collection) return async () => {};
+    const members = this.recipes.filter((r) => r.collectionIds.includes(id)).map((r) => r.id);
+    const stamp = now.toISOString();
+    const without = (r: Recipe): Recipe => ({ ...r, collectionIds: r.collectionIds.filter((c) => c !== id), updatedAt: stamp });
     await db.transaction('rw', db.collections, db.recipes, async () => {
       await db.collections.delete(id);
-      for (const r of this.recipes.filter((r) => r.collectionIds.includes(id))) {
-        await db.recipes.put({ ...r, collectionIds: r.collectionIds.filter((c) => c !== id) });
-      }
+      for (const r of this.recipes.filter((r) => members.includes(r.id))) await db.recipes.put($state.snapshot(without(r)) as Recipe);
     });
     this.collections = this.collections.filter((c) => c.id !== id);
-    this.recipes = this.recipes.map((r) => (r.collectionIds.includes(id) ? { ...r, collectionIds: r.collectionIds.filter((c) => c !== id) } : r));
+    this.recipes = this.recipes.map((r) => (members.includes(r.id) ? without(r) : r));
+    return async () => {
+      const back = (r: Recipe): Recipe => (r.collectionIds.includes(id) ? r : { ...r, collectionIds: [...r.collectionIds, id], updatedAt: new Date().toISOString() });
+      await db.transaction('rw', db.collections, db.recipes, async () => {
+        await db.collections.put(collection);
+        for (const r of this.recipes.filter((r) => members.includes(r.id))) await db.recipes.put($state.snapshot(back(r)) as Recipe);
+      });
+      if (!this.collections.some((c) => c.id === id)) this.collections = [...this.collections, collection].sort((a, b) => a.name.localeCompare(b.name));
+      this.recipes = this.recipes.map((r) => (members.includes(r.id) ? back(r) : r));
+    };
   }
 
   async toggleCollection(recipeId: string, collectionId: string): Promise<void> {
@@ -139,19 +153,22 @@ class Library {
 
   async dropPhoto(id: string): Promise<void> {
     await db.photos.delete(id).catch(() => undefined);
-    const url = this.thumbs.get(id);
-    if (url) URL.revokeObjectURL(url);
-    this.thumbs.delete(id);
+    for (const key of [id, `${id}:full`]) {
+      const url = this.thumbs.get(key);
+      if (url) URL.revokeObjectURL(url);
+      this.thumbs.delete(key);
+    }
   }
 
-  /** An object URL for a photo's thumbnail, cached for the session. */
-  async thumbUrl(id: string): Promise<string | null> {
-    const cached = this.thumbs.get(id);
+  /** An object URL for a photo's thumbnail (or, with `full`, the large copy), cached for the session. */
+  async thumbUrl(id: string, full = false): Promise<string | null> {
+    const key = full ? `${id}:full` : id;
+    const cached = this.thumbs.get(key);
     if (cached) return cached;
     const photo = await db.photos.get(id).catch(() => undefined);
     if (!photo) return null;
-    const url = URL.createObjectURL(photo.thumb);
-    this.thumbs.set(id, url);
+    const url = URL.createObjectURL(full ? photo.full : photo.thumb);
+    this.thumbs.set(key, url);
     return url;
   }
 

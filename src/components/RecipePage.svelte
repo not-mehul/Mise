@@ -1,6 +1,6 @@
 <script lang="ts">
   import { showIngredient, type UnitMode } from '../domain/ingredient';
-  import { recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
+  import { linkHost, recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
   import { formatDuration, stepPieces } from '../domain/steps';
   import type { CookEntry } from '../domain/cook';
   import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
@@ -69,7 +69,7 @@
   </button>
 
   {#if recipe.photoId}
-    <div class="hero"><Thumb photoId={recipe.photoId} alt={recipe.title} /></div>
+    <div class="hero"><Thumb photoId={recipe.photoId} alt={recipe.title} full /></div>
   {/if}
 
   <header class="recipe-head">
@@ -213,7 +213,7 @@
   <footer class="source t-hint">
     <b>{t('recipe.source')}.</b>
     {#if recipe.source.url}
-      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? new URL(recipe.source.url).hostname}</a>
+      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
     {:else}
       {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
     {/if}

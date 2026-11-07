@@ -146,7 +146,7 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | Path | What it is |
 | --- | --- |
 | `src/App.svelte`, `src/main.ts` | Shell and bootstrap |
-| `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Groceries and Settings; `ui/` holds Sheet, Modal and EmptyState |
+| `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Groceries and Settings; `ui/` holds Sheet, Switch and EmptyState |
 | `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, settings |
 | `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `photo.ts` (reading order for recognised text) |
 | `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos |

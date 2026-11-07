@@ -3,7 +3,7 @@
 // and photos/<id>.jpg. Import also takes the bare JSON.
 // ============================================================
 
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
+import { strFromU8, strToU8, unzip, zip, type AsyncZippable, type Unzipped } from 'fflate';
 import type { Photo } from '../data/db';
 import { normaliseRecipe, type Collection, type Recipe } from '../domain/recipe';
 
@@ -20,13 +20,14 @@ export function buildJson(recipes: Recipe[], collections: Collection[], now = ne
 }
 
 export async function buildBackupZip(recipes: Recipe[], collections: Collection[], photos: Photo[], now = new Date()): Promise<Uint8Array> {
-  const files: Record<string, Uint8Array> = { 'mise.json': strToU8(buildJson(recipes, collections, now)) };
+  const files: AsyncZippable = { 'mise.json': strToU8(buildJson(recipes, collections, now)) };
   for (const p of photos) {
     files[`photos/${p.id}.jpg`] = new Uint8Array(await p.full.arrayBuffer());
     files[`photos/${p.id}.thumb.jpg`] = new Uint8Array(await p.thumb.arrayBuffer());
   }
-  // Photos are already compressed; storing them is faster and no bigger.
-  return zipSync(files, { level: 0 });
+  // Photos are already compressed; storing them is faster and no bigger. The async zip works off
+  // the main thread, so a large library doesn't freeze the screen.
+  return new Promise((resolve, reject) => zip(files, { level: 0 }, (err, data) => (err ? reject(err) : resolve(data))));
 }
 
 export function isZip(bytes: Uint8Array): boolean {
@@ -44,9 +45,13 @@ function readJson(text: string): Omit<BackupData, 'photos'> {
   return { recipes: d.recipes.map(normaliseRecipe).filter((r): r is Recipe => r !== null), collections };
 }
 
-export function parseBackup(bytes: Uint8Array): BackupData {
+function unzipped(bytes: Uint8Array): Promise<Unzipped> {
+  return new Promise((resolve, reject) => unzip(bytes, (err, files) => (err ? reject(err) : resolve(files))));
+}
+
+export async function parseBackup(bytes: Uint8Array): Promise<BackupData> {
   if (!isZip(bytes)) return { ...readJson(new TextDecoder().decode(bytes)), photos: new Map() };
-  const files = unzipSync(bytes);
+  const files = await unzipped(bytes);
   const json = files['mise.json'];
   if (!json) throw new Error('Not a Mise backup');
   const data = readJson(strFromU8(json));

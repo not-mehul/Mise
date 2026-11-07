@@ -63,7 +63,7 @@ export async function exportAs(format: ExportFormat): Promise<{ message: string;
 export async function importFile(file: File): Promise<{ message: string; ok: boolean }> {
   try {
     const { parseBackup } = await backupLib();
-    const data = parseBackup(new Uint8Array(await file.arrayBuffer()));
+    const data = await parseBackup(new Uint8Array(await file.arrayBuffer()));
     if (!data.recipes.length) return { message: t('data.importNone'), ok: false };
     const s = await library.merge(data.recipes, data.collections, data.photos);
     return { message: t('data.imported', { added: s.added, updated: s.updated }), ok: true };

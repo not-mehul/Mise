@@ -11,7 +11,6 @@ const de: Messages = {
   'recipes.label': 'Deine Rezepte',
   'recipes.emptyTitle': 'Noch keine Rezepte',
   'recipes.emptyBody': 'Teile ein Rezept aus Instagram, von einer Website oder aus deinen Fotos mit Mise, oder füge es ein. Du prüfst es, bevor es gespeichert wird.',
-  'recipes.count': { one: '{count} Rezept', other: '{count} Rezepte' },
   'recipes.search': "Rezepte, Zutaten oder #Schlagwörter suchen",
   'recipes.new': "Neues Rezept",
   'recipes.all': "Alle",
@@ -255,6 +254,11 @@ const de: Messages = {
   'action.cancel': 'Abbrechen',
   'action.undo': 'Rückgängig',
   'toast.saveFailed': 'Die Änderung konnte nicht gespeichert werden. Versuch es noch einmal.',
+  'timer.noAlarm': 'Benachrichtigungen sind aus, deshalb können Timer bei ausgeschaltetem Bildschirm nicht klingeln. Schalte sie für Mise in den Einstellungen des Telefons ein.',
+  'editor.discarded': 'Rezept nicht gespeichert',
+  'editor.shareWaiting': 'Speichere oder verwirf zuerst dieses Rezept. Was du geteilt hast, öffnet sich danach.',
+  'new.linkFromApp': 'Eine andere App hat diesen Link geschickt. Lesen?',
+  'action.add': 'Hinzufügen',
 };
 
 export default de;

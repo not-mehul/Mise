@@ -22,7 +22,8 @@ interface ShareIntakePlugin {
 
 const ShareIntake = registerPlugin<ShareIntakePlugin>('ShareIntake');
 
-export type Incoming = { kind: 'link'; url: string } | { kind: 'text'; text: string } | { kind: 'photos'; photos: Blob[] };
+/** `ask`: the link came from another app's mise:// link, so it is shown before Mise fetches it. */
+export type Incoming = { kind: 'link'; url: string; ask?: boolean } | { kind: 'text'; text: string } | { kind: 'photos'; photos: Blob[] };
 
 /** What a share holds, as an import. Photos win over text: the text is usually just a caption for them. */
 export function readShare(share: RawShare): Incoming | null {
@@ -33,7 +34,9 @@ export function readShare(share: RawShare): Incoming | null {
   // "Check this out https://…" is a link; a long caption with a link in it is text.
   const url = findUrl(text);
   if (url && (isOnlyUrl(text) || text.length < 200)) return { kind: 'link', url };
-  return { kind: 'text', text };
+  // The subject is often the post or page title: it becomes the first line, which the parser reads as the title.
+  const subject = (share.subject ?? '').trim();
+  return { kind: 'text', text: subject && subject.length <= 120 && !text.includes(subject) ? `${subject}\n${text}` : text };
 }
 
 export async function listenForShares(onShare: (share: RawShare) => void): Promise<void> {

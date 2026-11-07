@@ -1,5 +1,5 @@
-// The person's preferences. Kept in localStorage for now; the recipe library
-// (IndexedDB) arrives with the collection and will hold them alongside it.
+// The person's preferences, in localStorage so the first paint can read them
+// synchronously (theme, language). Backups carry them too (src/lib/backup.ts).
 
 import { DEFAULT_SETTINGS, normaliseSettings, type Settings } from '../domain/settings';
 

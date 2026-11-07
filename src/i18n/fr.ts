@@ -11,7 +11,6 @@ const fr: Messages = {
   'recipes.label': 'Vos recettes',
   'recipes.emptyTitle': 'Pas encore de recettes',
   'recipes.emptyBody': 'Partagez une recette avec Mise depuis Instagram, un site ou vos photos, ou collez-la. Vous la vérifiez avant de l’enregistrer.',
-  'recipes.count': { one: '{count} recette', other: '{count} recettes' },
   'recipes.search': "Chercher une recette, un ingrédient ou un #mot-clé",
   'recipes.new': "Nouvelle recette",
   'recipes.all': "Toutes",
@@ -255,6 +254,11 @@ const fr: Messages = {
   'action.cancel': 'Annuler',
   'action.undo': 'Annuler',
   'toast.saveFailed': 'Impossible d’enregistrer ce changement. Réessayez.',
+  'timer.noAlarm': 'Les notifications sont désactivées : les minuteurs ne peuvent pas sonner écran éteint. Activez-les pour Mise dans les réglages du téléphone.',
+  'editor.discarded': 'Recette non enregistrée',
+  'editor.shareWaiting': 'Enregistrez ou annulez d’abord cette recette. Ce que vous avez partagé s’ouvre ensuite.',
+  'new.linkFromApp': 'Une autre app a envoyé ce lien. Le lire ?',
+  'action.add': 'Ajouter',
 };
 
 export default fr;

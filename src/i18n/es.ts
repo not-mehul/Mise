@@ -11,7 +11,6 @@ const es: Messages = {
   'recipes.label': 'Tus recetas',
   'recipes.emptyTitle': 'Aún no hay recetas',
   'recipes.emptyBody': 'Comparte una receta con Mise desde Instagram, una web o tus fotos, o pégala. La revisas antes de guardarla.',
-  'recipes.count': { one: '{count} receta', other: '{count} recetas' },
   'recipes.search': "Busca recetas, ingredientes o #etiquetas",
   'recipes.new': "Nueva receta",
   'recipes.all': "Todas",
@@ -255,6 +254,11 @@ const es: Messages = {
   'action.cancel': 'Cancelar',
   'action.undo': 'Deshacer',
   'toast.saveFailed': 'No se pudo guardar el cambio. Inténtalo de nuevo.',
+  'timer.noAlarm': 'Las notificaciones están desactivadas, así que los temporizadores no pueden sonar con la pantalla apagada. Actívalas para Mise en los ajustes del teléfono.',
+  'editor.discarded': 'Receta sin guardar',
+  'editor.shareWaiting': 'Guarda o cancela esta receta primero. Lo que compartiste se abre después.',
+  'new.linkFromApp': 'Otra app envió este enlace. ¿Leerlo?',
+  'action.add': 'Añadir',
 };
 
 export default es;

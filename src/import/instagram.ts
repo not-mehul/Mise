@@ -30,6 +30,13 @@ export interface Caption {
   author?: string;
 }
 
+/** "@handle" for a handle; a display name ("Jamie Oliver") is kept as written, never made into a handle. */
+function authorFrom(text: string): string | undefined {
+  const name = text.trim().replace(/^@/, '');
+  if (!name) return undefined;
+  return /^[\w.]+$/.test(name) ? `@${name}` : name;
+}
+
 /**
  * The caption from the post page. Its og:description reads
  * `12 likes, 3 comments - handle on March 1, 2026: "caption"`; og:title
@@ -40,7 +47,7 @@ export function captionFromPage(html: string): Caption | null {
     const v = meta(html, key);
     if (!v) continue;
     const m = /^(?:[\d.,\s]*[kKmM]?\s*\S+,\s*[\d.,\s]*[kKmM]?\s*\S+\s*-\s*)?(.+?)\s+(?:on|en|sur|auf)\s+(?:Instagram|[^:]{3,40}?)\s*:\s*["“](.+)["”]\s*\.?$/s.exec(v);
-    if (m) return { caption: m[2]!.trim(), author: m[1]!.trim().replace(/^@/, '') ? `@${m[1]!.trim().replace(/^@/, '').split(/\s+/)[0]}` : undefined };
+    if (m) return { caption: m[2]!.trim(), author: authorFrom(m[1]!) };
   }
   return null;
 }

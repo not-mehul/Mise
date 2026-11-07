@@ -36,7 +36,7 @@
 <div id="viewRecipes" role="tabpanel" aria-labelledby="tabRecipes">
   {#if ui.screen.kind === 'editor'}
     {#key ui.screen.draft}
-      <RecipeEditor draft={ui.screen.draft} mode={ui.screen.mode} />
+      <RecipeEditor draft={ui.screen.draft} mode={ui.screen.mode} owned={ui.screen.owned} />
     {/key}
   {:else if ui.screen.kind === 'recipe' && recipe}
     {#key recipe.id}

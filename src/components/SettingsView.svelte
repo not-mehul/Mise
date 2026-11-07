@@ -55,8 +55,8 @@
   }
 
   async function removeCollection(id: string, name: string) {
-    await library.removeCollection(id);
-    ui.notify(t('data.collectionDeleted', { name }), 'info');
+    const undo = await library.removeCollection(id);
+    ui.notify(t('data.collectionDeleted', { name }), 'info', { label: t('action.undo'), run: () => void undo() });
   }
 </script>
 
@@ -123,7 +123,7 @@
     {/if}
     <form class="staple-form" onsubmit={addStaple}>
       <input class="input" id="stapleInput" maxlength="60" enterkeyhint="done" placeholder={t('settings.addStaple')} aria-label={t('settings.addStaple')} bind:value={staple} />
-      <button type="submit" class="btn btn-muted" disabled={!staple.trim()}>{t('recipe.addCollection')}</button>
+      <button type="submit" class="btn btn-muted" disabled={!staple.trim()}>{t('action.add')}</button>
     </form>
   </div>
 

@@ -8,20 +8,30 @@
   import { ui } from '../state/ui.svelte';
   import Thumb from './Thumb.svelte';
 
-  let { draft: initial, mode }: { draft: RecipeDraft; mode: 'check' | 'edit' | 'write' } = $props();
+  let { draft: initial, mode, owned = [] }: { draft: RecipeDraft; mode: 'check' | 'edit' | 'write'; owned?: string[] } = $props();
 
   // A working copy; the screen's draft stays as it came in.
-  let draft = $state<RecipeDraft>(untrack(() => structuredClone($state.snapshot(initial) as RecipeDraft)));
+  const start = untrack(() => structuredClone($state.snapshot(initial) as RecipeDraft));
+  let draft = $state<RecipeDraft>(structuredClone(start));
   let errors = $state<{ title?: string; content?: string }>({});
   let saving = $state(false);
   /**
    * Photos picked here, or brought in by an import, and not yet saved. They
    * are deleted again if the editor is left without saving, however it is left.
    */
-  const picked: string[] = untrack(() => (mode === 'check' && initial.photoId ? [initial.photoId] : []));
+  const picked: string[] = untrack(() => [...new Set([...owned, ...(mode === 'check' && initial.photoId ? [initial.photoId] : [])])]);
   let kept = false;
   onDestroy(() => {
-    if (!kept) for (const id of picked) void library.dropPhoto(id);
+    if (kept) return;
+    const left = $state.snapshot(draft) as RecipeDraft;
+    // An import, or anything typed, can come back: Undo reopens the editor as it was left.
+    const worth = mode === 'check' || JSON.stringify(left) !== JSON.stringify(start);
+    const photos = [...picked];
+    const drop = () => {
+      for (const id of photos) void library.dropPhoto(id);
+    };
+    if (!worth) return drop();
+    ui.notify(t('editor.discarded'), 'info', { label: t('action.undo'), run: () => ui.edit(left, mode, photos), dismissed: drop });
   });
   const heading: Record<typeof mode, MessageKey> = { check: 'editor.check', edit: 'editor.edit', write: 'editor.write' };
 

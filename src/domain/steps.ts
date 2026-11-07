@@ -3,7 +3,7 @@
 // ingredients they name are linked to them for cooking mode.
 // ============================================================
 
-import { keyWord, type IngredientGroup } from './ingredient';
+import { keyWord, singular, type IngredientGroup } from './ingredient';
 import { parseNumber } from './quantity';
 
 export interface StepTimer {
@@ -35,6 +35,7 @@ const DURATION = new RegExp(
 /** Each duration in a step: "simmer 10–12 minutes" gives one timer of 10 minutes. */
 export function findTimers(text: string): StepTimer[] {
   const timers: StepTimer[] = [];
+  let lastPer = Infinity;
   for (const m of text.matchAll(DURATION)) {
     const value = parseNumber(m[1]!.replace(/\s+/g, ''));
     const per = UNIT_SECONDS.find(([re]) => re.test(m[3]!))?.[1];
@@ -45,13 +46,15 @@ export function findTimers(text: string): StepTimer[] {
     if (seconds <= 0 || seconds > 48 * 3600) continue;
     const start = m.index!;
     const prev = timers.at(-1);
-    // "1 hour 30 minutes" is one timer.
-    if (prev && /^\s*(?:and|y|et|und)?\s*$/i.test(text.slice(prev.end, start)) && per < 3600) {
+    // "1 hour 30 minutes" is one timer; "5 minutes and 3 minutes" are two.
+    if (prev && per < lastPer && /^\s*(?:and|y|et|und)?\s*$/i.test(text.slice(prev.end, start))) {
       prev.seconds += seconds;
       prev.end = start + m[0].length;
+      lastPer = per;
       continue;
     }
     timers.push({ start, end: start + m[0].length, seconds });
+    lastPer = per;
   }
   return timers;
 }
@@ -64,7 +67,8 @@ export function linkIngredients(text: string, groups: IngredientGroup[]): string
     for (const ing of group.items) {
       const word = keyWord(ing.item);
       if (word.length < 3) continue;
-      const stem = word.length > 3 && word.endsWith('s') ? word.slice(0, -1) : word;
+      // The singular is a prefix of both forms: "tomato" finds "tomato" and "tomatoes".
+      const stem = singular(word);
       if (new RegExp(`(?<![\\p{L}])${stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'iu').test(lower)) ids.push(ing.id);
     }
   }

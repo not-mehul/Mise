@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * "Share to Mise" from other apps: a link or caption (SEND text/plain), one
@@ -39,34 +41,56 @@ public class ShareIntakePlugin extends Plugin {
     /** Marks a launch intent as read. An extra, not a changed action, so the intent still matches what launched it. */
     static final String READ = "io.github.notmehul.mise.SHARE_READ";
 
+    /** Photos are decoded here, off the main thread, so a share of ten large photos can't freeze the app. */
+    private final ExecutorService worker = Executors.newSingleThreadExecutor();
+
+    /** Only touched on the worker thread, which runs reads and getPending in the order they arrive. */
     private JSObject pending;
 
     @Override
     public void load() {
         Intent intent = getActivity().getIntent();
         // Read once: a recreated activity must not import it again.
-        if (intent == null || intent.getBooleanExtra(READ, false)) return;
-        JSObject share = read(intent);
-        if (share != null) {
-            pending = share;
-            intent.putExtra(READ, true);
-        }
+        if (intent == null || intent.getBooleanExtra(READ, false) || !isShare(intent)) return;
+        intent.putExtra(READ, true);
+        final Intent shared = new Intent(intent);
+        worker.execute(() -> {
+            JSObject share = read(shared);
+            if (share != null) pending = share;
+        });
     }
 
     @Override
     protected void handleOnNewIntent(Intent intent) {
-        JSObject share = read(intent);
-        if (share == null) return;
-        if (hasListeners("shared")) notifyListeners("shared", share);
-        else pending = share;
+        if (!isShare(intent)) return;
+        final Intent shared = new Intent(intent);
+        worker.execute(() -> {
+            JSObject share = read(shared);
+            if (share == null) return;
+            if (hasListeners("shared")) notifyListeners("shared", share);
+            else pending = share;
+        });
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        worker.shutdown();
     }
 
     @PluginMethod
     public void getPending(PluginCall call) {
-        JSObject result = new JSObject();
-        if (pending != null) result.put("share", pending);
-        pending = null;
-        call.resolve(result);
+        worker.execute(() -> {
+            JSObject result = new JSObject();
+            if (pending != null) result.put("share", pending);
+            pending = null;
+            call.resolve(result);
+        });
+    }
+
+    private static boolean isShare(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        return Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action);
     }
 
     private JSObject read(Intent intent) {

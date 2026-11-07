@@ -10,6 +10,7 @@ import { formatDuration } from '../domain/steps';
 import { t } from '../i18n/index.svelte';
 import { buzz } from '../platform/device';
 import { alarmsReady, cancelAlarm, scheduleAlarm } from '../platform/notify';
+import { isNative } from '../platform/output';
 import { library } from './library.svelte';
 import { ui } from './ui.svelte';
 
@@ -29,6 +30,7 @@ class Timers {
   now = $state(Date.now());
   private ticker: ReturnType<typeof setInterval> | undefined;
   private salt = 0;
+  private warned = false;
 
   constructor() {
     this.schedule();
@@ -48,6 +50,11 @@ class Timers {
     const timer = startTimer(input, newId(), notifyIdFor(now, ++this.salt), now);
     this.set([...this.list, timer]);
     const allowed = await alarmsReady(t('timer.channel'), t('timer.channelHint'));
+    // Without notifications a timer can't ring once the screen is off: say so, once a session.
+    if (!allowed && isNative && !this.warned) {
+      this.warned = true;
+      ui.notify(t('timer.noAlarm'), 'error');
+    }
     // Paused or stopped while the permission prompt was up.
     const current = this.list.find((tm) => tm.id === timer.id);
     if (allowed && current?.endsAt) await this.alarm(current);

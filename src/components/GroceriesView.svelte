@@ -84,7 +84,7 @@
       aria-label={t('groceries.addLabel')}
       bind:value={typed}
     />
-    <button type="submit" class="btn btn-secondary" id="btnAddGrocery" disabled={!typed.trim()}>{t('recipe.addCollection')}</button>
+    <button type="submit" class="btn btn-secondary" id="btnAddGrocery" disabled={!typed.trim()}>{t('action.add')}</button>
     <datalist id="grocerySuggestions">
       {#each suggestions as s (s)}<option value={s}></option>{/each}
     </datalist>

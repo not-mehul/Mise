@@ -28,7 +28,16 @@
   );
   const cooking = $derived(ui.tab === 'recipes' && ui.screen.kind === 'cook' ? ui.screen : null);
   const cookRecipe = $derived(cooking ? library.get(cooking.id) : undefined);
-  const today = $derived(new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
+  // Ticks each minute, so the date in the header turns over at midnight with the app left open.
+  let clock = $state(new Date());
+  $effect(() => {
+    const id = setInterval(() => {
+      const now = new Date();
+      if (now.getDate() !== clock.getDate()) clock = now;
+    }, 60_000);
+    return () => clearInterval(id);
+  });
+  const today = $derived(clock.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
 
   $effect(() => applyTheme(settings.current.theme));
   $effect(() => {
