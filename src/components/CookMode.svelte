@@ -287,37 +287,53 @@
         </ul>
       {/each}
     {:else if step}
-      <h2 class="t-section-label step-number">{t('cook.step', { step: stepNumber })}{#if step.section}<span class="step-section"> · {step.section}</span>{/if}</h2>
-      <p class="step-text" id="stepText">
-        {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}{#if piece.timer !== undefined}<mark class="duration">{piece.text}</mark>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}{/each}
-      </p>
-      {#if step.timers.length}
-        <div class="step-timers">
-          {#each step.timers as timer, i (i)}
-            {@const running = timerFor(i)}
-            {#if running}
-              <span class="chip chip-status is-active timer-running">{running.done ? t('timer.rang') : formatClock(timers.left(running))}</span>
-            {:else}
-              <button type="button" class="btn btn-secondary start-timer" onclick={() => startTimer(i)}>
-                <!-- Lucide "timer" -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2" /><line x1="12" x2="15" y1="14" y2="11" /><circle cx="12" cy="14" r="8" /></svg>
-                {t('timer.start', { time: formatDuration(timer.seconds) })}
-              </button>
-            {/if}
+      <div class="step-layout">
+        <div class="step-main">
+          <h2 class="t-section-label step-number">{t('cook.step', { step: stepNumber })}{#if step.section}<span class="step-section"> · {step.section}</span>{/if}</h2>
+          <p class="step-text" id="stepText">
+            {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}{#if piece.timer !== undefined}<mark class="duration">{piece.text}</mark>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}{/each}
+          </p>
+          {#if step.timers.length}
+            <div class="step-timers">
+              {#each step.timers as timer, i (i)}
+                {@const running = timerFor(i)}
+                {#if running}
+                  <span class="chip chip-status is-active timer-running">{running.done ? t('timer.rang') : formatClock(timers.left(running))}</span>
+                {:else}
+                  <button type="button" class="btn btn-secondary start-timer" onclick={() => startTimer(i)}>
+                    <!-- Lucide "timer" -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2" /><line x1="12" x2="15" y1="14" y2="11" /><circle cx="12" cy="14" r="8" /></svg>
+                    {t('timer.start', { time: formatDuration(timer.seconds) })}
+                  </button>
+                {/if}
+              {/each}
+            </div>
+          {/if}
+          {#if needs.length}
+            <div class="needs">
+              <h3 class="t-section-label">{t('cook.needs')}</h3>
+              <ul>
+                {#each needs as ing (ing.id)}
+                  {@const shown = showIngredient(ing, factor, units, locale())}
+                  <li>{#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if} {shown.item}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+        <!-- On a tablet or a wide screen, every ingredient sits beside the step, with this step's lit. -->
+        <aside class="step-side" aria-label={t('recipe.ingredients')}>
+          {#each recipe.groups as group, gi (gi)}
+            {#if group.name}<h3 class="t-section-label group-name">{group.name}</h3>{/if}
+            <ul>
+              {#each group.items as ing (ing.id)}
+                {@const shown = showIngredient(ing, factor, units, locale())}
+                <li class:now={step.ingredientIds.includes(ing.id)}>{#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if} {shown.item}</li>
+              {/each}
+            </ul>
           {/each}
-        </div>
-      {/if}
-      {#if needs.length}
-        <div class="needs">
-          <h3 class="t-section-label">{t('cook.needs')}</h3>
-          <ul>
-            {#each needs as ing (ing.id)}
-              {@const shown = showIngredient(ing, factor, units, locale())}
-              <li>{#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if} {shown.item}</li>
-            {/each}
-          </ul>
-        </div>
-      {/if}
+        </aside>
+      </div>
     {:else}
       <h2 class="page-title">{t('cook.doneTitle')}</h2>
       <p class="t-hint">{t('cook.doneHint')}</p>
@@ -542,6 +558,49 @@
   }
   .rating button {
     letter-spacing: -0.1em;
+  }
+  .step-layout,
+  .step-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .step-side {
+    display: none;
+  }
+  /* Tablets and wide screens: the step on the left, the ingredients beside it. */
+  @media (min-width: 900px) {
+    .cook {
+      max-width: 1200px;
+    }
+    .step-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+      align-items: start;
+      gap: var(--space-6);
+    }
+    .step-main .needs {
+      display: none;
+    }
+    .step-side {
+      display: block;
+      position: sticky;
+      top: var(--space-4);
+      padding-left: var(--space-5);
+      border-left: 1px solid var(--border-faint);
+    }
+    .step-side ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      font-size: 1.0625rem;
+      color: var(--text-dim);
+    }
+    .step-side li.now {
+      color: var(--text-strong);
+    }
   }
   .cook-nav {
     position: sticky;
