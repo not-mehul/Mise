@@ -44,7 +44,7 @@ test('cooks a recipe step by step with a timer, then logs it', async ({ page }) 
 
   await page.locator('#btnNextStep').click();
   await expect(page.locator('#cookProgress')).toHaveText('Step 1 of 3');
-  await expect(page.locator('#stepText')).toHaveText('Heat the chilli oil in a small pan until it sizzles.');
+  await expect(page.locator('#stepText')).toHaveText('Heat the chilli oil (2 tbsp) in a small pan until it sizzles.');
   await expect(page.locator('.needs li')).toHaveText(['2 tbsp chilli oil']);
 
   await page.keyboard.press('ArrowRight');
@@ -137,4 +137,14 @@ test('read aloud and the volume key setting live in Settings', async ({ page }) 
   await page.locator('#tabRecipes').click();
   await page.locator('#btnCook').click();
   await expect(page.locator('#btnReadAloud')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('on a wide screen the ingredients sit beside the step, with this step’s lit', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.locator('#btnCook').click();
+  await page.locator('#btnNextStep').click();
+  await expect(page.locator('.step-side')).toBeVisible();
+  await expect(page.locator('.needs')).toBeHidden();
+  await expect(page.locator('.step-side li.now')).toHaveText(['1 tbsp chilli oil']);
+  await expect(page.locator('.step-side li')).toHaveCount(3);
 });

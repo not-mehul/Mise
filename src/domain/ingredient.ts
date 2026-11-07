@@ -5,7 +5,7 @@
 // ============================================================
 
 import { formatQuantity, parseLeadingQuantity } from './quantity';
-import { convert, parseLeadingUnit, unitById, type Unit } from './units';
+import { convertFor, parseLeadingUnit, unitById, unitLabel, type Unit } from './units';
 
 export interface Ingredient {
   id: string;
@@ -109,19 +109,33 @@ export function showIngredient(ing: Ingredient, factor: number, mode: UnitMode, 
   let qty = ing.qty * factor;
   let max = ing.qtyMax !== null ? ing.qtyMax * factor : null;
   if (unit && mode !== 'original') {
-    const c = convert(qty, unit, mode);
+    const c = convertFor(qty, unit, mode, ing.item);
     if (c) {
       const ratio = c.value / qty;
       qty = c.value;
       max = max !== null ? max * ratio : null;
       unit = c.unit;
-      unitText = c.unit.short;
+      unitText = unitLabel(c.unit, max ?? qty);
     }
   }
   const style = unit?.style ?? 'fraction';
   const n = formatQuantity(qty, style, locale);
   const range = max !== null ? `${n}–${formatQuantity(max, style, locale)}` : n;
   return { amount: unitText ? `${range} ${unitText}` : range, item: ing.item, note: ing.note };
+}
+
+/**
+ * A word in the singular, for matching: "tomatoes" → "tomato", "cherries" → "cherry",
+ * "leaves" → "leaf". Words ending in -us or -ss keep their s (couscous, hummus, glass).
+ */
+export function singular(word: string): string {
+  if (word.length <= 3) return word;
+  if (word.endsWith('ies') && word.length > 4) return `${word.slice(0, -3)}y`;
+  if (/(?:ea|oa|i)ves$/.test(word)) return `${word.slice(0, -3)}f`;
+  if (word.endsWith('oes')) return word.slice(0, -2);
+  if (/(?:ss|sh|ch|x)es$/.test(word)) return word.slice(0, -2);
+  if (word.endsWith('s') && !/(?:ss|us|is)$/.test(word)) return word.slice(0, -1);
+  return word;
 }
 
 /** The word a step would use for this ingredient: "plain flour" → "flour". */

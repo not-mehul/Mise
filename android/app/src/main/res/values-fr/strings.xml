@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="shortcut_new">Nouvelle recette</string>
+    <string name="shortcut_new_long">Ajouter une recette</string>
+    <string name="shortcut_groceries">Courses</string>
+    <string name="shortcut_groceries_long">Ouvrir la liste de courses</string>
+    <string name="widget_title">Courses</string>
+    <string name="widget_empty">Rien à acheter</string>
+    <string name="widget_more">+%1$d de plus</string>
+    <string name="widget_description">Votre liste de courses, sans ce qui est coché</string>
+</resources>

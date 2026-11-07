@@ -4,15 +4,23 @@ import type { UnitMode } from '../domain/ingredient';
 import type { RecipeDraft } from '../domain/recipe';
 import type { MiseLink } from '../platform/incoming';
 import type { Incoming } from '../platform/shared';
+import { t } from '../i18n/index.svelte';
 
-export type Tab = 'recipes' | 'groceries' | 'settings';
+export type Tab = 'recipes' | 'plan' | 'groceries' | 'settings';
 
 /** What the Recipes tab shows: the list, one recipe, the editor, or cooking mode over everything. */
 export type Screen =
   | { kind: 'list' }
   | { kind: 'recipe'; id: string }
-  | { kind: 'editor'; draft: RecipeDraft; mode: 'check' | 'edit' | 'write' }
+  /** `owned`: unsaved photos this editor deletes if it is left without saving. */
+  | { kind: 'editor'; draft: RecipeDraft; mode: 'check' | 'edit' | 'write'; owned?: string[] }
   | { kind: 'cook'; id: string; servings: number; units: UnitMode };
+
+/** A step cooking mode should turn to, from a timer's alarm. */
+export interface CookJump {
+  recipeId: string;
+  stepId: string;
+}
 export type ToastKind = 'success' | 'error' | 'info';
 
 export interface ToastAction {
@@ -31,15 +39,6 @@ export interface Toast {
   leaving?: boolean;
 }
 
-export interface ConfirmRequest {
-  title: string;
-  message: string;
-  /** The verb on the committing button: "Restore defaults", not "OK". */
-  action: string;
-  danger?: boolean;
-  resolve: (ok: boolean) => void;
-}
-
 /** How long a toast stays (style.md §8.12): longer when it offers an action. */
 export const TOAST_MS = 4000;
 export const TOAST_ACTION_MS = 6000;
@@ -50,11 +49,12 @@ class UiState {
   tab = $state<Tab>('recipes');
   /** Something to import, from the share sheet or a mise://import link; the New recipe sheet takes it. */
   incoming = $state.raw<Incoming | null>(null);
+  /** Something shared while the editor was open: it waits until the editor closes, so no edits are lost. */
+  private waiting: Incoming | null = null;
   screen = $state.raw<Screen>({ kind: 'list' });
   /** The "New recipe" sheet. */
   newOpen = $state(false);
   toast = $state.raw<Toast | null>(null);
-  confirmRequest = $state.raw<ConfirmRequest | null>(null);
   /** Overlays (dialogs, popups) register here so the Android back button can close them. */
   private closers: (() => void)[] = [];
 
@@ -100,20 +100,6 @@ class UiState {
     toast.action.run();
   }
 
-  /** Asks in a confirm modal (style.md §8.10). Only for what can't be undone. */
-  confirm(request: Omit<ConfirmRequest, 'resolve'>): Promise<boolean> {
-    this.confirmRequest?.resolve(false);
-    return new Promise((resolve) => {
-      this.confirmRequest = {
-        ...request,
-        resolve: (ok) => {
-          this.confirmRequest = null;
-          resolve(ok);
-        },
-      };
-    });
-  }
-
   go(tab: Tab): void {
     this.tab = tab;
     globalThis.scrollTo?.({ top: 0 });
@@ -121,17 +107,43 @@ class UiState {
 
   /** A mise:// link: always lands on Recipes, never changes data (style.md §14.1). */
   openLink(link: MiseLink): void {
-    if (link.kind === 'import') return this.importFrom({ kind: 'link', url: link.url });
+    if (link.kind === 'import') return this.importFrom({ kind: 'link', url: link.url, ask: true });
     this.go('recipes');
     if (link.id) this.openRecipe(link.id);
   }
 
   /** Opens the New recipe sheet on something to import. Nothing is saved until Save recipe. */
   importFrom(incoming: Incoming): void {
+    if (this.screen.kind === 'editor') {
+      this.waiting = incoming;
+      this.go('recipes');
+      this.notify(t('editor.shareWaiting'), 'info');
+      return;
+    }
     if (this.screen.kind === 'cook') this.openRecipe(this.screen.id);
     this.go('recipes');
     this.incoming = incoming;
     this.newOpen = true;
+  }
+
+  /** The New recipe sheet, from the icon's shortcut. An open editor is shown instead, so its edits aren't lost. */
+  newRecipe(): void {
+    this.go('recipes');
+    if (this.screen.kind === 'editor') return;
+    if (this.screen.kind === 'cook') this.openRecipe(this.screen.id);
+    this.newOpen = true;
+  }
+
+  /** Set when an alarm asks cooking mode to turn to a step; cooking mode clears it. */
+  cookJump = $state.raw<CookJump | null>(null);
+
+  /** Cooking mode for a recipe, at a step: from a timer's alarm. The editor stays open if it is. */
+  cookAt(recipeId: string, servings: number, stepId?: string): void {
+    if (this.screen.kind === 'editor') return;
+    if (stepId) this.cookJump = { recipeId, stepId };
+    if (this.tab === 'recipes' && this.screen.kind === 'cook' && this.screen.id === recipeId) return;
+    this.newOpen = false;
+    this.show({ kind: 'cook', id: recipeId, servings, units: 'original' });
   }
 
   show(screen: Screen): void {
@@ -144,8 +156,8 @@ class UiState {
     this.show({ kind: 'recipe', id });
   }
 
-  edit(draft: RecipeDraft, mode: 'check' | 'edit' | 'write'): void {
-    this.show({ kind: 'editor', draft, mode });
+  edit(draft: RecipeDraft, mode: 'check' | 'edit' | 'write', owned?: string[]): void {
+    this.show({ kind: 'editor', draft, mode, owned });
   }
 
   /** Leaves the editor: back to the recipe it was editing, or to the list. */
@@ -153,6 +165,9 @@ class UiState {
     const s = this.screen;
     const id = savedId ?? (s.kind === 'editor' ? s.draft.id : null);
     this.show(id ? { kind: 'recipe', id } : { kind: 'list' });
+    const waiting = this.waiting;
+    this.waiting = null;
+    if (waiting) this.importFrom(waiting);
   }
 
   pushOverlay(close: () => void): () => void {

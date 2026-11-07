@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the Mise icon: straight to a new recipe or the grocery list
+     (LauncherPlugin reads the "open" extra). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new-recipe"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_new"
+        android:shortcutLongLabel="@string/shortcut_new_long">
+        <intent
+            android:action="io.github.notmehul.mise.SHORTCUT"
+            android:targetPackage="io.github.notmehul.mise"
+            android:targetClass="io.github.notmehul.mise.MainActivity">
+            <extra android:name="io.github.notmehul.mise.OPEN" android:value="new" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="groceries"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_groceries"
+        android:shortcutLongLabel="@string/shortcut_groceries_long">
+        <intent
+            android:action="io.github.notmehul.mise.SHORTCUT"
+            android:targetPackage="io.github.notmehul.mise"
+            android:targetClass="io.github.notmehul.mise.MainActivity">
+            <extra android:name="io.github.notmehul.mise.OPEN" android:value="groceries" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -2,6 +2,7 @@
   import { TabRail, ThemeToggle, Toast } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
+  import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import TimerTray from './components/TimerTray.svelte';
@@ -14,6 +15,7 @@
 
   const TABS: { id: Tab; dom: string; panel: string; key: MessageKey }[] = [
     { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes' },
+    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan' },
     { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries' },
     { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings' },
   ];
@@ -28,7 +30,16 @@
   );
   const cooking = $derived(ui.tab === 'recipes' && ui.screen.kind === 'cook' ? ui.screen : null);
   const cookRecipe = $derived(cooking ? library.get(cooking.id) : undefined);
-  const today = $derived(new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
+  // Ticks each minute, so the date in the header turns over at midnight with the app left open.
+  let clock = $state(new Date());
+  $effect(() => {
+    const id = setInterval(() => {
+      const now = new Date();
+      if (now.getDate() !== clock.getDate()) clock = now;
+    }, 60_000);
+    return () => clearInterval(id);
+  });
+  const today = $derived(clock.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
 
   $effect(() => applyTheme(settings.current.theme));
   $effect(() => {
@@ -67,6 +78,8 @@
       <div class="timers-pinned"><TimerTray showRecipe /></div>
       {#if ui.tab === 'recipes'}
         <RecipesView />
+      {:else if ui.tab === 'plan'}
+        <PlanView />
       {:else if ui.tab === 'groceries'}
         <GroceriesView />
       {:else}

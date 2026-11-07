@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cookPages, formatClock, normaliseLog, normalisePlace, resumePlace, RESUME_MS, stepIngredients, type CookPlace } from '../../src/domain/cook';
 import { draftToRecipe, emptyDraft } from '../../src/domain/recipe';
-import { stepPieces } from '../../src/domain/steps';
+import { stepParts } from '../../src/domain/steps';
 
 const recipe = draftToRecipe(
   { ...emptyDraft(), title: 'Pancakes', ingredients: '200 g flour\n2 eggs\n300 ml milk', steps: 'Whisk the flour and eggs.\nAdd the milk and rest 10 minutes.\nFry.' },
@@ -24,7 +24,7 @@ describe('cooking mode pages', () => {
   });
 
   it('cuts a step around its timers', () => {
-    expect(stepPieces(recipe.steps[1]!)).toEqual([{ text: 'Add the milk and rest ' }, { text: '10 minutes', timer: 0 }, { text: '.' }]);
+    expect(stepParts(recipe.steps[1]!, [], 1, 'original')).toEqual([{ text: 'Add the milk and rest ' }, { text: '10 minutes', timer: 0 }, { text: '.' }]);
   });
 });
 

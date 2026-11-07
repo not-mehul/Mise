@@ -59,10 +59,9 @@ function list(v: unknown): unknown[] {
   return Array.isArray(v) ? v : v === undefined || v === null ? [] : [v];
 }
 
-/** Instructions as lines; a HowToSection becomes a "Name:" line before its steps. */
-function instructions(v: unknown): { steps: string[]; groups: boolean } {
+/** Instructions as lines; a HowToSection becomes a "Name:" line before its steps, which starts a section. */
+function instructions(v: unknown): string[] {
   const steps: string[] = [];
-  let groups = false;
   const walk = (x: unknown) => {
     if (typeof x === 'string') {
       const text = /</.test(x) ? htmlToText(x) : decodeEntities(x);
@@ -70,7 +69,8 @@ function instructions(v: unknown): { steps: string[]; groups: boolean } {
     } else if (Array.isArray(x)) x.forEach(walk);
     else if (isObject(x)) {
       if (types(x).includes('HowToSection') || Array.isArray(x.itemListElement)) {
-        groups = true;
+        const name = clean(x.name).replace(/:$/, '');
+        if (name) steps.push(`${name}:`);
         list(x.itemListElement).forEach(walk);
       } else {
         const text = clean(x.text ?? x.name ?? x.description);
@@ -79,7 +79,7 @@ function instructions(v: unknown): { steps: string[]; groups: boolean } {
     }
   };
   walk(v);
-  return { steps, groups };
+  return steps;
 }
 
 function imageUrl(v: unknown): string | null {
@@ -123,11 +123,11 @@ export function draftFromSchema(r: Json, url: string, site: string | null): Sche
   draft.cookMinutes = cook ? String(cook) : '';
   draft.totalMinutes = total && total !== (prep ?? 0) + (cook ?? 0) ? String(total) : '';
   draft.ingredients = list(r.recipeIngredient ?? r.ingredients)
-    .map(clean)
+    // Mealie and some exporters write each ingredient as an object.
+    .map((x) => (isObject(x) ? clean(x.display ?? x.originalText ?? x.note ?? x.text ?? x.name) : clean(x)))
     .filter(Boolean)
     .join('\n');
-  const { steps } = instructions(r.recipeInstructions);
-  draft.steps = steps.join('\n');
+  draft.steps = instructions(r.recipeInstructions).join('\n');
   draft.notes = clean(r.description);
   draft.tags = tags(r);
   draft.source.text = [draft.title, draft.ingredients, draft.steps].filter(Boolean).join('\n\n');

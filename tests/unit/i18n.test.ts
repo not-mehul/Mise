@@ -22,8 +22,8 @@ describe('translations', () => {
   it('interpolates and pluralises per locale', () => {
     const tEn = translateWith(en as Messages, 'en');
     const tDe = translateWith(de, 'de');
-    expect(tEn('recipes.count', { count: 1 })).toBe('1 recipe');
-    expect(tEn('recipes.count', { count: 3 })).toBe('3 recipes');
+    expect(tEn('recipe.ingredientCount', { count: 1 })).toBe('1 ingredient');
+    expect(tEn('recipe.ingredientCount', { count: 3 })).toBe('3 ingredients');
     expect(tDe('settings.version', { version: '1.0.0' })).toBe('Version 1.0.0');
   });
 });

@@ -1,7 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Mise</string>
-    <string name="title_activity_main">Mise</string>
-    <string name="package_name">io.github.notmehul.mise</string>
-    <string name="custom_url_scheme">io.github.notmehul.mise</string>
+    <string name="app_name" translatable="false">Mise</string>
+    <string name="title_activity_main" translatable="false">Mise</string>
+    <string name="package_name" translatable="false">io.github.notmehul.mise</string>
+    <string name="custom_url_scheme" translatable="false">io.github.notmehul.mise</string>
+    <string name="shortcut_new">New recipe</string>
+    <string name="shortcut_new_long">Add a new recipe</string>
+    <string name="shortcut_groceries">Groceries</string>
+    <string name="shortcut_groceries_long">Open the grocery list</string>
+    <string name="widget_title">Groceries</string>
+    <string name="widget_empty">Nothing to buy</string>
+    <string name="widget_more">+%1$d more</string>
+    <string name="widget_description">Your grocery list, ticked items left out</string>
 </resources>

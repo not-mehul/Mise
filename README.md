@@ -28,18 +28,36 @@ The plan has six phases, each one pull request:
 | 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | Done |
 | 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | Next |
 
+After phase 5 a review round added: a week's meal plan, "what can I cook" from
+what you have, cook again and new sorts, several photos per recipe, unit
+conversion by weight (cups of flour to grams) and oven temperatures, amounts
+inside each step, sections in the method, notes on grocery items, full
+backups (groceries, plan and settings too) where deletions stay deleted,
+import from Paprika and schema.org JSON (Mealie and others), sending a recipe
+as a file, sync through a folder, alarm-style timers, home screen shortcuts
+and a grocery widget, hands-free cooking by voice, and a wide-screen cooking
+layout.
+
 ## Cooking mode
 
 *Start cooking* on a recipe opens it full screen at the servings and units you
 chose. A *mise en place* page lists everything to gather, then each step gets
-its own screen in large type with the ingredients it names underneath. Move
+its own screen in large type with the ingredients it names underneath, and
+their amounts after each one in the text ("the flour (200 g)"). On a tablet or
+a wide screen the whole ingredient list sits beside the step instead, with this
+step's ingredients lit. Move
 with the buttons, a sideways swipe, a tap on the outer edge, the arrow keys or,
-on Android, the volume keys (down is next). *All steps* jumps anywhere.
+on Android, the volume keys (down is next). *All steps* jumps anywhere. With
+*Hands-free cooking* on, say "next", "back", "repeat", "timer", "ingredients"
+or "stop" in any of the four languages (`src/domain/voice.ts`); Mise listens
+only while cooking mode is open (`HandsFreePlugin.java`).
 
 A duration in a step is a *Start* button. Timers run side by side, stay pinned
-at the top of the app until you clear them, and ring with a system
-notification at the moment they end (`src/state/timers.svelte.ts`), so they
-work with the phone locked or Mise closed. The screen stays on while cooking
+at the top of the app until you clear them, and ring like an alarm at the
+moment they end, on the alarm sound stream and until you press *Stop*
+(`TimerAlarmPlugin.java`, `src/state/timers.svelte.ts`), so they work with the
+phone locked or Mise closed. Opening the alarm brings back cooking mode at the
+step that set it. The screen stays on while cooking
 mode is open, and *Read steps aloud* speaks each step with the phone's voice.
 Close and come back within four hours to pick up at the same step. The last
 page marks the recipe as cooked, with an optional rating and note, in the
@@ -58,7 +76,33 @@ suggestions from what you added before.
 Aisles come from an offline word list in English, Spanish, French and German
 (`src/domain/groceries.ts`). Move an item and Mise remembers where it goes.
 Ticked items sink to the bottom of their aisle, *Clear ticked* can be undone,
-and *Share* sends what is left as plain text.
+and *Share* sends what is left as plain text. Tap an item to fix its name or
+add a note for the shop. A home screen widget shows what is left to buy, and
+long-pressing the Mise icon goes straight to the list or a new recipe.
+
+## Plan
+
+The *Plan* tab shows the week ahead and the three after it. *Plan it* on a
+recipe, or *Add* on a day, puts a recipe on that day; the button at the top
+sends every planned recipe not yet on the grocery list there in one go, and
+*Cook* opens cooking mode at the planned servings.
+
+## Backups and sync
+
+A backup (`src/lib/backup.ts`) is one .zip with the recipes and their photos,
+collections, the grocery list, the plan and your preferences. Importing one
+merges: the newest copy of each recipe wins, and something deleted on one side
+stays deleted (`src/state/tombstones.ts`). *Import a file* also reads a Paprika
+export (.paprikarecipes) and schema.org recipe JSON from Mealie and other apps
+(`src/import/files.ts`), and on Android these files can be shared or opened
+with Mise. *Send as a file* on a recipe shares it, photos included, for another
+Mise to open.
+
+*Sync through a folder* (Settings, Android) keeps a copy of everything as
+`mise-sync.zip` in a folder you pick (`FolderSyncPlugin.java`,
+`src/state/sync.svelte.ts`). Mise merges it in on launch and return and writes
+it back when you leave; keep the folder the same across phones with Syncthing,
+Drive or Nextcloud. There is still no Mise server.
 
 ## How a recipe is read
 
@@ -83,6 +127,9 @@ the same review screen, and nothing is saved until you press *Save recipe*.
   build has no recogniser and offers paste instead.
 - **A link you already saved** offers to open that recipe instead, or to import
   it again.
+- **Recipe files**: a Mise backup or recipe, a Paprika export or schema.org
+  JSON. One recipe opens on the review screen; a file of several asks before
+  it adds them.
 
 Pasted text goes through `src/import/text.ts`. It finds the title, servings and
 times, then the ingredients and method by their headings (in English, Spanish,
@@ -137,7 +184,7 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | Job | Covers |
 | --- | --- |
 | Lint, typecheck, unit tests | `npm run check` and a production build |
-| End-to-end | Playwright: paste and write recipes, the Unsorted list, scaling, search, collections, delete and undo, backup and restore, theme and language, axe in both themes |
+| End-to-end | Playwright: paste and write recipes, the Unsorted list, scaling, search, collections, delete and undo, backup and restore, cooking mode on a phone and a wide screen, theme and language, axe on every tab in both themes |
 | Android build | Debug, R8-minified release and test APKs, Android lint |
 | Android emulator (API 36, 37) | Espresso-Web test driving the real WebView, then a launch smoke test of the minified release build. API 37 is non-blocking, as in Ledger |
 
@@ -146,13 +193,13 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | Path | What it is |
 | --- | --- |
 | `src/App.svelte`, `src/main.ts` | Shell and bootstrap |
-| `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Groceries and Settings; `ui/` holds Sheet, Modal and EmptyState |
-| `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, settings |
-| `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `photo.ts` (reading order for recognised text) |
-| `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos |
-| `src/state/` | The library, settings, export/import/backups, and UI state (screens, toast, the Android back stack) |
+| `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Plan, Groceries and Settings; `ui/` holds Sheet, Switch and EmptyState |
+| `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, the plan, pantry matching, voice commands, settings |
+| `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `photo.ts` (reading order for recognised text), `files.ts` (backups, Paprika, recipe JSON) |
+| `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos, groceries, the plan, deletions |
+| `src/state/` | The library, groceries, plan, timers, settings, export/import/backups, folder sync, the widget, and UI state (screens, toast, the Android back stack) |
 | `src/lib/` | Backups (.zip with fflate) and Markdown |
-| `src/platform/` | `links.ts`, `mise://` and share-sheet intake, text recognition, files out, sharing, photo downscaling, theme and system bars |
+| `src/platform/` | `links.ts`, `mise://` and share-sheet intake, text recognition, timer alarms, the sync folder, shortcuts and widget, voice, files out, sharing, photo downscaling, theme and system bars |
 | `src/i18n/` | English, Spanish, French and German; `en.ts` is the reference and a unit test checks the others |
 | `src/styles/app.css` | Imports `dusk-dawn/tokens.css` and `dusk-dawn/components.css` first, then Mise's layout |
 | `tests/unit`, `tests/e2e` | Vitest and Playwright |

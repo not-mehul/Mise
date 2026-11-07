@@ -19,9 +19,15 @@ export interface Settings {
   aisles: Record<string, Aisle>;
   /** The screen stays on while the grocery list is open. */
   listAwake: boolean;
+  /** Cooking mode listens for "next", "back" and "repeat" (Android). */
+  handsFree: boolean;
+  /** A folder (Android storage access URI) where Mise keeps a copy to sync through, or none. */
+  syncFolder?: { uri: string; name: string };
+  /** When the copy in the sync folder was last merged (ISO time). */
+  lastSyncAt?: string;
 }
 
-export const DEFAULT_SETTINGS: Settings = { theme: 'system', language: 'system', readAloud: false, volumeKeys: true, staples: DEFAULT_STAPLES, aisles: {}, listAwake: false };
+export const DEFAULT_SETTINGS: Settings = { theme: 'system', language: 'system', readAloud: false, volumeKeys: true, staples: DEFAULT_STAPLES, aisles: {}, listAwake: false, handsFree: false };
 
 const THEMES: readonly ThemeSetting[] = ['system', 'light', 'dark'];
 const LANGUAGES: readonly LanguageSetting[] = ['system', 'en', 'es', 'fr', 'de'];
@@ -40,7 +46,11 @@ export function normaliseSettings(value: unknown): Settings {
         ? Object.fromEntries(Object.entries(v.aisles as Record<string, unknown>).filter((e): e is [string, Aisle] => AISLES.includes(e[1] as Aisle)).slice(0, 500))
         : {},
     listAwake: typeof v.listAwake === 'boolean' ? v.listAwake : DEFAULT_SETTINGS.listAwake,
+    handsFree: typeof v.handsFree === 'boolean' ? v.handsFree : DEFAULT_SETTINGS.handsFree,
   };
+  const folder = v.syncFolder as Partial<{ uri: unknown; name: unknown }> | undefined;
+  if (folder && typeof folder.uri === 'string' && /^content:\/\//.test(folder.uri)) settings.syncFolder = { uri: folder.uri, name: typeof folder.name === 'string' ? folder.name : '' };
+  if (typeof v.lastSyncAt === 'string' && !Number.isNaN(Date.parse(v.lastSyncAt))) settings.lastSyncAt = v.lastSyncAt;
   if (typeof v.lastBackupAt === 'string' && !Number.isNaN(Date.parse(v.lastBackupAt))) settings.lastBackupAt = v.lastBackupAt;
   return settings;
 }

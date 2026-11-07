@@ -70,9 +70,9 @@ describe('the library', () => {
   it('merges a backup: new recipes added, the newest copy wins', async () => {
     const a = await library.save(draft('A'));
     const json = buildJson([{ ...a, title: 'A (newer)', updatedAt: '2999-01-01T00:00:00.000Z' }, { ...a, id: 'other', title: 'B' }], []);
-    const data = parseBackup(new TextEncoder().encode(json));
+    const data = await parseBackup(new TextEncoder().encode(json));
     const summary = await library.merge(data.recipes, data.collections, data.photos);
-    expect(summary).toEqual({ added: 1, updated: 1, unchanged: 0 });
+    expect(summary).toEqual({ added: 1, updated: 1, unchanged: 0, removed: 0 });
     expect(library.get(a.id)?.title).toBe('A (newer)');
     expect(library.get('other')?.title).toBe('B');
   });
@@ -81,17 +81,17 @@ describe('the library', () => {
 describe('backups', () => {
   it('round-trips recipes, collections and photos through a zip', async () => {
     const photo = { id: 'p1', full: new Blob([new Uint8Array([1, 2, 3])]), thumb: new Blob([new Uint8Array([4])]) };
-    const r = await library.save({ ...draft('Bread'), photoId: 'p1' });
+    const r = await library.save({ ...draft('Bread'), photoIds: ['p1'] });
     const zip = await buildBackupZip([r], [{ id: 'c', name: 'Baking', createdAt: r.createdAt }], [photo]);
-    const back = parseBackup(zip);
+    const back = await parseBackup(zip);
     expect(back.recipes[0]!.title).toBe('Bread');
     expect(back.collections[0]!.name).toBe('Baking');
     expect(new Uint8Array(await back.photos.get('p1')!.full.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
   });
 
-  it('refuses files that are not Mise backups', () => {
-    expect(() => parseBackup(new TextEncoder().encode('{"app":"ledger","entries":[]}'))).toThrow();
-    expect(() => parseBackup(new TextEncoder().encode('hello'))).toThrow();
+  it('refuses files that are not Mise backups', async () => {
+    await expect(parseBackup(new TextEncoder().encode('{"app":"ledger","entries":[]}'))).rejects.toThrow();
+    await expect(parseBackup(new TextEncoder().encode('hello'))).rejects.toThrow();
   });
 
   it('is due weekly and keeps the newest five', () => {

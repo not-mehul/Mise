@@ -3,10 +3,12 @@
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { volumeKeysAvailable } from '../platform/device';
   import { isNative } from '../platform/output';
+  import { voiceAvailable } from '../platform/voice';
   import { groceries } from '../state/groceries.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
-  import { backupNow, exportAs, importFile } from '../state/transfer';
+  import { sync, type SyncResult } from '../state/sync.svelte';
+  import { backupNow, exportAs, importFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
   import Switch from './ui/Switch.svelte';
 
@@ -54,9 +56,15 @@
     if (file) void run(() => importFile(file));
   }
 
+  async function syncing(task: () => Promise<SyncResult>) {
+    const result = await task().catch(() => 'failed' as const);
+    if (result === 'synced') ui.notify(t('sync.done'), 'success');
+    else if (result === 'failed') ui.notify(t('sync.failed'), 'error');
+  }
+
   async function removeCollection(id: string, name: string) {
-    await library.removeCollection(id);
-    ui.notify(t('data.collectionDeleted', { name }), 'info');
+    const undo = await library.removeCollection(id);
+    ui.notify(t('data.collectionDeleted', { name }), 'info', { label: t('action.undo'), run: () => void undo() });
   }
 </script>
 
@@ -100,6 +108,9 @@
     <div class="section-head"><h2>{t('settings.cooking')}</h2></div>
     <div class="switches">
       <Switch id="switchReadAloud" checked={settings.current.readAloud} label={t('settings.readAloud')} hint={t('settings.readAloudHint')} onchange={(on) => settings.update({ readAloud: on })} />
+      {#if voiceAvailable}
+        <Switch id="switchHandsFree" checked={settings.current.handsFree} label={t('settings.handsFree')} hint={t('settings.handsFreeHint')} onchange={(on) => settings.update({ handsFree: on })} />
+      {/if}
       {#if volumeKeysAvailable}
         <Switch id="switchVolumeKeys" checked={settings.current.volumeKeys} label={t('settings.volumeKeys')} hint={t('settings.volumeKeysHint')} onchange={(on) => settings.update({ volumeKeys: on })} />
       {/if}
@@ -123,7 +134,7 @@
     {/if}
     <form class="staple-form" onsubmit={addStaple}>
       <input class="input" id="stapleInput" maxlength="60" enterkeyhint="done" placeholder={t('settings.addStaple')} aria-label={t('settings.addStaple')} bind:value={staple} />
-      <button type="submit" class="btn btn-muted" disabled={!staple.trim()}>{t('recipe.addCollection')}</button>
+      <button type="submit" class="btn btn-muted" disabled={!staple.trim()}>{t('action.add')}</button>
     </form>
   </div>
 
@@ -155,11 +166,29 @@
       <p class="t-hint">{t('data.lastBackup', { when: settings.current.lastBackupAt ? relativeTime(settings.current.lastBackupAt) : t('data.never') })}</p>
     {/if}
     <label class="btn btn-muted file-btn" class:busy>
-      {t('data.import')}
-      <input type="file" id="importFile" class="visually-hidden" accept=".zip,.json,application/zip,application/json" disabled={busy} onchange={(e) => onImport(e.currentTarget)} />
+      {t('data.importAny')}
+      <input type="file" id="importFile" class="visually-hidden" accept=".zip,.json,.paprikarecipes,.paprikarecipe,application/zip,application/json" disabled={busy} onchange={(e) => onImport(e.currentTarget)} />
     </label>
-    <p class="t-hint">{t('data.importHint')}</p>
+    <p class="t-hint">{t('data.importAnyHint')}</p>
   </div>
+
+  {#if isNative}
+    <div class="panel" id="syncPanel">
+      <div class="section-head"><h2>{t('sync.title')}</h2></div>
+      {#if settings.current.syncFolder}
+        <p class="t-body-small">{t('sync.folder', { name: settings.current.syncFolder.name || t('sync.unnamed') })}</p>
+        <p class="t-hint">{t('sync.last', { when: settings.current.lastSyncAt ? relativeTime(settings.current.lastSyncAt) : t('data.never') })}</p>
+        <div class="data-actions">
+          <button type="button" class="btn btn-secondary" id="btnSyncNow" disabled={sync.busy} onclick={() => syncing(() => sync.now())}>{t('sync.now')}</button>
+          <button type="button" class="btn btn-muted" disabled={sync.busy} onclick={() => syncing(() => sync.choose())}>{t('sync.change')}</button>
+          <button type="button" class="btn btn-muted" disabled={sync.busy} onclick={() => sync.stop()}>{t('sync.stop')}</button>
+        </div>
+      {:else}
+        <button type="button" class="btn btn-secondary" id="btnSyncChoose" disabled={sync.busy} onclick={() => syncing(() => sync.choose())}>{t('sync.choose')}</button>
+      {/if}
+      <p class="t-hint">{t('sync.hint')}</p>
+    </div>
+  {/if}
 
   <div class="panel">
     <div class="section-head"><h2>{t('settings.about')}</h2></div>

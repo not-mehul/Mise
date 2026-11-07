@@ -7,6 +7,34 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { isNative } from './output';
 
+// ─── Chime ──────────────────────────────────────────────────
+
+let audio: AudioContext | null = null;
+
+/** Three short beeps, for a timer ending while Mise is open in a browser (the phone rings through its alarm). */
+export function chime(): void {
+  const Ctx = globalThis.AudioContext ?? (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    audio ??= new Ctx();
+    void audio.resume();
+    const start = audio.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, start + i * 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.3, start + i * 0.35 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + i * 0.35 + 0.25);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(start + i * 0.35);
+      osc.stop(start + i * 0.35 + 0.3);
+    }
+  } catch {
+    // No sound: the toast and the buzz still show it.
+  }
+}
+
 // ─── Keep awake ──────────────────────────────────────────────
 
 let wakeLock: { release: () => Promise<void> } | null = null;

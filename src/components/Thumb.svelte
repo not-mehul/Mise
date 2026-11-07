@@ -2,13 +2,15 @@
   // A recipe's photo thumbnail, or a quiet placeholder.
   import { library } from '../state/library.svelte';
 
-  let { photoId, alt = '' }: { photoId: string | null; alt?: string } = $props();
+  // `full`: the 1600 px copy, for a picture shown large (the recipe's hero).
+  let { photoId, alt = '', full = false }: { photoId: string | null; alt?: string; full?: boolean } = $props();
   let url = $state<string | null>(null);
 
   $effect(() => {
     const id = photoId;
+    const large = full;
     url = null;
-    if (id) void library.thumbUrl(id).then((u) => (url = id === photoId ? u : url));
+    if (id) void library.thumbUrl(id, large).then((u) => (url = id === photoId ? u : url));
   });
 </script>
 

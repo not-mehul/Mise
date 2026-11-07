@@ -1,15 +1,19 @@
 <script lang="ts">
   import { showIngredient, type UnitMode } from '../domain/ingredient';
-  import { recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
-  import { formatDuration, stepPieces } from '../domain/steps';
+  import { groceryKey } from '../domain/groceries';
+  import { linkHost, recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
+  import { formatDuration, stepParts } from '../domain/steps';
   import type { CookEntry } from '../domain/cook';
   import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { shareText } from '../platform/share';
   import { library } from '../state/library.svelte';
-  import { recipeMarkdown } from '../state/transfer';
+  import { plan } from '../state/plan.svelte';
+  import { recipeMarkdown, shareRecipeFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
   import AddGroceries from './AddGroceries.svelte';
+  import PlanDayPicker from './PlanDayPicker.svelte';
   import Thumb from './Thumb.svelte';
+  import Sheet from './ui/Sheet.svelte';
 
   let { recipe }: { recipe: Recipe } = $props();
 
@@ -23,6 +27,8 @@
   let have = $state<Record<string, boolean>>({});
   let newCollection = $state('');
   let adding = $state(false);
+  let planning = $state(false);
+  let viewing = $state<string | null>(null);
   const total = $derived(totalTime(recipe));
 
   const UNIT_MODES: { value: UnitMode; key: MessageKey }[] = [
@@ -40,7 +46,7 @@
     const title = recipe.title;
     const { undo, forget } = await library.remove(recipe.id);
     ui.show({ kind: 'list' });
-    ui.notify(t('recipe.deleted', { title }), 'info', { label: t('action.undo'), run: () => void undo(), dismissed: () => void forget() });
+    ui.notify(t('recipe.deleted', { title }), 'info', { label: t('action.undo'), run: () => void undo(), dismissed: () => void forget().then(() => plan.forgetRecipe(recipe.id)) });
   }
 
   function cook() {
@@ -51,6 +57,12 @@
     const before = recipe.log;
     await library.setLog(recipe.id, before.filter((e) => e !== entry));
     ui.notify(t('log.deleted'), 'info', { label: t('action.undo'), run: () => void library.setLog(recipe.id, before) });
+  }
+
+  /** Another recipe this ingredient names ("Pizza dough"), so it opens from here. */
+  function subRecipe(item: string) {
+    const key = groceryKey(item);
+    return key ? library.recipes.find((r) => r.id !== recipe.id && groceryKey(r.title) === key) : undefined;
   }
 
   const day = (iso: string) => new Date(iso).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -69,7 +81,14 @@
   </button>
 
   {#if recipe.photoId}
-    <div class="hero"><Thumb photoId={recipe.photoId} alt={recipe.title} /></div>
+    <button type="button" class="hero" aria-label={t('recipe.viewPhoto', { n: 1 })} onclick={() => (viewing = recipe.photoId)}><Thumb photoId={recipe.photoId} alt={recipe.title} full /></button>
+  {/if}
+  {#if recipe.photoIds.length > 1}
+    <ul class="gallery" id="recipeGallery" aria-label={t('recipe.photos')}>
+      {#each recipe.photoIds as id, i (id)}
+        <li><button type="button" class="gallery-photo" aria-label={t('recipe.viewPhoto', { n: i + 1 })} onclick={() => (viewing = id)}><Thumb photoId={id} /></button></li>
+      {/each}
+    </ul>
   {/if}
 
   <header class="recipe-head">
@@ -95,6 +114,7 @@
         {t('cook.start')}
       </button>
     {/if}
+    <button type="button" class="btn btn-secondary" id="btnPlan" onclick={() => (planning = true)}>{t('plan.planIt')}</button>
     {#if recipe.groups.length}
       <button type="button" class="btn btn-secondary" id="btnAddGroceries" onclick={() => (adding = true)}>{t('groceries.addFromRecipe')}</button>
     {/if}
@@ -102,6 +122,7 @@
   <div class="tools">
     <button type="button" class="btn btn-muted" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
     <button type="button" class="btn btn-muted" id="btnShare" onclick={share}>{t('recipe.share')}</button>
+    <button type="button" class="btn btn-muted" id="btnShareFile" onclick={() => void shareRecipeFile(recipe)}>{t('recipe.shareFile')}</button>
     <button type="button" class="btn btn-muted" id="btnDelete" onclick={remove}>{t('recipe.delete')}</button>
   </div>
 
@@ -133,12 +154,13 @@
         <ul class="ingredients">
           {#each group.items as ing (ing.id)}
             {@const shown = showIngredient(ing, factor, units, locale())}
+            {@const sub = subRecipe(ing.item)}
             <li>
               <label class="ingredient" class:have={have[ing.id]}>
                 <input type="checkbox" bind:checked={have[ing.id]} />
                 <span>
                   {#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if}
-                  <span class="item">{shown.item}</span>{#if shown.note}<span class="note">, {shown.note}</span>{/if}
+                  {#if sub}<button type="button" class="item sub-recipe" onclick={(e) => { e.preventDefault(); ui.openRecipe(sub.id); }}>{shown.item}</button>{:else}<span class="item">{shown.item}</span>{/if}{#if shown.note}<span class="note">, {shown.note}</span>{/if}
                 </span>
               </label>
             </li>
@@ -152,10 +174,11 @@
     <section class="panel" aria-labelledby="methodHead">
       <div class="section-head"><h3 id="methodHead">{t('recipe.method')}</h3></div>
       <ol class="steps">
-        {#each recipe.steps as step (step.id)}
-          <li>
-            {#each stepPieces(step) as piece, pi (pi)}
-              {#if piece.timer !== undefined}<span class="timer" title={t('recipe.timer', { time: formatDuration(step.timers[piece.timer]!.seconds) })}>{piece.text}</span>{:else}{piece.text}{/if}
+        {#each recipe.steps as step, si (step.id)}
+          {#if step.section && step.section !== recipe.steps[si - 1]?.section}<li class="step-section t-section-label" aria-hidden="true">{step.section}</li>{/if}
+          <li class="step" value={si + 1}>
+            {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}
+              {#if piece.timer !== undefined}<span class="timer" title={t('recipe.timer', { time: formatDuration(step.timers[piece.timer]!.seconds) })}>{piece.text}</span>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}
             {/each}
           </li>
         {/each}
@@ -213,7 +236,7 @@
   <footer class="source t-hint">
     <b>{t('recipe.source')}.</b>
     {#if recipe.source.url}
-      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? new URL(recipe.source.url).hostname}</a>
+      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
     {:else}
       {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
     {/if}
@@ -226,8 +249,18 @@
   {/if}
 </article>
 
+{#if viewing}
+  <Sheet title={recipe.title} onclose={() => (viewing = null)}>
+    <div class="photo-view"><Thumb photoId={viewing} alt={recipe.title} full /></div>
+  </Sheet>
+{/if}
+
+{#if planning}
+  <PlanDayPicker {recipe} servings={base ? servings : null} onclose={() => (planning = false)} />
+{/if}
+
 {#if adding}
-  <AddGroceries {recipe} {factor} {units} onclose={() => (adding = false)} />
+  <AddGroceries sources={[{ recipe, factor }]} {units} onclose={() => (adding = false)} />
 {/if}
 
 <style>
@@ -241,9 +274,41 @@
     padding-left: 0.75rem;
   }
   .hero {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
     aspect-ratio: 16 / 10;
     border-radius: var(--radius);
     overflow: hidden;
+  }
+  .gallery {
+    list-style: none;
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    margin-top: calc(-1 * var(--space-3));
+  }
+  .gallery-photo {
+    display: block;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: none;
+    cursor: zoom-in;
+  }
+  .photo-view :global(.thumb) {
+    height: auto;
+  }
+  .photo-view :global(img) {
+    height: auto;
+    max-height: 75dvh;
+    object-fit: contain;
   }
   .recipe-head {
     display: flex;
@@ -351,6 +416,26 @@
     font-family: var(--font-mono);
     font-size: 0.875rem;
     color: var(--accent-amber);
+  }
+  .step-section {
+    list-style: none;
+    margin: var(--space-2) 0 calc(-1 * var(--space-2)) -1.5rem;
+    font-family: var(--font-sans);
+  }
+  .inline-amount {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .sub-recipe {
+    font: inherit;
+    color: var(--accent-bright);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
   }
   .timer {
     color: var(--accent-amber);

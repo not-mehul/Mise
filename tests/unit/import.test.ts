@@ -74,7 +74,7 @@ describe('schema.org', () => {
     expect(draft.servings).toBe('4');
     expect([draft.prepMinutes, draft.cookMinutes, draft.totalMinutes]).toEqual(['10', '15', '']);
     expect(draft.ingredients).toBe('200 g spaghetti\n1 lemon, zested\n100 g peas');
-    expect(draft.steps).toBe('Boil the pasta for 10 minutes.\nStir in the lemon and peas.');
+    expect(draft.steps).toBe('Pasta:\nBoil the pasta for 10 minutes.\nStir in the lemon and peas.');
     expect(draft.notes).toBe('A weeknight favourite.');
     expect(draft.tags).toBe('dinner, quick, vegetarian');
     expect(draft.source).toMatchObject({ kind: 'url', url: 'https://example.com/pasta', author: 'Ana Ruiz' });

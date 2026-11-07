@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="shortcut_new">Neues Rezept</string>
+    <string name="shortcut_new_long">Ein Rezept hinzufügen</string>
+    <string name="shortcut_groceries">Einkauf</string>
+    <string name="shortcut_groceries_long">Die Einkaufsliste öffnen</string>
+    <string name="widget_title">Einkauf</string>
+    <string name="widget_empty">Nichts zu kaufen</string>
+    <string name="widget_more">+%1$d weitere</string>
+    <string name="widget_description">Deine Einkaufsliste, ohne Abgehaktes</string>
+</resources>

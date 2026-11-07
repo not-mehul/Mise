@@ -2,19 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Mise needs the network only to fetch a recipe page you share with it;
-         everything else works offline, photo text recognition included. No
+         everything else works offline, photo text recognition included. The
+         microphone is asked for only when hands-free cooking is turned on
+         (HandsFreePlugin), and used only while cooking mode is open. No
          storage or camera permissions:
          backups go to Documents/ (app-created files) and the share sheet,
          and photos come from the system picker or camera app. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Cooking timers ring as notifications at the moment they end, with
-         the screen off or another app open. Local Notifications adds
-         POST_NOTIFICATIONS (asked for on the first timer) and
-         SCHEDULE_EXACT_ALARM; USE_EXACT_ALARM keeps them exact on Android 13
-         and later without sending you to the "Alarms & reminders" screen,
-         because timers are what cooking mode is for. -->
+    <!-- Cooking timers ring like an alarm at the moment they end, with the
+         screen off or another app open (TimerAlarmPlugin). Local
+         Notifications adds POST_NOTIFICATIONS (asked for on the first timer)
+         and SCHEDULE_EXACT_ALARM; USE_EXACT_ALARM keeps them exact on
+         Android 13 and later without sending you to the "Alarms & reminders"
+         screen, because timers are what cooking mode is for. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Auto Backup (Google account) copies the recipe library, which lives
          in the WebView's IndexedDB. -->
@@ -40,6 +43,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Long-press shortcuts: a new recipe, the grocery list (LauncherPlugin). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
             <!-- mise:// links from the other apps (style.md §14.1), read by
                  src/platform/incoming.ts. -->
             <intent-filter>
@@ -65,8 +72,48 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <!-- Recipe files sent or opened with Mise: a Mise backup or shared
+                 recipe, a Paprika export, schema.org JSON (src/import/files.ts).
+                 Opening one shows what it holds before anything is saved. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/gzip" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/gzip" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
 
         </activity>
+
+        <!-- The grocery list on the home screen. -->
+        <receiver
+            android:name=".GroceryWidget"
+            android:exported="true"
+            android:label="@string/widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grocery_widget" />
+        </receiver>
+
+        <!-- Rings a kitchen timer at the moment it ends (TimerAlarmPlugin). -->
+        <receiver
+            android:name=".TimerAlarmReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -82,6 +129,10 @@
     <!-- Lets the app ask whether a sibling app is installed before handing
          off to it (style.md §14.1). -->
     <queries>
+        <!-- The phone's speech recognizer, for hands-free cooking. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="waymark" />

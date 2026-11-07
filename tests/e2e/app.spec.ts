@@ -8,6 +8,8 @@ test.beforeEach(async ({ page }) => {
 
 test('opens on an empty recipe collection and moves between tabs', async ({ page }) => {
   await expect(page.locator('#viewRecipes .empty-title')).toHaveText('No recipes yet');
+  await page.locator('#tabPlan').click();
+  await expect(page.locator('#viewPlan')).toBeVisible();
   await page.locator('#tabGroceries').click();
   await expect(page.locator('#viewGroceries .empty-title')).toHaveText('Nothing to buy');
   await page.locator('#tabSettings').click();
@@ -37,7 +39,7 @@ for (const theme of ['dark', 'light'] as const) {
   test(`has no accessibility violations in ${theme === 'dark' ? 'Dusk' : 'Dawn'}`, async ({ page }) => {
     await page.locator('#tabSettings').click();
     await page.locator(`[data-theme-option="${theme}"]`).click();
-    for (const tab of ['#tabRecipes', '#tabGroceries', '#tabSettings']) {
+    for (const tab of ['#tabRecipes', '#tabPlan', '#tabGroceries', '#tabSettings']) {
       await page.locator(tab).click();
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations, tab).toEqual([]);

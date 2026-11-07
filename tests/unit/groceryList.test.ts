@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../../src/data/db';
-import { formatAmounts } from '../../src/domain/groceries';
+import { formatAmounts, type GroceryItem } from '../../src/domain/groceries';
 import { groceries } from '../../src/state/groceries.svelte';
 import { settings } from '../../src/state/settings.svelte';
 
@@ -48,5 +48,28 @@ describe('the grocery list', () => {
     expect(settings.current.staples).toContain('olive oil');
     groceries.setStaple('olive oil', false);
     expect(settings.current.staples).toEqual(['salt']);
+  });
+
+  it('edits an item, its amount and note, and merges it into a twin', async () => {
+    await groceries.addTyped('2 lemons');
+    await groceries.addTyped('200 g butter');
+    const butter = groceries.list.find((g) => g.item === 'butter')!;
+    await groceries.edit(butter.id, '300 g butter', 'unsalted');
+    expect(groceries.list.find((g) => g.id === butter.id)).toMatchObject({ note: 'unsalted' });
+    expect(formatAmounts(groceries.list.find((g) => g.id === butter.id)!.amounts)).toBe('300 g');
+    await groceries.edit(butter.id, '1 lemon', '');
+    expect(groceries.list.map((g) => [g.item, formatAmounts(g.amounts)])).toEqual([['lemons', '3']]);
+    await groceries.init();
+    expect(groceries.list).toHaveLength(1);
+  });
+});
+
+describe('the home screen widget', () => {
+  it('lists what is left to buy, in shop order, with amounts', async () => {
+    const { widgetLines } = await import('../../src/state/widget.svelte');
+    const item = (id: string, item: string, aisle: GroceryItem['aisle'], ticked = false, amounts: GroceryItem['amounts'] = []) =>
+      ({ id, item, key: item, aisle, amounts, recipeIds: [], ticked, addedAt: '2026-11-01T00:00:00Z' }) as GroceryItem;
+    const lines = widgetLines([item('a', 'bread', 'bakery'), item('b', 'lemons', 'produce', false, [{ qty: 2, qtyMax: null, unit: null }] as GroceryItem['amounts']), item('c', 'milk', 'dairy', true)]);
+    expect(lines).toEqual(['lemons · 2', 'bread']);
   });
 });

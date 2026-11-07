@@ -25,6 +25,8 @@
   /** The link the pasted text came from (an Instagram caption), kept as the source. */
   let pasteFrom = $state<string | null>(null);
   let saved = $state.raw<Recipe | null>(null);
+  /** The link step was opened by a mise:// link rather than by the person. */
+  let fromApp = $state(false);
 
   // Each read gets a number; a read that finishes after the sheet closed or another began is dropped.
   let run = 0;
@@ -42,7 +44,10 @@
       error = '';
       if (incoming.kind === 'link') {
         url = incoming.url;
-        void readLink();
+        // Any web page can fire a mise:// link, so Mise shows it and waits for Read (style.md §14.1).
+        fromApp = !!incoming.ask;
+        if (fromApp) step = 'link';
+        else void readLink();
       } else if (incoming.kind === 'text') {
         text = incoming.text;
         pasteFrom = null;
@@ -58,7 +63,7 @@
   /** Hands a draft to the review screen, unless the sheet moved on while it was read. */
   async function finish(ticket: number, draft: RecipeDraft) {
     if (!open || ticket !== run) {
-      if (draft.photoId) await library.dropPhoto(draft.photoId);
+      for (const id of draft.photoIds) await library.dropPhoto(id);
       return;
     }
     onclose();
@@ -87,7 +92,7 @@
     step = 'reading';
     const result = await fromLink(link);
     if (!open || ticket !== run) {
-      if (result.ok && result.draft.photoId) await library.dropPhoto(result.draft.photoId);
+      if (result.ok) for (const id of result.draft.photoIds) await library.dropPhoto(id);
       return;
     }
     if (result.ok) return finish(ticket, result.draft);
@@ -221,7 +226,7 @@
         <span class="t-field-label">{t('new.linkLabel')}</span>
         <!-- svelte-ignore a11y_autofocus -->
         <input class="input" id="linkInput" type="url" inputmode="url" autocomplete="off" placeholder="https://" autofocus bind:value={url} oninput={() => (error = '')} aria-invalid={!!error} />
-        {#if error}<p class="field-error">{error}</p>{:else}<p class="field-hint">{t('new.linkHint')}</p>{/if}
+        {#if error}<p class="field-error">{error}</p>{:else}<p class="field-hint">{t(fromApp ? 'new.linkFromApp' : 'new.linkHint')}</p>{/if}
       </label>
       <div class="btn-row actions">
         <button type="button" class="btn btn-muted" onclick={() => go('choose')}>{t('action.back')}</button>

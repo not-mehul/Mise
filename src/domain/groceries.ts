@@ -4,9 +4,9 @@
 // kind of unit and keeping the rest side by side.
 // ============================================================
 
-import { type Ingredient, type UnitMode } from './ingredient';
+import { singular, type Ingredient, type UnitMode } from './ingredient';
 import { formatQuantity } from './quantity';
-import { convert, unitById } from './units';
+import { convertFor, unitById, unitLabel } from './units';
 
 export const AISLES = ['produce', 'dairy', 'meat', 'bakery', 'pantry', 'frozen', 'other'] as const;
 export type Aisle = (typeof AISLES)[number];
@@ -33,6 +33,8 @@ export interface GroceryItem {
   recipeIds: string[];
   ticked: boolean;
   addedAt: string;
+  /** A note for the shop: "the big tin", "ripe ones". */
+  note?: string;
 }
 
 /** Something to add: from a recipe's ingredient or typed in. */
@@ -42,15 +44,6 @@ export interface GroceryAddition extends GroceryAmount {
 }
 
 // ---------- matching ----------
-
-function singular(word: string): string {
-  if (word.length <= 3) return word;
-  if (word.endsWith('ies') && word.length > 4) return `${word.slice(0, -3)}y`;
-  if (word.endsWith('oes')) return word.slice(0, -2);
-  if (/(?:ss|sh|ch|x)es$/.test(word)) return word.slice(0, -2);
-  if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
-  return word;
-}
 
 /** The name items are matched by: lower case, single spaces, each word singular. */
 export function groceryKey(item: string): string {
@@ -85,6 +78,8 @@ const PHRASES: [string, Aisle][] = [
   ['ice cream', 'frozen'],
   ['baking powder', 'pantry'],
   ['baking soda', 'pantry'],
+  ['bay leaf', 'pantry'],
+  ['lemon juice', 'produce'],
   ['pimienta negra', 'pantry'],
   ['poivre noir', 'pantry'],
   ['schwarzer pfeffer', 'pantry'],
@@ -97,10 +92,10 @@ const PHRASES: [string, Aisle][] = [
 const WORDS: Record<Exclude<Aisle, 'other'>, string[]> = {
   frozen: ['frozen', 'congelado', 'congelada', 'surgelé', 'surgelée', 'tiefkühl', 'tk'],
   produce: [
-    'apple', 'avocado', 'banana', 'basil', 'beetroot', 'berry', 'blueberry', 'broccoli', 'cabbage', 'carrot', 'cauliflower', 'celery', 'cherry', 'chilli', 'chili', 'chive', 'cilantro', 'coriander', 'courgette', 'cucumber', 'dill', 'eggplant', 'aubergine', 'fennel', 'garlic', 'ginger', 'grape', 'herb', 'kale', 'leek', 'lemon', 'lettuce', 'lime', 'mango', 'mint', 'mushroom', 'onion', 'orange', 'parsley', 'pea', 'peach', 'pear', 'plum', 'potato', 'pumpkin', 'radish', 'raspberry', 'rocket', 'arugula', 'rosemary', 'sage', 'salad', 'scallion', 'shallot', 'spinach', 'squash', 'strawberry', 'thyme', 'tomato', 'zucchini', 'capsicum', 'jalapeño', 'jalapeno', 'sweetcorn',
+    'apple', 'asparagus', 'avocado', 'banana', 'basil', 'beetroot', 'berry', 'blueberry', 'broccoli', 'cabbage', 'carrot', 'cauliflower', 'celery', 'cherry', 'chilli', 'chili', 'chive', 'cilantro', 'coriander', 'courgette', 'cucumber', 'dill', 'eggplant', 'aubergine', 'fennel', 'garlic', 'ginger', 'grape', 'herb', 'kale', 'leek', 'lemon', 'lettuce', 'lime', 'mango', 'mint', 'mushroom', 'onion', 'orange', 'parsley', 'pea', 'peach', 'pear', 'plum', 'potato', 'pumpkin', 'radish', 'raspberry', 'rocket', 'arugula', 'rosemary', 'sage', 'salad', 'scallion', 'shallot', 'spinach', 'squash', 'strawberry', 'thyme', 'tomato', 'zucchini', 'capsicum', 'jalapeño', 'jalapeno', 'sweetcorn',
     'cebolla', 'ajo', 'tomate', 'patata', 'papa', 'zanahoria', 'limón', 'pimiento', 'perejil', 'lechuga', 'manzana', 'plátano', 'champiñón', 'seta', 'pepino', 'calabacín', 'espinaca', 'puerro', 'albahaca',
     'oignon', 'ail', 'carotte', 'citron', 'poivron', 'persil', 'laitue', 'champignon', 'concombre', 'échalote', 'épinard', 'poireau', 'pomme', 'basilic', 'ciboulette',
-    'zwiebel', 'knoblauch', 'kartoffel', 'möhre', 'karotte', 'zitrone', 'paprika', 'petersilie', 'salat', 'apfel', 'pilz', 'gurke', 'spinat', 'lauch', 'schnittlauch', 'ingwer',
+    'zwiebel', 'knoblauch', 'kartoffel', 'möhre', 'karotte', 'zitrone', 'paprikaschote', 'petersilie', 'salat', 'apfel', 'pilz', 'gurke', 'spinat', 'lauch', 'schnittlauch', 'ingwer',
   ],
   dairy: [
     'milk', 'butter', 'cream', 'cheese', 'yogurt', 'yoghurt', 'egg', 'parmesan', 'mozzarella', 'feta', 'ricotta', 'mascarpone', 'buttermilk', 'cheddar', 'halloumi',
@@ -112,16 +107,17 @@ const WORDS: Record<Exclude<Aisle, 'other'>, string[]> = {
     'chicken', 'beef', 'pork', 'lamb', 'bacon', 'ham', 'sausage', 'mince', 'steak', 'turkey', 'duck', 'fish', 'salmon', 'tuna', 'cod', 'prawn', 'shrimp', 'anchovy', 'chorizo', 'pancetta', 'prosciutto', 'mussel', 'squid', 'thigh', 'drumstick',
     'pollo', 'carne', 'cerdo', 'ternera', 'cordero', 'jamón', 'salchicha', 'pescado', 'salmón', 'atún', 'gamba', 'langostino',
     'poulet', 'bœuf', 'boeuf', 'porc', 'agneau', 'jambon', 'lardon', 'saucisse', 'poisson', 'saumon', 'thon', 'crevette',
-    'hähnchen', 'huhn', 'rind', 'schwein', 'lamm', 'speck', 'schinken', 'wurst', 'hackfleisch', 'fisch', 'lachs', 'thunfisch', 'garnele',
+    'hähnchen', 'huhn', 'rindfleisch', 'rinderhack', 'schwein', 'lamm', 'speck', 'schinken', 'wurst', 'hackfleisch', 'fisch', 'lachs', 'thunfisch', 'garnele',
   ],
   bakery: ['bread', 'baguette', 'bun', 'tortilla', 'pita', 'naan', 'brioche', 'croissant', 'loaf', 'sourdough', 'bagel', 'pan', 'pain', 'brot', 'brötchen'],
   pantry: [
-    'flour', 'sugar', 'salt', 'pepper', 'peppercorn', 'oil', 'vinegar', 'rice', 'pasta', 'spaghetti', 'noodle', 'lentil', 'chickpea', 'bean', 'stock', 'broth', 'sauce', 'honey', 'syrup', 'oat', 'yeast', 'cocoa', 'chocolate', 'vanilla', 'spice', 'cumin', 'cinnamon', 'nutmeg', 'oregano', 'mustard', 'ketchup', 'mayonnaise', 'soy', 'tahini', 'peanut', 'nut', 'almond', 'walnut', 'cashew', 'seed', 'sesame', 'cornflour', 'cornstarch', 'breadcrumb', 'couscous', 'quinoa', 'raisin', 'coffee', 'tea', 'wine', 'miso', 'curry',
+    'flour', 'sugar', 'salt', 'pepper', 'peppercorn', 'oil', 'vinegar', 'rice', 'pasta', 'spaghetti', 'noodle', 'lentil', 'chickpea', 'bean', 'stock', 'broth', 'sauce', 'honey', 'syrup', 'oat', 'yeast', 'cocoa', 'chocolate', 'vanilla', 'spice', 'cumin', 'cinnamon', 'nutmeg', 'oregano', 'mustard', 'ketchup', 'mayonnaise', 'soy', 'tahini', 'peanut', 'nut', 'almond', 'walnut', 'cashew', 'seed', 'sesame', 'cornflour', 'cornstarch', 'breadcrumb', 'couscous', 'quinoa', 'raisin', 'coffee', 'tea', 'wine', 'miso', 'curry', 'paprika', 'turmeric', 'cardamom', 'allspice', 'chickpea', 'hummus',
     'harina', 'azúcar', 'sal', 'aceite', 'vinagre', 'arroz', 'caldo', 'miel', 'levadura', 'especia', 'comino', 'canela', 'garbanzo', 'lenteja',
     'farine', 'sucre', 'sel', 'huile', 'vinaigre', 'riz', 'pâte', 'bouillon', 'levure', 'cannelle', 'poivre', 'moutarde',
     'mehl', 'zucker', 'salz', 'öl', 'essig', 'reis', 'nudel', 'brühe', 'honig', 'hefe', 'zimt', 'pfeffer', 'senf',
   ],
 };
+const SPICE = /(?:^|\s)(?:powder|ground|dried|flake|seasoning|spice|pulver|gemahlen|getrocknet|polvo|molido|seco|en poudre|moulu|séché)(?:$|\s)/;
 const ORDER: Exclude<Aisle, 'other'>[] = ['frozen', 'meat', 'dairy', 'bakery', 'produce', 'pantry'];
 
 function wordAisle(word: string): Aisle | null {
@@ -142,6 +138,8 @@ export function aisleFor(item: string, overrides: Record<string, Aisle> = {}, un
   if (remembered) return remembered;
   for (const [phrase, aisle] of PHRASES) if (key.includes(phrase)) return aisle;
   if (unit === 'can') return 'pantry';
+  // Dried and ground things are spices, whatever plant they came from: chilli powder, ground ginger.
+  if (SPICE.test(key)) return 'pantry';
   const words = key.split(' ');
   if (words.includes('frozen') || words.some((w) => wordAisle(w) === 'frozen')) return 'frozen';
   // The last word names the thing ("chilli oil" is oil), the others describe it.
@@ -164,7 +162,7 @@ export function additionFrom(ing: Ingredient, factor: number, mode: UnitMode, re
   let unit = ing.unit;
   const known = unitById(ing.unit);
   if (known && qty !== null && mode !== 'original') {
-    const c = convert(qty, known, mode);
+    const c = convertFor(qty, known, mode, ing.item);
     if (c) {
       const ratio = c.value / qty;
       qty = c.value;
@@ -218,7 +216,7 @@ export function formatAmounts(amounts: GroceryAmount[], locale = 'en'): string {
   return amounts
     .map((a) => {
       const unit = unitById(a.unit);
-      const words = unit ? unit.short : (a.unitText ?? '');
+      const words = unit ? unitLabel(unit, a.qtyMax ?? a.qty) : (a.unitText ?? '');
       if (a.qty === null) return words;
       const style = unit?.style ?? 'fraction';
       const n = formatQuantity(a.qty, style, locale);
@@ -291,7 +289,7 @@ export function listToText(list: GroceryItem[], title: string, aisleName: (a: Ai
     lines.push('', aisleName(aisle));
     for (const g of items) {
       const amount = formatAmounts(g.amounts, locale);
-      lines.push(`- ${amount ? `${amount} ` : ''}${g.item}`);
+      lines.push(`- ${amount ? `${amount} ` : ''}${g.item}${g.note ? ` (${g.note})` : ''}`);
     }
   }
   return lines.join('\n');
@@ -320,5 +318,6 @@ export function normaliseItem(value: unknown): GroceryItem | null {
     recipeIds: Array.isArray(v.recipeIds) ? v.recipeIds.filter((r): r is string => typeof r === 'string') : [],
     ticked: v.ticked === true,
     addedAt: typeof v.addedAt === 'string' ? v.addedAt : new Date().toISOString(),
+    ...(typeof v.note === 'string' && v.note.trim() ? { note: v.note.trim().slice(0, 200) } : {}),
   };
 }
