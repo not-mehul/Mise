@@ -96,7 +96,7 @@ test('a timer rings when it runs out', async ({ page }) => {
   await page.clock.install();
   await page.getByRole('button', { name: 'Start 3 min' }).click();
   await page.clock.runFor(181_000);
-  await expect(page.locator('#timerTray .timer-chip.done')).toHaveCount(1);
+  await expect(page.locator('#timerTray .timer-chip.is-done')).toHaveCount(1);
   await expect(page.locator('.toast')).toContainText('the Step 2 timer is done');
   await page.getByRole('button', { name: 'Clear the Step 2 timer' }).click();
   await expect(page.locator('#timerTray')).toHaveCount(0);

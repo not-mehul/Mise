@@ -12,7 +12,7 @@ own text recognition, and the network is used only to fetch a page you share.
 It uses **Editorial Dusk & Dawn**, the design system it shares with Waymark,
 BookShelf, Ledger, Colophon and Rosetta. Everything shared (tokens, Fraunces,
 the shared components and the colour checks) comes from one package,
-[`dusk-dawn`](https://github.com/not-mehul/dusk-dawn), pinned at `v1.0.0`; its
+[`dusk-dawn`](https://github.com/not-mehul/dusk-dawn), pinned at `v1.1.0`; its
 `style.md` is the spec. Design changes go into that package, never into Mise.
 
 ## Status

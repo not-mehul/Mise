@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Switch } from 'dusk-dawn';
   import type { LanguageSetting, ThemeSetting } from '../domain/settings';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { volumeKeysAvailable } from '../platform/device';
@@ -10,7 +11,6 @@
   import { sync, type SyncResult } from '../state/sync.svelte';
   import { backupNow, exportAs, importFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
-  import Switch from './ui/Switch.svelte';
 
   const THEMES: { value: ThemeSetting; key: MessageKey }[] = [
     { value: 'system', key: 'settings.themeSystem' },
