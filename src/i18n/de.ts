@@ -305,6 +305,17 @@ const de: Messages = {
   'data.importAnyHint': 'Eine Mise-Sicherung oder ein Rezept (.zip, .json), ein Paprika-Export (.paprikarecipes) oder schema.org-Rezept-JSON aus Mealie und anderen Apps. Sicherungen werden zusammengeführt, die neueste Fassung jedes Rezepts gewinnt.',
   'data.sharedFile': 'Rezepte in dieser Datei: {count}. Zu Mise hinzufügen?',
   'action.import': 'Importieren',
+  'sync.title': 'Über einen Ordner abgleichen',
+  'sync.choose': 'Ordner wählen',
+  'sync.change': 'Ordner ändern',
+  'sync.stop': 'Abgleich beenden',
+  'sync.now': 'Jetzt abgleichen',
+  'sync.folder': 'Abgleich mit {name}',
+  'sync.unnamed': 'dem gewählten Ordner',
+  'sync.last': 'Zuletzt abgeglichen: {when}',
+  'sync.done': 'Abgeglichen',
+  'sync.failed': 'Abgleich fehlgeschlagen. Prüfe, ob der Ordner noch da ist.',
+  'sync.hint': 'Mise legt eine Kopie von allem als mise-sync.zip in diesem Ordner ab und führt sie bei jedem Öffnen zusammen. Halte den Ordner mit Syncthing, Drive oder Nextcloud auf allen Handys gleich. Die neueste Fassung jedes Rezepts gewinnt, und Gelöschtes bleibt gelöscht.',
 };
 
 export default de;

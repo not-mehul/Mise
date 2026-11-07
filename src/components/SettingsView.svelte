@@ -6,6 +6,7 @@
   import { groceries } from '../state/groceries.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
+  import { sync, type SyncResult } from '../state/sync.svelte';
   import { backupNow, exportAs, importFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
   import Switch from './ui/Switch.svelte';
@@ -52,6 +53,12 @@
     const file = input.files?.[0];
     input.value = '';
     if (file) void run(() => importFile(file));
+  }
+
+  async function syncing(task: () => Promise<SyncResult>) {
+    const result = await task().catch(() => 'failed' as const);
+    if (result === 'synced') ui.notify(t('sync.done'), 'success');
+    else if (result === 'failed') ui.notify(t('sync.failed'), 'error');
   }
 
   async function removeCollection(id: string, name: string) {
@@ -160,6 +167,24 @@
     </label>
     <p class="t-hint">{t('data.importAnyHint')}</p>
   </div>
+
+  {#if isNative}
+    <div class="panel" id="syncPanel">
+      <div class="section-head"><h2>{t('sync.title')}</h2></div>
+      {#if settings.current.syncFolder}
+        <p class="t-body-small">{t('sync.folder', { name: settings.current.syncFolder.name || t('sync.unnamed') })}</p>
+        <p class="t-hint">{t('sync.last', { when: settings.current.lastSyncAt ? relativeTime(settings.current.lastSyncAt) : t('data.never') })}</p>
+        <div class="data-actions">
+          <button type="button" class="btn btn-secondary" id="btnSyncNow" disabled={sync.busy} onclick={() => syncing(() => sync.now())}>{t('sync.now')}</button>
+          <button type="button" class="btn btn-muted" disabled={sync.busy} onclick={() => syncing(() => sync.choose())}>{t('sync.change')}</button>
+          <button type="button" class="btn btn-muted" disabled={sync.busy} onclick={() => sync.stop()}>{t('sync.stop')}</button>
+        </div>
+      {:else}
+        <button type="button" class="btn btn-secondary" id="btnSyncChoose" disabled={sync.busy} onclick={() => syncing(() => sync.choose())}>{t('sync.choose')}</button>
+      {/if}
+      <p class="t-hint">{t('sync.hint')}</p>
+    </div>
+  {/if}
 
   <div class="panel">
     <div class="section-head"><h2>{t('settings.about')}</h2></div>

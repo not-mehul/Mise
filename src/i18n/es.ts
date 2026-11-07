@@ -305,6 +305,17 @@ const es: Messages = {
   'data.importAnyHint': 'Una copia o receta de Mise (.zip, .json), una exportación de Paprika (.paprikarecipes) o JSON de recetas schema.org de Mealie y otras apps. Las copias se combinan y gana la versión más reciente de cada receta.',
   'data.sharedFile': 'Recetas en ese archivo: {count}. ¿Añadirlas a Mise?',
   'action.import': 'Importar',
+  'sync.title': 'Sincronizar con una carpeta',
+  'sync.choose': 'Elegir una carpeta',
+  'sync.change': 'Cambiar carpeta',
+  'sync.stop': 'Dejar de sincronizar',
+  'sync.now': 'Sincronizar ahora',
+  'sync.folder': 'Sincronizando con {name}',
+  'sync.unnamed': 'la carpeta elegida',
+  'sync.last': 'Última sincronización: {when}',
+  'sync.done': 'Sincronizado',
+  'sync.failed': 'No se pudo sincronizar. Comprueba que la carpeta sigue ahí.',
+  'sync.hint': 'Mise guarda una copia de todo en mise-sync.zip en esta carpeta y la combina cada vez que abres Mise. Mantén la carpeta igual en tus teléfonos con Syncthing, Drive o Nextcloud. Gana la copia más reciente de cada receta y lo borrado sigue borrado.',
 };
 
 export default es;

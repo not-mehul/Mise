@@ -311,6 +311,17 @@ const en = {
   'data.importAnyHint': 'A Mise backup or recipe (.zip, .json), a Paprika export (.paprikarecipes) or schema.org recipe JSON from Mealie and other apps. Backups merge, and the newest copy of each recipe wins.',
   'data.sharedFile': 'Recipes in that file: {count}. Add them to Mise?',
   'action.import': 'Import',
+  'sync.title': 'Sync through a folder',
+  'sync.choose': 'Choose a folder',
+  'sync.change': 'Change folder',
+  'sync.stop': 'Stop syncing',
+  'sync.now': 'Sync now',
+  'sync.folder': 'Syncing with {name}',
+  'sync.unnamed': 'the chosen folder',
+  'sync.last': 'Last synced: {when}',
+  'sync.done': 'Synced',
+  'sync.failed': 'Couldn’t sync. Check that the folder is still there.',
+  'sync.hint': 'Mise keeps a copy of everything in mise-sync.zip in this folder and merges it in each time you open Mise. Keep the folder in step across phones with Syncthing, Drive or Nextcloud. The newest copy of each recipe wins, and deletions stay deleted.',
 } as const;
 
 export default en;

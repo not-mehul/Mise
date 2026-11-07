@@ -305,6 +305,17 @@ const fr: Messages = {
   'data.importAnyHint': 'Une sauvegarde ou une recette Mise (.zip, .json), un export Paprika (.paprikarecipes) ou du JSON de recettes schema.org depuis Mealie et d’autres apps. Les sauvegardes fusionnent, la copie la plus récente de chaque recette l’emporte.',
   'data.sharedFile': 'Recettes dans ce fichier : {count}. Les ajouter à Mise ?',
   'action.import': 'Importer',
+  'sync.title': 'Synchroniser par un dossier',
+  'sync.choose': 'Choisir un dossier',
+  'sync.change': 'Changer de dossier',
+  'sync.stop': 'Arrêter la synchro',
+  'sync.now': 'Synchroniser',
+  'sync.folder': 'Synchronisé avec {name}',
+  'sync.unnamed': 'le dossier choisi',
+  'sync.last': 'Dernière synchro : {when}',
+  'sync.done': 'Synchronisé',
+  'sync.failed': 'Synchronisation impossible. Vérifiez que le dossier existe toujours.',
+  'sync.hint': 'Mise garde une copie de tout dans mise-sync.zip dans ce dossier et la fusionne à chaque ouverture. Gardez le dossier identique sur vos téléphones avec Syncthing, Drive ou Nextcloud. La copie la plus récente de chaque recette l’emporte, et ce qui est supprimé le reste.',
 };
 
 export default fr;

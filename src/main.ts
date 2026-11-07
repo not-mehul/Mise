@@ -15,6 +15,7 @@ import { library } from './state/library.svelte';
 import { plan } from './state/plan.svelte';
 import { tombstones } from './state/tombstones';
 import { settings } from './state/settings.svelte';
+import { sync } from './state/sync.svelte';
 import { autoBackupIfDue, importBytes } from './state/transfer.svelte';
 import { ui } from './state/ui.svelte';
 import './styles/app.css';
@@ -34,7 +35,13 @@ async function start(): Promise<void> {
     void CapacitorApp.addListener('backButton', () => {
       if (!ui.back()) void CapacitorApp.exitApp();
     });
-    void CapacitorApp.addListener('resume', () => void autoBackupIfDue());
+    void CapacitorApp.addListener('resume', () => {
+      void autoBackupIfDue();
+      void sync.now();
+    });
+    // Leaving Mise writes the sync folder's copy, so another phone sees the change.
+    void CapacitorApp.addListener('pause', () => void sync.push());
+    void sync.now();
     // mise:// links from the other apps (style.md §14.1).
     void listenForLinks((link) => ui.openLink(link));
     // "Share to Mise" from other apps: a link, a caption or photos.

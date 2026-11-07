@@ -20,6 +20,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(VolumeKeysPlugin.class);
         registerPlugin(TextRecognitionPlugin.class);
         registerPlugin(ShareIntakePlugin.class);
+        registerPlugin(FolderSyncPlugin.class);
         super.onCreate(savedInstanceState);
     }
 

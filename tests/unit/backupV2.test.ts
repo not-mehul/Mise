@@ -96,3 +96,45 @@ describe('recipe files shared from another app', () => {
     await vi.waitFor(() => expect(library.recipes.map((r) => r.title).sort()).toEqual(['A', 'B']));
   });
 });
+
+describe('sync through a folder', () => {
+  it('merges the other phone’s copy, writes everything back, and skips a file it has already seen', async () => {
+    const { createSync, SYNC_FILE } = await import('../../src/state/sync.svelte');
+    const { bytesToBase64 } = await import('../../src/lib/base64');
+    const files = new Map<string, { data: string; modified: number }>();
+    let clock = 1;
+    let reads = 0;
+    const io = {
+      pick: async () => ({ uri: 'content://tree/sync', name: 'Sync' }),
+      release: async () => undefined,
+      read: async ({ file, since }: { file: string; since?: number }) => {
+        const f = files.get(file);
+        if (!f) return {};
+        if (f.modified === since) return { modified: f.modified };
+        reads++;
+        return f;
+      },
+      write: async ({ file, data }: { file: string; data: string }) => {
+        files.set(file, { data, modified: ++clock });
+        return { modified: clock };
+      },
+    };
+    // The other phone's copy has a recipe this one hasn't.
+    await library.save({ ...emptyDraft(), title: 'From the other phone', ingredients: 'x', steps: 'y' });
+    files.set(SYNC_FILE, { data: bytesToBase64(await backupBytes()), modified: 1 });
+    await fresh();
+    await library.save({ ...emptyDraft(), title: 'Mine', ingredients: 'x', steps: 'y' });
+
+    const s = createSync(io);
+    expect(await s.choose()).toBe('synced');
+    expect(library.recipes.map((r) => r.title).sort()).toEqual(['From the other phone', 'Mine']);
+    const back = await parseBackup(Uint8Array.from(atob(files.get(SYNC_FILE)!.data), (c) => c.charCodeAt(0)));
+    expect(back.recipes).toHaveLength(2);
+    expect(reads).toBe(1);
+    await s.now();
+    expect(reads).toBe(1);
+    await s.stop();
+    expect(await s.now()).toBe('off');
+    expect(settings.current.syncFolder).toBeUndefined();
+  });
+});
