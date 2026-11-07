@@ -243,7 +243,7 @@ const es: Messages = {
   'settings.readAloudHint': 'El modo cocina lee cada paso al llegar a él, con la voz del teléfono.',
   'settings.volumeKeys': 'Las teclas de volumen pasan los pasos',
   'settings.volumeKeysHint': 'Bajar volumen para el siguiente paso, subir para volver.',
-  'settings.cookingHint': 'La pantalla sigue encendida mientras el modo cocina está abierto. Los temporizadores suenan con una notificación aunque el teléfono esté bloqueado.',
+  'settings.cookingHint': 'La pantalla sigue encendida mientras el modo cocina está abierto. Los temporizadores suenan como una alarma aunque el teléfono esté bloqueado.',
 
   'action.close': 'Cerrar',
   'action.back': "Atrás",
@@ -317,6 +317,10 @@ const es: Messages = {
   'sync.failed': 'No se pudo sincronizar. Comprueba que la carpeta sigue ahí.',
   'sync.hint': 'Mise guarda una copia de todo en mise-sync.zip en esta carpeta y la combina cada vez que abres Mise. Mantén la carpeta igual en tus teléfonos con Syncthing, Drive o Nextcloud. Gana la copia más reciente de cada receta y lo borrado sigue borrado.',
   'action.stop': 'Detener',
+  'cook.handsFree': 'Manos libres: escucha “siguiente”, “atrás”, “repite”, “temporizador”',
+  'cook.handsFreeRefused': 'Mise no puede usar el micrófono, así que manos libres está desactivado.',
+  'settings.handsFree': 'Cocinar con manos libres',
+  'settings.handsFreeHint': 'En el modo cocina, di “siguiente”, “atrás”, “repite”, “temporizador”, “ingredientes” o “para”. Mise solo escucha con el modo cocina abierto.',
 };
 
 export default es;

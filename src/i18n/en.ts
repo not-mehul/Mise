@@ -249,7 +249,7 @@ const en = {
   'settings.readAloudHint': 'Cooking mode speaks each step as you reach it, in the phone’s voice.',
   'settings.volumeKeys': 'Volume keys turn steps',
   'settings.volumeKeysHint': 'Volume down for the next step, up to go back.',
-  'settings.cookingHint': 'The screen stays on while cooking mode is open. Timers ring with a notification even when the phone is locked.',
+  'settings.cookingHint': 'The screen stays on while cooking mode is open. Timers ring like an alarm even when the phone is locked.',
 
   'action.close': 'Close',
   'action.back': 'Back',
@@ -323,6 +323,10 @@ const en = {
   'sync.failed': 'Couldn’t sync. Check that the folder is still there.',
   'sync.hint': 'Mise keeps a copy of everything in mise-sync.zip in this folder and merges it in each time you open Mise. Keep the folder in step across phones with Syncthing, Drive or Nextcloud. The newest copy of each recipe wins, and deletions stay deleted.',
   'action.stop': 'Stop',
+  'cook.handsFree': 'Hands-free: listen for “next”, “back”, “repeat”, “timer”',
+  'cook.handsFreeRefused': 'Mise can’t use the microphone, so hands-free is off.',
+  'settings.handsFree': 'Hands-free cooking',
+  'settings.handsFreeHint': 'In cooking mode, say “next”, “back”, “repeat”, “timer”, “ingredients” or “stop”. Mise listens only while cooking mode is open.',
 } as const;
 
 export default en;

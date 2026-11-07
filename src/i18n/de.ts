@@ -243,7 +243,7 @@ const de: Messages = {
   'settings.readAloudHint': 'Der Kochmodus liest jeden Schritt vor, sobald du ihn erreichst, mit der Stimme des Telefons.',
   'settings.volumeKeys': 'Lautstärketasten blättern',
   'settings.volumeKeysHint': 'Leiser für den nächsten Schritt, lauter für zurück.',
-  'settings.cookingHint': 'Der Bildschirm bleibt an, solange der Kochmodus offen ist. Timer klingeln mit einer Benachrichtigung, auch wenn das Telefon gesperrt ist.',
+  'settings.cookingHint': 'Der Bildschirm bleibt an, solange der Kochmodus offen ist. Timer klingeln wie ein Wecker, auch wenn das Telefon gesperrt ist.',
 
   'action.close': 'Schließen',
   'action.back': "Zurück",
@@ -317,6 +317,10 @@ const de: Messages = {
   'sync.failed': 'Abgleich fehlgeschlagen. Prüfe, ob der Ordner noch da ist.',
   'sync.hint': 'Mise legt eine Kopie von allem als mise-sync.zip in diesem Ordner ab und führt sie bei jedem Öffnen zusammen. Halte den Ordner mit Syncthing, Drive oder Nextcloud auf allen Handys gleich. Die neueste Fassung jedes Rezepts gewinnt, und Gelöschtes bleibt gelöscht.',
   'action.stop': 'Stopp',
+  'cook.handsFree': 'Freihändig: hört auf „weiter“, „zurück“, „wiederholen“, „Timer“',
+  'cook.handsFreeRefused': 'Mise kann das Mikrofon nicht nutzen, daher ist freihändig aus.',
+  'settings.handsFree': 'Freihändig kochen',
+  'settings.handsFreeHint': 'Sage im Kochmodus „weiter“, „zurück“, „wiederholen“, „Timer“, „Zutaten“ oder „stopp“. Mise hört nur zu, solange der Kochmodus offen ist.',
 };
 
 export default de;

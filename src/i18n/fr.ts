@@ -243,7 +243,7 @@ const fr: Messages = {
   'settings.readAloudHint': 'Le mode cuisine lit chaque étape quand vous y arrivez, avec la voix du téléphone.',
   'settings.volumeKeys': 'Les touches de volume tournent les étapes',
   'settings.volumeKeysHint': 'Volume bas pour l’étape suivante, haut pour revenir.',
-  'settings.cookingHint': 'L’écran reste allumé tant que le mode cuisine est ouvert. Les minuteurs sonnent avec une notification même téléphone verrouillé.',
+  'settings.cookingHint': 'L’écran reste allumé tant que le mode cuisine est ouvert. Les minuteurs sonnent comme un réveil, même téléphone verrouillé.',
 
   'action.close': 'Fermer',
   'action.back': "Retour",
@@ -317,6 +317,10 @@ const fr: Messages = {
   'sync.failed': 'Synchronisation impossible. Vérifiez que le dossier existe toujours.',
   'sync.hint': 'Mise garde une copie de tout dans mise-sync.zip dans ce dossier et la fusionne à chaque ouverture. Gardez le dossier identique sur vos téléphones avec Syncthing, Drive ou Nextcloud. La copie la plus récente de chaque recette l’emporte, et ce qui est supprimé le reste.',
   'action.stop': 'Arrêter',
+  'cook.handsFree': 'Mains libres : écoute « suivant », « retour », « répète », « minuteur »',
+  'cook.handsFreeRefused': 'Mise ne peut pas utiliser le micro, le mode mains libres est désactivé.',
+  'settings.handsFree': 'Cuisiner les mains libres',
+  'settings.handsFreeHint': 'En mode cuisine, dites « suivant », « retour », « répète », « minuteur », « ingrédients » ou « arrête ». Mise n’écoute que lorsque le mode cuisine est ouvert.',
 };
 
 export default fr;

@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Mise needs the network only to fetch a recipe page you share with it;
-         everything else works offline, photo text recognition included. No
+         everything else works offline, photo text recognition included. The
+         microphone is asked for only when hands-free cooking is turned on
+         (HandsFreePlugin), and used only while cooking mode is open. No
          storage or camera permissions:
          backups go to Documents/ (app-created files) and the share sheet,
          and photos come from the system picker or camera app. -->
@@ -15,6 +17,7 @@
          Android 13 and later without sending you to the "Alarms & reminders"
          screen, because timers are what cooking mode is for. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Auto Backup (Google account) copies the recipe library, which lives
          in the WebView's IndexedDB. -->
@@ -126,6 +129,10 @@
     <!-- Lets the app ask whether a sibling app is installed before handing
          off to it (style.md §14.1). -->
     <queries>
+        <!-- The phone's speech recognizer, for hands-free cooking. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="waymark" />

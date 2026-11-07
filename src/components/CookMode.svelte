@@ -9,7 +9,9 @@
   import { formatDuration, stepParts } from '../domain/steps';
   import { locale, t } from '../i18n/index.svelte';
   import { captureVolumeKeys, keepAwake, tick } from '../platform/device';
-  import { speak, stopSpeaking } from '../platform/speech';
+  import { voiceCommand } from '../domain/voice';
+  import { isSpeaking, speak, stopSpeaking } from '../platform/speech';
+  import { listen, voiceAvailable } from '../platform/voice';
   import { loadPlace, savePlace } from '../state/cookPlace';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
@@ -92,6 +94,68 @@
   $effect(() => {
     if (!settings.current.readAloud) stopSpeaking();
   });
+
+  // Hands-free: "next", "back", "repeat", "timer", "ingredients", "stop".
+  let listening = $state(false);
+  $effect(() => {
+    if (!settings.current.handsFree || !voiceAvailable) return;
+    let stop: (() => void) | null = null;
+    let gone = false;
+    void listen(locale(), (texts) => untrack(() => heard(texts)), () => {
+      listening = false;
+      settings.update({ handsFree: false });
+      ui.notify(t('cook.handsFreeRefused'), 'error');
+    }).then((off) => {
+      if (gone) off();
+      else {
+        stop = off;
+        listening = settings.current.handsFree;
+      }
+    });
+    return () => {
+      gone = true;
+      listening = false;
+      stop?.();
+    };
+  });
+
+  function sayStep() {
+    if (step) void speak(`${t('cook.step', { step: stepNumber })}. ${step.text}`, locale());
+  }
+
+  function heard(texts: string[]) {
+    if (isSpeaking() && voiceCommand(texts) !== 'stop') return;
+    switch (voiceCommand(texts)) {
+      case 'next':
+        go(page + 1);
+        // Read aloud reads the new step by itself.
+        if (!settings.current.readAloud) sayStep();
+        break;
+      case 'back':
+        go(page - 1);
+        if (!settings.current.readAloud) sayStep();
+        break;
+      case 'repeat':
+        sayStep();
+        break;
+      case 'timer': {
+        const i = step?.timers.findIndex((_, n) => !timerFor(n)) ?? -1;
+        if (i >= 0) startTimer(i);
+        break;
+      }
+      case 'ingredients': {
+        const list = (current.kind === 'prep' ? recipe.groups.flatMap((g) => g.items) : needs).map((ing) => {
+          const shown = showIngredient(ing, factor, units, locale());
+          return [shown.amount, shown.item].filter(Boolean).join(' ');
+        });
+        if (list.length) void speak(list.join(', '), locale());
+        break;
+      }
+      case 'stop':
+        stopSpeaking();
+        break;
+    }
+  }
 
   function onKey(e: KeyboardEvent) {
     if (allSteps || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -176,6 +240,12 @@
       <!-- Lucide "volume-2" -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><path d="M16 9a5 5 0 0 1 0 6" /><path d="M19.364 18.364a9 9 0 0 0 0-12.728" /></svg>
     </button>
+    {#if voiceAvailable}
+      <button type="button" class="btn-icon" id="btnHandsFree" class:listening aria-pressed={settings.current.handsFree} aria-label={t('cook.handsFree')} onclick={() => settings.update({ handsFree: !settings.current.handsFree })}>
+        <!-- Lucide "mic" -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
+      </button>
+    {/if}
     <button type="button" class="btn btn-muted" id="btnAllSteps" onclick={() => (allSteps = true)}>{t('cook.allSteps')}</button>
   </header>
   <div class="cook-where">
@@ -345,8 +415,22 @@
     flex-shrink: 0;
     color: var(--text-dim);
   }
-  #btnReadAloud[aria-pressed='true'] {
+  #btnReadAloud[aria-pressed='true'],
+  #btnHandsFree[aria-pressed='true'] {
     color: var(--accent-bright);
+  }
+  #btnHandsFree.listening svg {
+    animation: listening 2s var(--ease-settle) infinite;
+  }
+  @keyframes listening {
+    50% {
+      opacity: 0.55;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #btnHandsFree.listening svg {
+      animation: none;
+    }
   }
   .meter-fill {
     transition: transform var(--dur-settle) var(--ease-settle);

@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(FolderSyncPlugin.class);
         registerPlugin(TimerAlarmPlugin.class);
         registerPlugin(LauncherPlugin.class);
+        registerPlugin(HandsFreePlugin.class);
         super.onCreate(savedInstanceState);
     }
 

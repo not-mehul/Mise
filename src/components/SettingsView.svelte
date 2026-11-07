@@ -3,6 +3,7 @@
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { volumeKeysAvailable } from '../platform/device';
   import { isNative } from '../platform/output';
+  import { voiceAvailable } from '../platform/voice';
   import { groceries } from '../state/groceries.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
@@ -107,6 +108,9 @@
     <div class="section-head"><h2>{t('settings.cooking')}</h2></div>
     <div class="switches">
       <Switch id="switchReadAloud" checked={settings.current.readAloud} label={t('settings.readAloud')} hint={t('settings.readAloudHint')} onchange={(on) => settings.update({ readAloud: on })} />
+      {#if voiceAvailable}
+        <Switch id="switchHandsFree" checked={settings.current.handsFree} label={t('settings.handsFree')} hint={t('settings.handsFreeHint')} onchange={(on) => settings.update({ handsFree: on })} />
+      {/if}
       {#if volumeKeysAvailable}
         <Switch id="switchVolumeKeys" checked={settings.current.volumeKeys} label={t('settings.volumeKeys')} hint={t('settings.volumeKeysHint')} onchange={(on) => settings.update({ volumeKeys: on })} />
       {/if}
