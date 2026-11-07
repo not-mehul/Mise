@@ -25,8 +25,8 @@ The plan has six phases, each one pull request:
 | 2. Collection | Recipe model, ingredient parser, scaling, paste and write import, recipe page, search, collections, backups | Done |
 | 3. Cooking mode | One step per screen, mise en place, timers, keep-awake, volume keys, read aloud, cook log | Done |
 | 4. Groceries | List from recipes with merging, aisles, staples, sharing | Done |
-| 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | Next |
-| 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | |
+| 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | Done |
+| 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | Next |
 
 ## Cooking mode
 
@@ -61,6 +61,28 @@ Ticked items sink to the bottom of their aisle, *Clear ticked* can be undone,
 and *Share* sends what is left as plain text.
 
 ## How a recipe is read
+
+*New recipe* asks where the recipe is: a link, photos, pasted text, or by hand.
+On Android you can also share to Mise from any app: a link or caption
+(Instagram, a browser, a message) or one or more photos. Every import ends on
+the same review screen, and nothing is saved until you press *Save recipe*.
+
+- **Links** are fetched by the phone itself (`src/import/web.ts`). Most recipe
+  sites publish a schema.org Recipe for search engines, as JSON-LD or
+  microdata, and Mise reads it field for field (`src/import/schema.ts`),
+  including the picture. Pages without one fall back to the page's main text,
+  read like pasted text.
+- **Instagram** posts and reels: Mise reads the caption from the public post
+  page (`src/import/instagram.ts`). Instagram often refuses automated readers;
+  when it does, Mise asks you to paste the caption and keeps the link as the
+  source. Videos are not transcribed.
+- **Photos** are read offline by ML Kit text recognition, bundled in the APK
+  (`TextRecognitionPlugin.java`). Several photos become one recipe in the order
+  you picked them, and two-column pages are read column by column
+  (`src/import/photo.ts`). The first photo becomes the recipe's picture. The web
+  build has no recogniser and offers paste instead.
+- **A link you already saved** offers to open that recipe instead, or to import
+  it again.
 
 Pasted text goes through `src/import/text.ts`. It finds the title, servings and
 times, then the ingredients and method by their headings (in English, Spanish,
@@ -126,11 +148,11 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | `src/App.svelte`, `src/main.ts` | Shell and bootstrap |
 | `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Groceries and Settings; `ui/` holds Sheet, Modal and EmptyState |
 | `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, settings |
-| `src/import/` | Readers that turn something shared into a recipe draft; `text.ts` reads pasted text and captions |
+| `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `photo.ts` (reading order for recognised text) |
 | `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos |
 | `src/state/` | The library, settings, export/import/backups, and UI state (screens, toast, the Android back stack) |
 | `src/lib/` | Backups (.zip with fflate) and Markdown |
-| `src/platform/` | `links.ts`, `mise://` intake, files out, sharing, photo downscaling, theme and system bars |
+| `src/platform/` | `links.ts`, `mise://` and share-sheet intake, text recognition, files out, sharing, photo downscaling, theme and system bars |
 | `src/i18n/` | English, Spanish, French and German; `en.ts` is the reference and a unit test checks the others |
 | `src/styles/app.css` | Imports `dusk-dawn/tokens.css` and `dusk-dawn/components.css` first, then Mise's layout |
 | `tests/unit`, `tests/e2e` | Vitest and Playwright |

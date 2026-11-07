@@ -8,6 +8,7 @@ import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
 import { isNative } from './platform/output';
+import { listenForShares, readShare } from './platform/shared';
 import { applyTheme } from './platform/theme.svelte';
 import { groceries } from './state/groceries.svelte';
 import { library } from './state/library.svelte';
@@ -33,6 +34,11 @@ async function start(): Promise<void> {
     void CapacitorApp.addListener('resume', () => void autoBackupIfDue());
     // mise:// links from the other apps (style.md §14.1).
     void listenForLinks((link) => ui.openLink(link));
+    // "Share to Mise" from other apps: a link, a caption or photos.
+    void listenForShares((share) => {
+      const incoming = readShare(share);
+      if (incoming) ui.importFrom(incoming);
+    });
   }
   void autoBackupIfDue();
 }

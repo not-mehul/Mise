@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ML Kit (photo text recognition) finds its parts through Firebase component
+# discovery, which builds each ComponentRegistrar by reflection from the
+# names in the manifest. R8 can't see that, and dropped their constructors
+# in the release build ("NoSuchMethodException: …TextRegistrar.<init>").
+-keep class * implements com.google.firebase.components.ComponentRegistrar {
+    public <init>();
+}
