@@ -57,18 +57,15 @@ export async function parseBackup(bytes: Uint8Array): Promise<BackupData> {
   const data = readJson(strFromU8(json));
   const photos = new Map<string, Photo>();
   for (const r of data.recipes) {
-    if (!r.photoId) continue;
-    const full = files[`photos/${r.photoId}.jpg`];
-    if (!full) {
-      r.photoId = null;
-      continue;
-    }
-    const thumb = files[`photos/${r.photoId}.thumb.jpg`] ?? full;
-    photos.set(r.photoId, {
-      id: r.photoId,
-      full: new Blob([full as BlobPart], { type: 'image/jpeg' }),
-      thumb: new Blob([thumb as BlobPart], { type: 'image/jpeg' }),
+    // Photos missing from the zip are dropped from the recipe rather than left dangling.
+    r.photoIds = r.photoIds.filter((id) => {
+      const full = files[`photos/${id}.jpg`];
+      if (!full) return false;
+      const thumb = files[`photos/${id}.thumb.jpg`] ?? full;
+      photos.set(id, { id, full: new Blob([full as BlobPart], { type: 'image/jpeg' }), thumb: new Blob([thumb as BlobPart], { type: 'image/jpeg' }) });
+      return true;
     });
+    r.photoId = r.photoIds[0] ?? null;
   }
   return { ...data, photos };
 }

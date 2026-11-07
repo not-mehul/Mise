@@ -13,6 +13,7 @@
   import AddGroceries from './AddGroceries.svelte';
   import PlanDayPicker from './PlanDayPicker.svelte';
   import Thumb from './Thumb.svelte';
+  import Sheet from './ui/Sheet.svelte';
 
   let { recipe }: { recipe: Recipe } = $props();
 
@@ -27,6 +28,7 @@
   let newCollection = $state('');
   let adding = $state(false);
   let planning = $state(false);
+  let viewing = $state<string | null>(null);
   const total = $derived(totalTime(recipe));
 
   const UNIT_MODES: { value: UnitMode; key: MessageKey }[] = [
@@ -79,7 +81,14 @@
   </button>
 
   {#if recipe.photoId}
-    <div class="hero"><Thumb photoId={recipe.photoId} alt={recipe.title} full /></div>
+    <button type="button" class="hero" aria-label={t('recipe.viewPhoto', { n: 1 })} onclick={() => (viewing = recipe.photoId)}><Thumb photoId={recipe.photoId} alt={recipe.title} full /></button>
+  {/if}
+  {#if recipe.photoIds.length > 1}
+    <ul class="gallery" id="recipeGallery" aria-label={t('recipe.photos')}>
+      {#each recipe.photoIds as id, i (id)}
+        <li><button type="button" class="gallery-photo" aria-label={t('recipe.viewPhoto', { n: i + 1 })} onclick={() => (viewing = id)}><Thumb photoId={id} /></button></li>
+      {/each}
+    </ul>
   {/if}
 
   <header class="recipe-head">
@@ -239,6 +248,12 @@
   {/if}
 </article>
 
+{#if viewing}
+  <Sheet title={recipe.title} onclose={() => (viewing = null)}>
+    <div class="photo-view"><Thumb photoId={viewing} alt={recipe.title} full /></div>
+  </Sheet>
+{/if}
+
 {#if planning}
   <PlanDayPicker {recipe} servings={base ? servings : null} onclose={() => (planning = false)} />
 {/if}
@@ -258,9 +273,41 @@
     padding-left: 0.75rem;
   }
   .hero {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
     aspect-ratio: 16 / 10;
     border-radius: var(--radius);
     overflow: hidden;
+  }
+  .gallery {
+    list-style: none;
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    margin-top: calc(-1 * var(--space-3));
+  }
+  .gallery-photo {
+    display: block;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: none;
+    cursor: zoom-in;
+  }
+  .photo-view :global(.thumb) {
+    height: auto;
+  }
+  .photo-view :global(img) {
+    height: auto;
+    max-height: 75dvh;
+    object-fit: contain;
   }
   .recipe-head {
     display: flex;

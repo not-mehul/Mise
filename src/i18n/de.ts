@@ -105,9 +105,7 @@ const de: Messages = {
   'editor.tags': "Schlagwörter",
   'editor.tagsHint': "Durch Kommas getrennt: Alltag, vegetarisch.",
   'editor.notes': "Notizen",
-  'editor.photo': "Foto",
   'editor.addPhoto': "Foto hinzufügen",
-  'editor.changePhoto': "Foto ändern",
   'editor.removePhoto': "Foto entfernen",
   'editor.photoFailed': "Das Foto konnte nicht gelesen werden. Versuch ein anderes.",
   'editor.unsorted': "Nicht zugeordnet",
@@ -296,6 +294,13 @@ const de: Messages = {
   'pantry.missing': { one: 'Es fehlt {count}: {items}', other: 'Es fehlen {count}: {items}' },
   'pantry.all': 'Du hast alles',
   'pantry.none': 'Kein Rezept verwendet etwas davon.',
+  'editor.photos': 'Fotos',
+  'editor.cover': 'Titelbild',
+  'editor.makeCover': 'Als Titelbild',
+  'editor.morePhotos': 'Weitere Fotos hinzufügen',
+  'editor.removePhotoN': 'Foto {n} entfernen',
+  'recipe.photos': 'Fotos',
+  'recipe.viewPhoto': 'Foto {n} ansehen',
 };
 
 export default de;

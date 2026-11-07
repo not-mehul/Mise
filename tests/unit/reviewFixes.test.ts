@@ -168,3 +168,21 @@ describe('smarter units, inline amounts and sections (features)', () => {
     expect(recipeToDraft(r).steps).toBe('For the pastry:\nRub in the butter.\nChill.\nFilling:\nCook the apples.');
   });
 });
+
+describe('several photos', () => {
+  it('reads a recipe saved with one photoId as a list, cover first', () => {
+    const r = normaliseRecipe({ id: 'r', title: 'x', photoId: 'a', photoIds: ['b', 'a'] })!;
+    expect(r.photoIds).toEqual(['b', 'a']);
+    expect(r.photoId).toBe('b');
+    expect(normaliseRecipe({ id: 'r', title: 'x', photoId: 'a' })!.photoIds).toEqual(['a']);
+  });
+
+  it('keeps every photo through a backup, and drops ones missing from it', async () => {
+    const { buildBackupZip, parseBackup } = await import('../../src/lib/backup');
+    const r = draftToRecipe({ ...emptyDraft(), title: 'Pie', ingredients: 'flour', photoIds: ['p1', 'p2', 'gone'] }, undefined);
+    const photo = (id: string) => ({ id, full: new Blob([new Uint8Array([1])]), thumb: new Blob([new Uint8Array([2])]) });
+    const back = await parseBackup(await buildBackupZip([r], [], [photo('p1'), photo('p2')]));
+    expect(back.recipes[0]!.photoIds).toEqual(['p1', 'p2']);
+    expect([...back.photos.keys()]).toEqual(['p1', 'p2']);
+  });
+});

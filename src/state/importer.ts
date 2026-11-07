@@ -1,7 +1,7 @@
 // ============================================================
 // Runs an import: a link or photos → a draft for the review screen.
-// A picture found on the page, or the first photo, comes along as the
-// recipe's photo; the editor drops it again if the recipe isn't saved.
+// A picture found on the page, or every photo that was read, comes along as the
+// recipe's photos; the editor drops them again if the recipe isn't saved.
 // ============================================================
 
 import { CapacitorHttp } from '@capacitor/core';
@@ -39,7 +39,7 @@ async function attachPhoto(draft: RecipeDraft, file: Blob | null): Promise<void>
   if (!file) return;
   try {
     const { full, thumb } = await processPhoto(file);
-    draft.photoId = await library.addPhoto(full, thumb);
+    draft.photoIds = [...draft.photoIds, await library.addPhoto(full, thumb)];
   } catch (err) {
     // The recipe still imports, without a picture.
     console.warn('Keeping the imported picture failed:', err);
@@ -66,6 +66,7 @@ export async function fromPhotos(photos: Blob[]): Promise<PhotoResult> {
   const text = photosToText(pages);
   if (!text.trim()) return { ok: false, reason: 'nothing' };
   const { draft } = parseRecipeText(text, 'photo');
-  await attachPhoto(draft, photos[0] ?? null);
+  // Every page is kept, in the order picked; the first is the cover.
+  for (const photo of photos) await attachPhoto(draft, photo);
   return { ok: true, draft };
 }

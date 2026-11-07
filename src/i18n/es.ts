@@ -105,9 +105,7 @@ const es: Messages = {
   'editor.tags': "Etiquetas",
   'editor.tagsHint': "Separadas por comas: entre semana, vegetariana.",
   'editor.notes': "Notas",
-  'editor.photo': "Foto",
   'editor.addPhoto': "Añadir foto",
-  'editor.changePhoto': "Cambiar foto",
   'editor.removePhoto': "Quitar foto",
   'editor.photoFailed': "No se pudo leer esa foto. Prueba con otra.",
   'editor.unsorted': "Sin ordenar",
@@ -296,6 +294,13 @@ const es: Messages = {
   'pantry.missing': { one: 'Falta {count}: {items}', other: 'Faltan {count}: {items}' },
   'pantry.all': 'Lo tienes todo',
   'pantry.none': 'Ninguna receta usa nada de eso.',
+  'editor.photos': 'Fotos',
+  'editor.cover': 'Portada',
+  'editor.makeCover': 'Usar de portada',
+  'editor.morePhotos': 'Añadir más fotos',
+  'editor.removePhotoN': 'Quitar la foto {n}',
+  'recipe.photos': 'Fotos',
+  'recipe.viewPhoto': 'Ver la foto {n}',
 };
 
 export default es;

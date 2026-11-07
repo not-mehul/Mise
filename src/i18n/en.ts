@@ -109,9 +109,7 @@ const en = {
   'editor.tags': 'Tags',
   'editor.tagsHint': 'Separated by commas: weeknight, vegetarian.',
   'editor.notes': 'Notes',
-  'editor.photo': 'Photo',
   'editor.addPhoto': 'Add photo',
-  'editor.changePhoto': 'Change photo',
   'editor.removePhoto': 'Remove photo',
   'editor.photoFailed': 'Couldn’t read that photo. Try another one.',
   'editor.unsorted': 'Unsorted',
@@ -302,6 +300,13 @@ const en = {
   'pantry.missing': { one: 'Missing {count}: {items}', other: 'Missing {count}: {items}' },
   'pantry.all': 'You have everything',
   'pantry.none': 'No recipe uses any of those.',
+  'editor.photos': 'Photos',
+  'editor.cover': 'Cover',
+  'editor.makeCover': 'Make cover',
+  'editor.morePhotos': 'Add more photos',
+  'editor.removePhotoN': 'Remove photo {n}',
+  'recipe.photos': 'Photos',
+  'recipe.viewPhoto': 'View photo {n}',
 } as const;
 
 export default en;

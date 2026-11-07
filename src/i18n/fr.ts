@@ -105,9 +105,7 @@ const fr: Messages = {
   'editor.tags': "Mots-clés",
   'editor.tagsHint': "Séparés par des virgules : semaine, végétarien.",
   'editor.notes': "Notes",
-  'editor.photo': "Photo",
   'editor.addPhoto': "Ajouter une photo",
-  'editor.changePhoto': "Changer la photo",
   'editor.removePhoto': "Retirer la photo",
   'editor.photoFailed': "Impossible de lire cette photo. Essayez-en une autre.",
   'editor.unsorted': "À classer",
@@ -296,6 +294,13 @@ const fr: Messages = {
   'pantry.missing': { one: 'Il manque {count} : {items}', other: 'Il manque {count} : {items}' },
   'pantry.all': 'Vous avez tout',
   'pantry.none': 'Aucune recette n’utilise ces ingrédients.',
+  'editor.photos': 'Photos',
+  'editor.cover': 'Couverture',
+  'editor.makeCover': 'Mettre en couverture',
+  'editor.morePhotos': 'Ajouter des photos',
+  'editor.removePhotoN': 'Retirer la photo {n}',
+  'recipe.photos': 'Photos',
+  'recipe.viewPhoto': 'Voir la photo {n}',
 };
 
 export default fr;

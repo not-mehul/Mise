@@ -19,7 +19,7 @@
    * Photos picked here, or brought in by an import, and not yet saved. They
    * are deleted again if the editor is left without saving, however it is left.
    */
-  const picked: string[] = untrack(() => [...new Set([...owned, ...(mode === 'check' && initial.photoId ? [initial.photoId] : [])])]);
+  const picked: string[] = untrack(() => [...new Set([...owned, ...(mode === 'check' ? initial.photoIds : [])])]);
   let kept = false;
   onDestroy(() => {
     if (kept) return;
@@ -41,19 +41,28 @@
     draft.unsorted = draft.unsorted.filter((_, i) => i !== index);
   }
 
-  async function pickPhoto(input: HTMLInputElement) {
-    const file = input.files?.[0];
+  async function pickPhotos(input: HTMLInputElement) {
+    const files = Array.from(input.files ?? []);
     input.value = '';
-    if (!file) return;
-    try {
-      const { full, thumb } = await processPhoto(file);
-      const id = await library.addPhoto(full, thumb);
-      picked.push(id);
-      draft.photoId = id;
-    } catch (err) {
-      console.warn('Reading the photo failed:', err);
-      ui.notify(t('editor.photoFailed'), 'error');
+    for (const file of files) {
+      try {
+        const { full, thumb } = await processPhoto(file);
+        const id = await library.addPhoto(full, thumb);
+        picked.push(id);
+        draft.photoIds = [...draft.photoIds, id];
+      } catch (err) {
+        console.warn('Reading the photo failed:', err);
+        ui.notify(t('editor.photoFailed'), 'error');
+      }
     }
+  }
+
+  function makeCover(id: string) {
+    draft.photoIds = [id, ...draft.photoIds.filter((p) => p !== id)];
+  }
+
+  function removePhoto(id: string) {
+    draft.photoIds = draft.photoIds.filter((p) => p !== id);
   }
 
   function cancel() {
@@ -72,7 +81,7 @@
     try {
       const recipe = await library.save($state.snapshot(draft) as RecipeDraft);
       kept = true;
-      for (const id of picked) if (id !== recipe.photoId) await library.dropPhoto(id);
+      for (const id of picked) if (!recipe.photoIds.includes(id)) await library.dropPhoto(id);
       ui.notify(t('editor.saved', { title: recipe.title }), 'success');
       ui.closeEditor(recipe.id);
     } catch (err) {
@@ -167,16 +176,27 @@
   </label>
 
   <div class="field">
-    <span class="t-field-label">{t('editor.photo')}</span>
+    <span class="t-field-label">{t('editor.photos')}</span>
+    {#if draft.photoIds.length}
+      <ul class="photo-list" id="editPhotos">
+        {#each draft.photoIds as id, i (id)}
+          <li class="photo-item">
+            <span class="photo"><Thumb photoId={id} /></span>
+            {#if i === 0}
+              <span class="chip chip-tag">{t('editor.cover')}</span>
+            {:else}
+              <button type="button" class="btn btn-muted" onclick={() => makeCover(id)}>{t('editor.makeCover')}</button>
+            {/if}
+            <button type="button" class="btn btn-muted" aria-label={t('editor.removePhotoN', { n: i + 1 })} onclick={() => removePhoto(id)}>{t('editor.removePhoto')}</button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
     <div class="photo-row">
-      {#if draft.photoId}<span class="photo"><Thumb photoId={draft.photoId} /></span>{/if}
       <label class="btn btn-muted file-btn">
-        {draft.photoId ? t('editor.changePhoto') : t('editor.addPhoto')}
-        <input type="file" class="visually-hidden" id="editPhoto" accept="image/*" onchange={(e) => void pickPhoto(e.currentTarget)} />
+        {draft.photoIds.length ? t('editor.morePhotos') : t('editor.addPhoto')}
+        <input type="file" class="visually-hidden" id="editPhoto" accept="image/*" multiple onchange={(e) => void pickPhotos(e.currentTarget)} />
       </label>
-      {#if draft.photoId}
-        <button type="button" class="btn btn-muted" onclick={() => (draft.photoId = null)}>{t('editor.removePhoto')}</button>
-      {/if}
     </div>
   </div>
 
@@ -236,7 +256,20 @@
     align-items: center;
     gap: var(--space-3);
   }
+  .photo-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .photo-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
   .photo {
+    flex-shrink: 0;
     width: 64px;
     height: 64px;
     border-radius: var(--radius);

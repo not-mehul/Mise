@@ -33,7 +33,10 @@ export interface Recipe {
   tags: string[];
   collectionIds: string[];
   notes: string;
+  /** The cover photo: photoIds[0], kept for older readers. */
   photoId: string | null;
+  /** Every photo, cover first: a dish, or each page of a cookbook recipe. */
+  photoIds: string[];
   /** Each time it was cooked, newest first. */
   log: CookEntry[];
   createdAt: string;
@@ -60,7 +63,8 @@ export interface RecipeDraft {
   notes: string;
   source: RecipeSource;
   collectionIds: string[];
-  photoId: string | null;
+  /** Photos, cover first. */
+  photoIds: string[];
   /** Lines the parser couldn't place, for the person to sort. */
   unsorted: string[];
 }
@@ -68,7 +72,7 @@ export interface RecipeDraft {
 export function emptyDraft(source: RecipeSource = { kind: 'manual' }): RecipeDraft {
   return {
     id: null, title: '', servings: '', prepMinutes: '', cookMinutes: '', totalMinutes: '',
-    ingredients: '', steps: '', tags: '', notes: '', source, collectionIds: [], photoId: null, unsorted: [],
+    ingredients: '', steps: '', tags: '', notes: '', source, collectionIds: [], photoIds: [], unsorted: [],
   };
 }
 
@@ -177,7 +181,8 @@ export function draftToRecipe(draft: RecipeDraft, existing: Recipe | undefined, 
     tags: parseTags(draft.tags),
     collectionIds: draft.collectionIds,
     notes: draft.notes.trim(),
-    photoId: draft.photoId,
+    photoId: draft.photoIds[0] ?? null,
+    photoIds: [...new Set(draft.photoIds)],
     log: existing?.log ?? [],
     createdAt: existing?.createdAt ?? stamp,
     updatedAt: stamp,
@@ -199,7 +204,7 @@ export function recipeToDraft(recipe: Recipe): RecipeDraft {
     notes: recipe.notes,
     source: recipe.source,
     collectionIds: recipe.collectionIds,
-    photoId: recipe.photoId,
+    photoIds: [...recipe.photoIds],
     unsorted: [],
   };
 }
@@ -265,6 +270,14 @@ export function linkHost(url: string): string {
   }
 }
 
+/** The photo fields of a stored recipe; one saved before several photos had only photoId. */
+function photosOf(v: Partial<Recipe>): Pick<Recipe, 'photoId' | 'photoIds'> {
+  const ids = Array.isArray(v.photoIds) ? v.photoIds.filter((p): p is string => typeof p === 'string' && !!p) : [];
+  if (typeof v.photoId === 'string' && v.photoId && !ids.includes(v.photoId)) ids.unshift(v.photoId);
+  const unique = [...new Set(ids)].slice(0, 20);
+  return { photoId: unique[0] ?? null, photoIds: unique };
+}
+
 /** Anything read back from storage or a backup, made safe to use; null if it isn't a recipe. */
 export function normaliseRecipe(value: unknown): Recipe | null {
   if (!value || typeof value !== 'object') return null;
@@ -302,7 +315,7 @@ export function normaliseRecipe(value: unknown): Recipe | null {
     tags: Array.isArray(v.tags) ? v.tags.filter((t): t is string => typeof t === 'string') : [],
     collectionIds: Array.isArray(v.collectionIds) ? v.collectionIds.filter((t): t is string => typeof t === 'string') : [],
     notes: typeof v.notes === 'string' ? v.notes : '',
-    photoId: typeof v.photoId === 'string' ? v.photoId : null,
+    ...photosOf(v),
     log: normaliseLog(v.log),
     createdAt: typeof v.createdAt === 'string' ? v.createdAt : stamp,
     updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : stamp,

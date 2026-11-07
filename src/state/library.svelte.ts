@@ -45,7 +45,7 @@ class Library {
     const existing = this.get(draft.id);
     const recipe = draftToRecipe(draft, existing);
     await db.recipes.put($state.snapshot(recipe) as Recipe);
-    if (existing?.photoId && existing.photoId !== recipe.photoId) await this.dropPhoto(existing.photoId);
+    for (const id of existing?.photoIds ?? []) if (!recipe.photoIds.includes(id)) await this.dropPhoto(id);
     this.recipes = [recipe, ...this.recipes.filter((r) => r.id !== recipe.id)];
     return recipe;
   }
@@ -94,7 +94,7 @@ class Library {
         this.recipes = [...this.recipes, recipe].sort(byNewest);
       },
       forget: async () => {
-        if (recipe.photoId && !this.recipes.some((r) => r.photoId === recipe.photoId)) await this.dropPhoto(recipe.photoId);
+        for (const id of recipe.photoIds) if (!this.recipes.some((r) => r.photoIds.includes(id))) await this.dropPhoto(id);
       },
     };
   }
@@ -196,8 +196,10 @@ class Library {
         else summary.added++;
         await db.recipes.put(r);
         next.set(r.id, r);
-        const photo = r.photoId ? photos.get(r.photoId) : undefined;
-        if (photo) await db.photos.put(photo);
+        for (const id of r.photoIds) {
+          const photo = photos.get(id);
+          if (photo) await db.photos.put(photo);
+        }
       }
     });
     this.recipes = [...next.values()].sort(byNewest);

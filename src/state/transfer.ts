@@ -33,7 +33,8 @@ export function recipeMarkdown(r: Recipe): string {
 
 async function backupFile(now = new Date()): Promise<OutputFile> {
   const { buildBackupZip } = await backupLib();
-  const photos = (await Promise.all(library.recipes.filter((r) => r.photoId).map((r) => library.photo(r.photoId!)))).filter((p): p is Photo => !!p);
+  const ids = [...new Set(library.recipes.flatMap((r) => r.photoIds))];
+  const photos = (await Promise.all(ids.map((id) => library.photo(id)))).filter((p): p is Photo => !!p);
   return {
     name: datedName(BACKUP_PREFIX, 'zip', now, true),
     data: await buildBackupZip(library.recipes, library.collections, photos, now),

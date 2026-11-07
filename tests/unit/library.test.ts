@@ -81,7 +81,7 @@ describe('the library', () => {
 describe('backups', () => {
   it('round-trips recipes, collections and photos through a zip', async () => {
     const photo = { id: 'p1', full: new Blob([new Uint8Array([1, 2, 3])]), thumb: new Blob([new Uint8Array([4])]) };
-    const r = await library.save({ ...draft('Bread'), photoId: 'p1' });
+    const r = await library.save({ ...draft('Bread'), photoIds: ['p1'] });
     const zip = await buildBackupZip([r], [{ id: 'c', name: 'Baking', createdAt: r.createdAt }], [photo]);
     const back = await parseBackup(zip);
     expect(back.recipes[0]!.title).toBe('Bread');

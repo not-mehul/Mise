@@ -63,7 +63,7 @@
   /** Hands a draft to the review screen, unless the sheet moved on while it was read. */
   async function finish(ticket: number, draft: RecipeDraft) {
     if (!open || ticket !== run) {
-      if (draft.photoId) await library.dropPhoto(draft.photoId);
+      for (const id of draft.photoIds) await library.dropPhoto(id);
       return;
     }
     onclose();
@@ -92,7 +92,7 @@
     step = 'reading';
     const result = await fromLink(link);
     if (!open || ticket !== run) {
-      if (result.ok && result.draft.photoId) await library.dropPhoto(result.draft.photoId);
+      if (result.ok) for (const id of result.draft.photoIds) await library.dropPhoto(id);
       return;
     }
     if (result.ok) return finish(ticket, result.draft);
