@@ -3,7 +3,7 @@
 // ============================================================
 
 import { db } from '../data/db';
-import { addToList, groceryKey, normaliseItem, type Aisle, type GroceryAddition, type GroceryItem } from '../domain/groceries';
+import { addToList, aisleFor, groceryKey, mergeAmount, normaliseItem, type Aisle, type GroceryAddition, type GroceryItem } from '../domain/groceries';
 import { newId, parseIngredient } from '../domain/ingredient';
 import { settings } from './settings.svelte';
 
@@ -54,6 +54,44 @@ class Groceries {
     const ing = parseIngredient(line);
     await this.add([{ item: ing.item, qty: ing.qty, qtyMax: ing.qtyMax, unit: ing.unit, unitText: ing.unit ? null : ing.unitText, recipeId: null }]);
     return this.list.find((g) => g.key === groceryKey(ing.item)) ?? null;
+  }
+
+  /**
+   * Rewrites an item from a typed line ("300 g butter") and a note. If it now names
+   * something already on the list, the two become one line.
+   */
+  async edit(id: string, text: string, note: string): Promise<void> {
+    const g = this.list.find((x) => x.id === id);
+    const line = text.trim().slice(0, 200);
+    if (!g || !line) return;
+    const ing = parseIngredient(line);
+    const key = groceryKey(ing.item);
+    const amount = { qty: ing.qty, qtyMax: ing.qtyMax, unit: ing.unit, unitText: ing.unit ? null : ing.unitText };
+    const hasAmount = amount.qty !== null || !!amount.unit || !!amount.unitText;
+    const cleanNote = note.trim().slice(0, 200);
+    const next: GroceryItem = {
+      ...g,
+      item: ing.item,
+      key,
+      aisle: key === g.key ? g.aisle : aisleFor(ing.item, settings.current.aisles, ing.unit),
+      amounts: hasAmount ? [amount] : [],
+    };
+    if (cleanNote) next.note = cleanNote;
+    else delete next.note;
+    const twin = this.list.find((x) => x.id !== id && x.key === key);
+    if (!twin) return this.patch(id, () => next);
+    const merged: GroceryItem = {
+      ...twin,
+      ticked: twin.ticked && g.ticked,
+      amounts: next.amounts.reduce(mergeAmount, twin.ticked ? [] : twin.amounts),
+      recipeIds: [...new Set([...twin.recipeIds, ...g.recipeIds])],
+      ...(cleanNote || twin.note ? { note: cleanNote || twin.note } : {}),
+    };
+    await db.transaction('rw', db.groceries, async () => {
+      await db.groceries.delete(id);
+      await db.groceries.put($state.snapshot(merged) as GroceryItem);
+    });
+    this.list = this.list.filter((x) => x.id !== id).map((x) => (x.id === twin.id ? merged : x));
   }
 
   async toggle(id: string): Promise<void> {

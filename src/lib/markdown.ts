@@ -27,7 +27,12 @@ export function recipeToMarkdown(r: Recipe, l: MarkdownLabels): string {
   }
   if (r.steps.length) {
     out.push(`## ${l.method}`, '');
-    r.steps.forEach((s, i) => out.push(`${i + 1}. ${s.text}`));
+    let section: string | undefined;
+    r.steps.forEach((s, i) => {
+      if (s.section && s.section !== section) out.push('', `### ${s.section}`, '');
+      section = s.section;
+      out.push(`${i + 1}. ${s.text}`);
+    });
     out.push('');
   }
   if (r.notes) out.push(`## ${l.notes}`, '', r.notes, '');

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { showIngredient, type UnitMode } from '../domain/ingredient';
+  import { groceryKey } from '../domain/groceries';
   import { linkHost, recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
-  import { formatDuration, stepPieces } from '../domain/steps';
+  import { formatDuration, stepParts } from '../domain/steps';
   import type { CookEntry } from '../domain/cook';
   import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { shareText } from '../platform/share';
@@ -51,6 +52,12 @@
     const before = recipe.log;
     await library.setLog(recipe.id, before.filter((e) => e !== entry));
     ui.notify(t('log.deleted'), 'info', { label: t('action.undo'), run: () => void library.setLog(recipe.id, before) });
+  }
+
+  /** Another recipe this ingredient names ("Pizza dough"), so it opens from here. */
+  function subRecipe(item: string) {
+    const key = groceryKey(item);
+    return key ? library.recipes.find((r) => r.id !== recipe.id && groceryKey(r.title) === key) : undefined;
   }
 
   const day = (iso: string) => new Date(iso).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -133,12 +140,13 @@
         <ul class="ingredients">
           {#each group.items as ing (ing.id)}
             {@const shown = showIngredient(ing, factor, units, locale())}
+            {@const sub = subRecipe(ing.item)}
             <li>
               <label class="ingredient" class:have={have[ing.id]}>
                 <input type="checkbox" bind:checked={have[ing.id]} />
                 <span>
                   {#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if}
-                  <span class="item">{shown.item}</span>{#if shown.note}<span class="note">, {shown.note}</span>{/if}
+                  {#if sub}<button type="button" class="item sub-recipe" onclick={(e) => { e.preventDefault(); ui.openRecipe(sub.id); }}>{shown.item}</button>{:else}<span class="item">{shown.item}</span>{/if}{#if shown.note}<span class="note">, {shown.note}</span>{/if}
                 </span>
               </label>
             </li>
@@ -152,10 +160,11 @@
     <section class="panel" aria-labelledby="methodHead">
       <div class="section-head"><h3 id="methodHead">{t('recipe.method')}</h3></div>
       <ol class="steps">
-        {#each recipe.steps as step (step.id)}
-          <li>
-            {#each stepPieces(step) as piece, pi (pi)}
-              {#if piece.timer !== undefined}<span class="timer" title={t('recipe.timer', { time: formatDuration(step.timers[piece.timer]!.seconds) })}>{piece.text}</span>{:else}{piece.text}{/if}
+        {#each recipe.steps as step, si (step.id)}
+          {#if step.section && step.section !== recipe.steps[si - 1]?.section}<li class="step-section t-section-label" aria-hidden="true">{step.section}</li>{/if}
+          <li class="step" value={si + 1}>
+            {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}
+              {#if piece.timer !== undefined}<span class="timer" title={t('recipe.timer', { time: formatDuration(step.timers[piece.timer]!.seconds) })}>{piece.text}</span>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}
             {/each}
           </li>
         {/each}
@@ -351,6 +360,26 @@
     font-family: var(--font-mono);
     font-size: 0.875rem;
     color: var(--accent-amber);
+  }
+  .step-section {
+    list-style: none;
+    margin: var(--space-2) 0 calc(-1 * var(--space-2)) -1.5rem;
+    font-family: var(--font-sans);
+  }
+  .inline-amount {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .sub-recipe {
+    font: inherit;
+    color: var(--accent-bright);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
   }
   .timer {
     color: var(--accent-amber);

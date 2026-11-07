@@ -259,6 +259,11 @@ const de: Messages = {
   'editor.shareWaiting': 'Speichere oder verwirf zuerst dieses Rezept. Was du geteilt hast, öffnet sich danach.',
   'new.linkFromApp': 'Eine andere App hat diesen Link geschickt. Lesen?',
   'action.add': 'Hinzufügen',
+  'groceries.itemLabel': 'Artikel',
+  'groceries.itemHint': 'Mit der Menge, etwa 300 g Butter.',
+  'groceries.note': 'Notiz',
+  'groceries.notePlaceholder': 'Die große Dose, reife…',
+  'groceries.save': 'Artikel speichern',
 };
 
 export default de;

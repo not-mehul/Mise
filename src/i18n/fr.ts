@@ -259,6 +259,11 @@ const fr: Messages = {
   'editor.shareWaiting': 'Enregistrez ou annulez d’abord cette recette. Ce que vous avez partagé s’ouvre ensuite.',
   'new.linkFromApp': 'Une autre app a envoyé ce lien. Le lire ?',
   'action.add': 'Ajouter',
+  'groceries.itemLabel': 'Article',
+  'groceries.itemHint': 'Avec la quantité, comme 300 g de beurre.',
+  'groceries.note': 'Note',
+  'groceries.notePlaceholder': 'La grande boîte, bien mûrs…',
+  'groceries.save': 'Enregistrer l’article',
 };
 
 export default fr;

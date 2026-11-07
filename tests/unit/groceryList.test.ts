@@ -49,4 +49,17 @@ describe('the grocery list', () => {
     groceries.setStaple('olive oil', false);
     expect(settings.current.staples).toEqual(['salt']);
   });
+
+  it('edits an item, its amount and note, and merges it into a twin', async () => {
+    await groceries.addTyped('2 lemons');
+    await groceries.addTyped('200 g butter');
+    const butter = groceries.list.find((g) => g.item === 'butter')!;
+    await groceries.edit(butter.id, '300 g butter', 'unsalted');
+    expect(groceries.list.find((g) => g.id === butter.id)).toMatchObject({ note: 'unsalted' });
+    expect(formatAmounts(groceries.list.find((g) => g.id === butter.id)!.amounts)).toBe('300 g');
+    await groceries.edit(butter.id, '1 lemon', '');
+    expect(groceries.list.map((g) => [g.item, formatAmounts(g.amounts)])).toEqual([['lemons', '3']]);
+    await groceries.init();
+    expect(groceries.list).toHaveLength(1);
+  });
 });

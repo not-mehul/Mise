@@ -6,7 +6,7 @@
   import { cookPages, resumePlace, stepIngredients, formatClock } from '../domain/cook';
   import { showIngredient, type UnitMode } from '../domain/ingredient';
   import type { Recipe } from '../domain/recipe';
-  import { formatDuration, stepPieces } from '../domain/steps';
+  import { formatDuration, stepParts } from '../domain/steps';
   import { locale, t } from '../i18n/index.svelte';
   import { captureVolumeKeys, keepAwake, tick } from '../platform/device';
   import { speak, stopSpeaking } from '../platform/speech';
@@ -203,9 +203,9 @@
         </ul>
       {/each}
     {:else if step}
-      <h2 class="t-section-label step-number">{t('cook.step', { step: stepNumber })}</h2>
+      <h2 class="t-section-label step-number">{t('cook.step', { step: stepNumber })}{#if step.section}<span class="step-section"> · {step.section}</span>{/if}</h2>
       <p class="step-text" id="stepText">
-        {#each stepPieces(step) as piece, pi (pi)}{#if piece.timer !== undefined}<mark class="duration">{piece.text}</mark>{:else}{piece.text}{/if}{/each}
+        {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}{#if piece.timer !== undefined}<mark class="duration">{piece.text}</mark>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}{/each}
       </p>
       {#if step.timers.length}
         <div class="step-timers">
@@ -363,6 +363,15 @@
     line-height: 1.35;
     color: var(--text-heading);
     overflow-wrap: break-word;
+  }
+  .step-section {
+    color: var(--text-dim);
+  }
+  .inline-amount {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 0.6em;
+    white-space: nowrap;
   }
   .duration {
     background: none;

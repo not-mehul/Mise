@@ -44,6 +44,21 @@
       .join(', ');
   }
 
+  let editLine = $state('');
+  let editNote = $state('');
+
+  function openEdit(g: GroceryItem) {
+    const amount = formatAmounts(g.amounts, locale());
+    editLine = amount ? `${amount} ${g.item}` : g.item;
+    editNote = g.note ?? '';
+    editing = g.id;
+  }
+
+  async function saveEdit(id: string) {
+    editing = null;
+    await groceries.edit(id, editLine, editNote);
+  }
+
   async function clearTicked() {
     const count = ticked.length;
     const undo = await groceries.remove(ticked.map((g) => g.id));
@@ -119,10 +134,11 @@
                 <input type="checkbox" checked={g.ticked} onchange={() => groceries.toggle(g.id)} />
                 <span class="text">
                   <span class="name">{#if amount}<span class="amount t-data">{`${amount} `}</span>{/if}{g.item}</span>
+                  {#if g.note}<span class="from t-hint grocery-note">{g.note}</span>{/if}
                   {#if source}<span class="from t-hint">{source}</span>{/if}
                 </span>
               </label>
-              <button type="button" class="btn-icon" aria-label={t('groceries.edit', { item: g.item })} onclick={() => (editing = g.id)}>
+              <button type="button" class="btn-icon" aria-label={t('groceries.edit', { item: g.item })} onclick={() => openEdit(g)}>
                 <!-- Lucide "ellipsis" -->
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
               </button>
@@ -139,6 +155,26 @@
 
 {#if item}
   <Sheet title={item.item} onclose={() => (editing = null)}>
+    <form
+      class="edit-item"
+      onsubmit={(e) => {
+        e.preventDefault();
+        void saveEdit(item.id);
+      }}
+    >
+      <label class="field">
+        <span class="t-field-label">{t('groceries.itemLabel')}</span>
+        <input class="input" id="groceryEditLine" maxlength="200" autocomplete="off" enterkeyhint="done" bind:value={editLine} />
+        <p class="field-hint">{t('groceries.itemHint')}</p>
+      </label>
+      <label class="field">
+        <span class="t-field-label">{t('groceries.note')}</span>
+        <input class="input" id="groceryEditNote" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder={t('groceries.notePlaceholder')} bind:value={editNote} />
+      </label>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary" id="btnSaveGrocery" disabled={!editLine.trim()}>{t('groceries.save')}</button>
+      </div>
+    </form>
     <div class="field">
       <span class="t-field-label" id="aisleLabel">{t('groceries.aisle')}</span>
       <div class="chip-row" role="radiogroup" aria-labelledby="aisleLabel">
@@ -156,6 +192,15 @@
 {/if}
 
 <style>
+  .edit-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+  .grocery-note {
+    font-style: italic;
+  }
   .add-row {
     display: flex;
     gap: var(--space-2);

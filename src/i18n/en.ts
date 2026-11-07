@@ -265,6 +265,11 @@ const en = {
   'editor.shareWaiting': 'Save or cancel this recipe first. What you shared opens next.',
   'new.linkFromApp': 'Another app sent this link. Read it?',
   'action.add': 'Add',
+  'groceries.itemLabel': 'Item',
+  'groceries.itemHint': 'With the amount, like 300 g butter.',
+  'groceries.note': 'Note',
+  'groceries.notePlaceholder': 'The big tin, ripe ones…',
+  'groceries.save': 'Save item',
 } as const;
 
 export default en;

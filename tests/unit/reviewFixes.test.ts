@@ -139,3 +139,32 @@ describe('the library (B14, B15)', () => {
     expect(library.get(r.id)!.collectionIds).toEqual([c.id]);
   });
 });
+
+describe('smarter units, inline amounts and sections (features)', () => {
+  it('weighs cups of flour in metric and measures grams of sugar in US', async () => {
+    const { showIngredient: show, parseIngredient: parse } = await import('../../src/domain/ingredient');
+    expect(show(parse('1 cup flour'), 1, 'metric').amount).toBe('125 g');
+    expect(show(parse('200 g sugar'), 1, 'us').amount).toBe('1 cup');
+    expect(show(parse('1 cup milk'), 1, 'metric').amount).toBe('235 ml');
+  });
+
+  it('converts oven temperatures', async () => {
+    const { convertTemperatures } = await import('../../src/domain/units');
+    expect(convertTemperatures('Heat the oven to 180°C (fan 160 °C).', 'us')).toBe('Heat the oven to 355 °F (fan 320 °F).');
+    expect(convertTemperatures('Bake at 350F.', 'metric')).toBe('Bake at 175 °C.');
+    expect(convertTemperatures('Bake at 350F.', 'original')).toBe('Bake at 350F.');
+  });
+
+  it('puts the scaled amount after the first mention of an ingredient', async () => {
+    const { stepParts } = await import('../../src/domain/steps');
+    const groups = [{ name: '', items: [parseIngredient('200 g flour', 'f'), parseIngredient('2 eggs', 'e')] }];
+    const step = { text: 'Whisk the eggs into the flour, then rest 10 minutes.', timers: findTimers('Whisk the eggs into the flour, then rest 10 minutes.'), ingredientIds: ['f', 'e'] };
+    expect(stepParts(step, groups, 2, 'original').map((p) => p.text).join('')).toBe('Whisk the eggs (4) into the flour (400 g), then rest 10 minutes.');
+  });
+
+  it('reads "Name:" lines in the method as sections and writes them back', () => {
+    const r = draftToRecipe({ ...emptyDraft(), title: 'Pie', ingredients: 'flour', steps: 'For the pastry:\nRub in the butter.\nChill.\nFilling:\nCook the apples.' }, undefined);
+    expect(r.steps.map((s) => s.section)).toEqual(['For the pastry', 'For the pastry', 'Filling']);
+    expect(recipeToDraft(r).steps).toBe('For the pastry:\nRub in the butter.\nChill.\nFilling:\nCook the apples.');
+  });
+});

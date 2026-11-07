@@ -6,7 +6,7 @@
 
 import { singular, type Ingredient, type UnitMode } from './ingredient';
 import { formatQuantity } from './quantity';
-import { convert, unitById, unitLabel } from './units';
+import { convertFor, unitById, unitLabel } from './units';
 
 export const AISLES = ['produce', 'dairy', 'meat', 'bakery', 'pantry', 'frozen', 'other'] as const;
 export type Aisle = (typeof AISLES)[number];
@@ -33,6 +33,8 @@ export interface GroceryItem {
   recipeIds: string[];
   ticked: boolean;
   addedAt: string;
+  /** A note for the shop: "the big tin", "ripe ones". */
+  note?: string;
 }
 
 /** Something to add: from a recipe's ingredient or typed in. */
@@ -160,7 +162,7 @@ export function additionFrom(ing: Ingredient, factor: number, mode: UnitMode, re
   let unit = ing.unit;
   const known = unitById(ing.unit);
   if (known && qty !== null && mode !== 'original') {
-    const c = convert(qty, known, mode);
+    const c = convertFor(qty, known, mode, ing.item);
     if (c) {
       const ratio = c.value / qty;
       qty = c.value;
@@ -287,7 +289,7 @@ export function listToText(list: GroceryItem[], title: string, aisleName: (a: Ai
     lines.push('', aisleName(aisle));
     for (const g of items) {
       const amount = formatAmounts(g.amounts, locale);
-      lines.push(`- ${amount ? `${amount} ` : ''}${g.item}`);
+      lines.push(`- ${amount ? `${amount} ` : ''}${g.item}${g.note ? ` (${g.note})` : ''}`);
     }
   }
   return lines.join('\n');
@@ -316,5 +318,6 @@ export function normaliseItem(value: unknown): GroceryItem | null {
     recipeIds: Array.isArray(v.recipeIds) ? v.recipeIds.filter((r): r is string => typeof r === 'string') : [],
     ticked: v.ticked === true,
     addedAt: typeof v.addedAt === 'string' ? v.addedAt : new Date().toISOString(),
+    ...(typeof v.note === 'string' && v.note.trim() ? { note: v.note.trim().slice(0, 200) } : {}),
   };
 }

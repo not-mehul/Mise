@@ -5,7 +5,7 @@
 // ============================================================
 
 import { formatQuantity, parseLeadingQuantity } from './quantity';
-import { convert, parseLeadingUnit, unitById, unitLabel, type Unit } from './units';
+import { convertFor, parseLeadingUnit, unitById, unitLabel, type Unit } from './units';
 
 export interface Ingredient {
   id: string;
@@ -109,7 +109,7 @@ export function showIngredient(ing: Ingredient, factor: number, mode: UnitMode, 
   let qty = ing.qty * factor;
   let max = ing.qtyMax !== null ? ing.qtyMax * factor : null;
   if (unit && mode !== 'original') {
-    const c = convert(qty, unit, mode);
+    const c = convertFor(qty, unit, mode, ing.item);
     if (c) {
       const ratio = c.value / qty;
       qty = c.value;

@@ -107,14 +107,38 @@ export function parseIngredientText(text: string, keep: IdPool = new IdPool()): 
   return groups.filter((g, i) => g.items.length || (i > 0 && g.name));
 }
 
-/** Step text → steps, one per non-empty line, numbering stripped. Steps keep their ids across an edit. */
+/**
+ * Step text → steps, one per non-empty line, numbering stripped. A line ending in a colon
+ * ("For the sauce:") starts a section of the method. Steps keep their ids across an edit.
+ */
 export function parseStepText(text: string, groups: IngredientGroup[], keep: IdPool = new IdPool()): Step[] {
-  return text
-    .split('\n')
-    .map((l) => l.trim().replace(/^(?:step\s*\d+\s*[:.)-]?|paso\s*\d+\s*[:.)-]?|étape\s*\d+\s*[:.)-]?|schritt\s*\d+\s*[:.)-]?)\s*/i, ''))
-    .map((l) => stripListMarker(l))
-    .filter(Boolean)
-    .map((text) => ({ id: keep.take(text), text, timers: findTimers(text), ingredientIds: linkIngredients(text, groups) }));
+  const steps: Step[] = [];
+  let section: string | undefined;
+  for (const line of text.split('\n')) {
+    const clean = stripListMarker(line.trim().replace(/^(?:step\s*\d+\s*[:.)-]?|paso\s*\d+\s*[:.)-]?|étape\s*\d+\s*[:.)-]?|schritt\s*\d+\s*[:.)-]?)\s*/i, ''));
+    if (!clean) continue;
+    const heading = GROUP_HEADING.exec(clean);
+    if (heading && !/\d/.test(heading[1]!) && heading[1]!.split(/\s+/).length <= 6) {
+      section = heading[1]!.trim();
+      continue;
+    }
+    const step: Step = { id: keep.take(clean), text: clean, timers: findTimers(clean), ingredientIds: linkIngredients(clean, groups) };
+    if (section) step.section = section;
+    steps.push(step);
+  }
+  return steps;
+}
+
+/** Steps → the editor's text, with a "Section:" line where each section starts. */
+export function stepsToText(steps: Step[]): string {
+  const lines: string[] = [];
+  let section: string | undefined;
+  for (const st of steps) {
+    if (st.section && st.section !== section) lines.push(`${st.section}:`);
+    section = st.section;
+    lines.push(st.text);
+  }
+  return lines.join('\n');
 }
 
 function positiveInt(value: string): number | null {
@@ -170,7 +194,7 @@ export function recipeToDraft(recipe: Recipe): RecipeDraft {
     cookMinutes: str(recipe.cookMinutes),
     totalMinutes: str(recipe.totalMinutes),
     ingredients: ingredientsToText(recipe.groups),
-    steps: recipe.steps.map((s) => s.text).join('\n'),
+    steps: stepsToText(recipe.steps),
     tags: recipe.tags.join(', '),
     notes: recipe.notes,
     source: recipe.source,
@@ -262,7 +286,7 @@ export function normaliseRecipe(value: unknown): Recipe | null {
   const steps = Array.isArray(v.steps)
     ? v.steps
         .filter((s) => s && typeof s.text === 'string')
-        .map((s) => ({ id: uniqueId(s.id), text: s.text, timers: findTimers(s.text), ingredientIds: linkIngredients(s.text, groups) }))
+        .map((s): Step => ({ id: uniqueId(s.id), text: s.text, timers: findTimers(s.text), ingredientIds: linkIngredients(s.text, groups), ...(typeof s.section === 'string' && s.section ? { section: s.section } : {}) }))
     : [];
   const stamp = new Date().toISOString();
   return {

@@ -259,6 +259,11 @@ const es: Messages = {
   'editor.shareWaiting': 'Guarda o cancela esta receta primero. Lo que compartiste se abre después.',
   'new.linkFromApp': 'Otra app envió este enlace. ¿Leerlo?',
   'action.add': 'Añadir',
+  'groceries.itemLabel': 'Artículo',
+  'groceries.itemHint': 'Con la cantidad, como 300 g de mantequilla.',
+  'groceries.note': 'Nota',
+  'groceries.notePlaceholder': 'La lata grande, maduros…',
+  'groceries.save': 'Guardar artículo',
 };
 
 export default es;

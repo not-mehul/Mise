@@ -3,7 +3,8 @@
 // ingredients they name are linked to them for cooking mode.
 // ============================================================
 
-import { keyWord, singular, type IngredientGroup } from './ingredient';
+import { keyWord, showIngredient, singular, type IngredientGroup, type UnitMode } from './ingredient';
+import { convertTemperatures } from './units';
 import { parseNumber } from './quantity';
 
 export interface StepTimer {
@@ -19,6 +20,8 @@ export interface Step {
   timers: StepTimer[];
   /** Ingredients this step names. */
   ingredientIds: string[];
+  /** The part of the method it belongs to ("For the sauce"), from a "Name:" line before it. */
+  section?: string;
 }
 
 const UNIT_SECONDS: [RegExp, number][] = [
@@ -59,19 +62,19 @@ export function findTimers(text: string): StepTimer[] {
   return timers;
 }
 
+/** Where a step names an ingredient: the whole word, from a match of its singular ("tomato" finds "tomatoes"). */
+function mention(text: string, item: string): { start: number; end: number } | null {
+  const word = keyWord(item);
+  if (word.length < 3) return null;
+  const stem = singular(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp(`(?<![\\p{L}])${stem}\\p{L}*`, 'iu').exec(text);
+  return m ? { start: m.index, end: m.index + m[0].length } : null;
+}
+
 /** The ingredients a step names, by each ingredient's key word. */
 export function linkIngredients(text: string, groups: IngredientGroup[]): string[] {
-  const lower = text.toLowerCase();
   const ids: string[] = [];
-  for (const group of groups) {
-    for (const ing of group.items) {
-      const word = keyWord(ing.item);
-      if (word.length < 3) continue;
-      // The singular is a prefix of both forms: "tomato" finds "tomato" and "tomatoes".
-      const stem = singular(word);
-      if (new RegExp(`(?<![\\p{L}])${stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'iu').test(lower)) ids.push(ing.id);
-    }
-  }
+  for (const group of groups) for (const ing of group.items) if (mention(text, ing.item)) ids.push(ing.id);
   return ids;
 }
 
@@ -87,15 +90,52 @@ export function formatDuration(seconds: number): string {
   return parts.join(' ') || '0 s';
 }
 
-/** A step's text cut around its timers, so the durations can be marked. */
-export function stepPieces(step: Pick<Step, 'text' | 'timers'>): { text: string; timer?: number }[] {
-  const out: { text: string; timer?: number }[] = [];
+export interface StepPart {
+  text: string;
+  /** Which of the step's timers this is, when it is one. */
+  timer?: number;
+  /** An amount shown after an ingredient's name: "flour (200 g)". */
+  amount?: boolean;
+}
+
+/**
+ * A step ready to show: cut around its timers, with each named ingredient's amount after
+ * its first mention (scaled and in the chosen units), and oven temperatures converted.
+ */
+export function stepParts(
+  step: Pick<Step, 'text' | 'timers' | 'ingredientIds'>,
+  groups: IngredientGroup[],
+  factor: number,
+  mode: UnitMode,
+  locale = 'en',
+): StepPart[] {
+  const inserts: { at: number; text: string }[] = [];
+  const wanted = new Set(step.ingredientIds);
+  for (const ing of groups.flatMap((g) => g.items)) {
+    if (!wanted.has(ing.id)) continue;
+    const at = mention(step.text, ing.item);
+    if (!at || step.timers.some((t) => at.end > t.start && at.start < t.end) || inserts.some((i) => i.at === at.end)) continue;
+    const { amount } = showIngredient(ing, factor, mode, locale);
+    if (amount) inserts.push({ at: at.end, text: ` (${amount})` });
+  }
+  inserts.sort((a, b) => a.at - b.at);
+  const out: StepPart[] = [];
+  const plain = (from: number, to: number) => {
+    let at = from;
+    for (const ins of inserts) {
+      if (ins.at < at || ins.at > to) continue;
+      if (ins.at > at) out.push({ text: convertTemperatures(step.text.slice(at, ins.at), mode) });
+      out.push({ text: ins.text, amount: true });
+      at = ins.at;
+    }
+    if (to > at) out.push({ text: convertTemperatures(step.text.slice(at, to), mode) });
+  };
   let at = 0;
   step.timers.forEach((timer, i) => {
-    if (timer.start > at) out.push({ text: step.text.slice(at, timer.start) });
+    plain(at, timer.start);
     out.push({ text: step.text.slice(timer.start, timer.end), timer: i });
     at = timer.end;
   });
-  if (at < step.text.length) out.push({ text: step.text.slice(at) });
+  plain(at, step.text.length);
   return out;
 }
