@@ -24,8 +24,8 @@ The plan has six phases, each one pull request:
 | 1. Scaffold | App shell, tabs, theme, languages, CI, APK release workflow | Done |
 | 2. Collection | Recipe model, ingredient parser, scaling, paste and write import, recipe page, search, collections, backups | Done |
 | 3. Cooking mode | One step per screen, mise en place, timers, keep-awake, volume keys, read aloud, cook log | Done |
-| 4. Groceries | List from recipes with merging, aisles, staples, sharing | Next |
-| 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | |
+| 4. Groceries | List from recipes with merging, aisles, staples, sharing | Done |
+| 5. Import | Links (schema.org), Instagram captions, on-device text recognition for photos, Android share intents | Next |
 | 6. Suite links | `mise://` in the sibling apps' `links.ts`, `dusk-dawn` v1.1.0 | |
 
 ## Cooking mode
@@ -44,6 +44,21 @@ mode is open, and *Read steps aloud* speaks each step with the phone's voice.
 Close and come back within four hours to pick up at the same step. The last
 page marks the recipe as cooked, with an optional rating and note, in the
 recipe's cook log.
+
+## Groceries
+
+One running list, grouped by aisle in shop order. *Add to groceries* on a
+recipe offers its ingredients at the servings and units you chose, all ticked
+except your pantry staples (salt, pepper, oil and whatever you add). The same
+item from two recipes becomes one line: quantities of one kind add up (200 g and
+900 g make 1.1 kg) and the rest sit side by side (200 g + 2 tbsp butter), with
+the recipes listed under it. You can also type items in ("2 lemons"), with
+suggestions from what you added before.
+
+Aisles come from an offline word list in English, Spanish, French and German
+(`src/domain/groceries.ts`). Move an item and Mise remembers where it goes.
+Ticked items sink to the bottom of their aisle, *Clear ticked* can be undone,
+and *Share* sends what is left as plain text.
 
 ## How a recipe is read
 

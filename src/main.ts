@@ -9,6 +9,7 @@ import { detectLocale, setLocale } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
 import { isNative } from './platform/output';
 import { applyTheme } from './platform/theme.svelte';
+import { groceries } from './state/groceries.svelte';
 import { library } from './state/library.svelte';
 import { settings } from './state/settings.svelte';
 import { autoBackupIfDue } from './state/transfer';
@@ -22,7 +23,7 @@ async function start(): Promise<void> {
   await setLocale(language === 'system' ? detectLocale() : language).catch(() => undefined);
 
   mount(App, { target: document.getElementById('app')! });
-  await library.init();
+  await Promise.all([library.init(), groceries.init()]);
 
   if (isNative) {
     // Android back: close the topmost overlay, then return to Recipes, then exit (style.md §14).

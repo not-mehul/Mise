@@ -3,6 +3,7 @@
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { volumeKeysAvailable } from '../platform/device';
   import { isNative } from '../platform/output';
+  import { groceries } from '../state/groceries.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
   import { backupNow, exportAs, importFile } from '../state/transfer';
@@ -15,6 +16,14 @@
     { value: 'light', key: 'settings.themeDawn' },
   ];
   let busy = $state(false);
+  let staple = $state('');
+
+  function addStaple(e: SubmitEvent) {
+    e.preventDefault();
+    if (!staple.trim()) return;
+    groceries.setStaple(staple, true);
+    staple = '';
+  }
 
   async function run(task: () => Promise<{ message: string; ok: boolean }>) {
     busy = true;
@@ -99,6 +108,26 @@
   </div>
 
   <div class="panel">
+    <div class="section-head"><h2>{t('settings.groceries')}</h2></div>
+    <div class="switches">
+      <Switch id="switchListAwake" checked={settings.current.listAwake} label={t('settings.listAwake')} hint={t('settings.listAwakeHint')} onchange={(on) => settings.update({ listAwake: on })} />
+    </div>
+    <span class="t-field-label" id="staplesLabel">{t('settings.staples')}</span>
+    <p class="field-hint">{t('settings.staplesHint')}</p>
+    {#if settings.current.staples.length}
+      <ul class="chip-row staples" id="staplesList" aria-labelledby="staplesLabel">
+        {#each settings.current.staples as s (s)}
+          <li><button type="button" class="chip" aria-label={t('settings.removeStaple', { item: s })} onclick={() => groceries.setStaple(s, false)}>{s} ×</button></li>
+        {/each}
+      </ul>
+    {/if}
+    <form class="staple-form" onsubmit={addStaple}>
+      <input class="input" id="stapleInput" maxlength="60" enterkeyhint="done" placeholder={t('settings.addStaple')} aria-label={t('settings.addStaple')} bind:value={staple} />
+      <button type="submit" class="btn btn-muted" disabled={!staple.trim()}>{t('recipe.addCollection')}</button>
+    </form>
+  </div>
+
+  <div class="panel">
     <div class="section-head"><h2>{t('data.collections')}</h2></div>
     {#if library.collections.length}
       <ul class="collections">
@@ -174,6 +203,15 @@
   }
   .switches {
     margin-bottom: var(--space-3);
+  }
+  .staples {
+    list-style: none;
+    margin: var(--space-3) 0;
+  }
+  .staple-form {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
   }
   .collections li {
     display: flex;
