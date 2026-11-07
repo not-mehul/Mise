@@ -51,6 +51,20 @@
     globalThis.scrollTo?.({ top: 0 });
   }
 
+  // A timer's alarm was opened: turn to the step that set it.
+  $effect(() => {
+    const jump = ui.cookJump;
+    if (!jump || jump.recipeId !== recipe.id) return;
+    untrack(() => {
+      const at = pages.findIndex((p) => p.kind === 'step' && recipe.steps[p.index]?.id === jump.stepId);
+      if (at >= 0) {
+        allSteps = false;
+        go(at);
+      }
+      ui.cookJump = null;
+    });
+  });
+
   // Where you are is saved as you go, so leaving and coming back resumes there.
   $effect(() => {
     savePlace({ recipeId: recipe.id, page, servings, gathered: Object.keys(gathered).filter((id) => gathered[id]), at: Date.now() });

@@ -316,6 +316,7 @@ const de: Messages = {
   'sync.done': 'Abgeglichen',
   'sync.failed': 'Abgleich fehlgeschlagen. Prüfe, ob der Ordner noch da ist.',
   'sync.hint': 'Mise legt eine Kopie von allem als mise-sync.zip in diesem Ordner ab und führt sie bei jedem Öffnen zusammen. Halte den Ordner mit Syncthing, Drive oder Nextcloud auf allen Handys gleich. Die neueste Fassung jedes Rezepts gewinnt, und Gelöschtes bleibt gelöscht.',
+  'action.stop': 'Stopp',
 };
 
 export default de;

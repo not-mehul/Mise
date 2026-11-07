@@ -15,6 +15,12 @@ export type Screen =
   /** `owned`: unsaved photos this editor deletes if it is left without saving. */
   | { kind: 'editor'; draft: RecipeDraft; mode: 'check' | 'edit' | 'write'; owned?: string[] }
   | { kind: 'cook'; id: string; servings: number; units: UnitMode };
+
+/** A step cooking mode should turn to, from a timer's alarm. */
+export interface CookJump {
+  recipeId: string;
+  stepId: string;
+}
 export type ToastKind = 'success' | 'error' | 'info';
 
 export interface ToastAction {
@@ -118,6 +124,18 @@ class UiState {
     this.go('recipes');
     this.incoming = incoming;
     this.newOpen = true;
+  }
+
+  /** Set when an alarm asks cooking mode to turn to a step; cooking mode clears it. */
+  cookJump = $state.raw<CookJump | null>(null);
+
+  /** Cooking mode for a recipe, at a step: from a timer's alarm. The editor stays open if it is. */
+  cookAt(recipeId: string, servings: number, stepId?: string): void {
+    if (this.screen.kind === 'editor') return;
+    if (stepId) this.cookJump = { recipeId, stepId };
+    if (this.tab === 'recipes' && this.screen.kind === 'cook' && this.screen.id === recipeId) return;
+    this.newOpen = false;
+    this.show({ kind: 'cook', id: recipeId, servings, units: 'original' });
   }
 
   show(screen: Screen): void {

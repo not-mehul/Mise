@@ -322,6 +322,7 @@ const en = {
   'sync.done': 'Synced',
   'sync.failed': 'Couldn’t sync. Check that the folder is still there.',
   'sync.hint': 'Mise keeps a copy of everything in mise-sync.zip in this folder and merges it in each time you open Mise. Keep the folder in step across phones with Syncthing, Drive or Nextcloud. The newest copy of each recipe wins, and deletions stay deleted.',
+  'action.stop': 'Stop',
 } as const;
 
 export default en;

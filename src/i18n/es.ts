@@ -316,6 +316,7 @@ const es: Messages = {
   'sync.done': 'Sincronizado',
   'sync.failed': 'No se pudo sincronizar. Comprueba que la carpeta sigue ahí.',
   'sync.hint': 'Mise guarda una copia de todo en mise-sync.zip en esta carpeta y la combina cada vez que abres Mise. Mantén la carpeta igual en tus teléfonos con Syncthing, Drive o Nextcloud. Gana la copia más reciente de cada receta y lo borrado sigue borrado.',
+  'action.stop': 'Detener',
 };
 
 export default es;

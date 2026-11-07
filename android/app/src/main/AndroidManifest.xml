@@ -8,12 +8,12 @@
          and photos come from the system picker or camera app. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Cooking timers ring as notifications at the moment they end, with
-         the screen off or another app open. Local Notifications adds
-         POST_NOTIFICATIONS (asked for on the first timer) and
-         SCHEDULE_EXACT_ALARM; USE_EXACT_ALARM keeps them exact on Android 13
-         and later without sending you to the "Alarms & reminders" screen,
-         because timers are what cooking mode is for. -->
+    <!-- Cooking timers ring like an alarm at the moment they end, with the
+         screen off or another app open (TimerAlarmPlugin). Local
+         Notifications adds POST_NOTIFICATIONS (asked for on the first timer)
+         and SCHEDULE_EXACT_ALARM; USE_EXACT_ALARM keeps them exact on
+         Android 13 and later without sending you to the "Alarms & reminders"
+         screen, because timers are what cooking mode is for. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <!-- Auto Backup (Google account) copies the recipe library, which lives
@@ -89,6 +89,11 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Rings a kitchen timer at the moment it ends (TimerAlarmPlugin). -->
+        <receiver
+            android:name=".TimerAlarmReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -316,6 +316,7 @@ const fr: Messages = {
   'sync.done': 'Synchronisé',
   'sync.failed': 'Synchronisation impossible. Vérifiez que le dossier existe toujours.',
   'sync.hint': 'Mise garde une copie de tout dans mise-sync.zip dans ce dossier et la fusionne à chaque ouverture. Gardez le dossier identique sur vos téléphones avec Syncthing, Drive ou Nextcloud. La copie la plus récente de chaque recette l’emporte, et ce qui est supprimé le reste.',
+  'action.stop': 'Arrêter',
 };
 
 export default fr;

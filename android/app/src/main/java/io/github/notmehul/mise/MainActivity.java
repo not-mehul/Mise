@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(TextRecognitionPlugin.class);
         registerPlugin(ShareIntakePlugin.class);
         registerPlugin(FolderSyncPlugin.class);
+        registerPlugin(TimerAlarmPlugin.class);
         super.onCreate(savedInstanceState);
     }
 
