@@ -1,17 +1,152 @@
 <script lang="ts">
-  import { t } from '../i18n/index.svelte';
-  import EmptyState from './EmptyState.svelte';
+  import { matchesSearch, totalTime, type Recipe } from '../domain/recipe';
+  import { locale, t } from '../i18n/index.svelte';
+  import { library } from '../state/library.svelte';
+  import { ui } from '../state/ui.svelte';
+  import NewRecipe from './NewRecipe.svelte';
+  import RecipeCard from './RecipeCard.svelte';
+  import RecipeEditor from './RecipeEditor.svelte';
+  import RecipePage from './RecipePage.svelte';
+  import EmptyState from './ui/EmptyState.svelte';
+
+  type Sort = 'recent' | 'name' | 'time';
+  let query = $state('');
+  let collection = $state<string>('');
+  let sort = $state<Sort>('recent');
+
+  const shown = $derived.by(() => {
+    let list = library.recipes.filter((r) => (!collection || r.collectionIds.includes(collection)) && (!query.trim() || matchesSearch(r, query)));
+    const collator = new Intl.Collator(locale());
+    if (sort === 'name') list = [...list].sort((a, b) => collator.compare(a.title, b.title));
+    if (sort === 'time') list = [...list].sort((a, b) => (totalTime(a) ?? 1e9) - (totalTime(b) ?? 1e9));
+    return list;
+  });
+  const recipe = $derived(ui.screen.kind === 'recipe' ? library.get(ui.screen.id) : undefined);
+
+  // A collection that was deleted stops filtering.
+  $effect(() => {
+    if (collection && !library.collections.some((c) => c.id === collection)) collection = '';
+  });
+
+  function open(r: Recipe) {
+    ui.openRecipe(r.id);
+  }
 </script>
 
 <div id="viewRecipes" role="tabpanel" aria-labelledby="tabRecipes">
-  <h2 class="visually-hidden">{t('recipes.label')}</h2>
-  <EmptyState title={t('recipes.emptyTitle')} text={t('recipes.emptyBody')}>
-    {#snippet icon()}
-      <!-- Lucide "chef-hat" -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" />
-        <path d="M6 17h12" />
-      </svg>
-    {/snippet}
-  </EmptyState>
+  {#if ui.screen.kind === 'editor'}
+    {#key ui.screen.draft}
+      <RecipeEditor draft={ui.screen.draft} mode={ui.screen.mode} />
+    {/key}
+  {:else if ui.screen.kind === 'recipe' && recipe}
+    {#key recipe.id}
+      <RecipePage {recipe} />
+    {/key}
+  {:else if library.status === 'loading'}
+    <p class="t-hint" role="status">{t('status.loading')}</p>
+  {:else if library.status === 'failed'}
+    <p class="field-error" role="alert">{t('status.failed')}</p>
+  {:else if !library.recipes.length}
+    <h2 class="visually-hidden">{t('recipes.label')}</h2>
+    <EmptyState title={t('recipes.emptyTitle')} text={t('recipes.emptyBody')}>
+      {#snippet icon()}
+        <!-- Lucide "chef-hat" -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" />
+          <path d="M6 17h12" />
+        </svg>
+      {/snippet}
+      <button type="button" class="btn btn-primary" id="btnNewRecipe" onclick={() => (ui.newOpen = true)}>{t('recipes.new')}</button>
+    </EmptyState>
+  {:else}
+    <div class="section-head">
+      <h2>{t('recipes.label')}</h2>
+      <button type="button" class="btn btn-primary" id="btnNewRecipe" onclick={() => (ui.newOpen = true)}>{t('recipes.new')}</button>
+    </div>
+
+    <div class="list-tools">
+      <input
+        class="input"
+        type="search"
+        id="recipeSearch"
+        inputmode="search"
+        enterkeyhint="search"
+        autocomplete="off"
+        placeholder={t('recipes.search')}
+        aria-label={t('recipes.search')}
+        bind:value={query}
+      />
+      <div class="tool-row">
+        {#if library.collections.length}
+          <div class="chip-row" role="radiogroup" aria-label={t('recipes.filter')}>
+            <button type="button" class="chip" role="radio" aria-checked={!collection} onclick={() => (collection = '')}>{t('recipes.all')}</button>
+            {#each library.collections as c (c.id)}
+              <button type="button" class="chip" role="radio" aria-checked={collection === c.id} onclick={() => (collection = c.id)}>{c.name}</button>
+            {/each}
+          </div>
+        {/if}
+        <label class="sort">
+          <span class="t-field-label">{t('recipes.sort')}</span>
+          <select class="select" id="recipeSort" bind:value={sort}>
+            <option value="recent">{t('recipes.sortRecent')}</option>
+            <option value="name">{t('recipes.sortName')}</option>
+            <option value="time">{t('recipes.sortTime')}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    {#if shown.length}
+      <ul class="recipe-list" id="recipeList">
+        {#each shown as r (r.id)}
+          <li><RecipeCard recipe={r} onopen={() => open(r)} /></li>
+        {/each}
+      </ul>
+    {:else}
+      <div class="empty-match">
+        <p class="empty-title">{t('recipes.noMatch')}</p>
+        <p class="empty-text">{t('recipes.noMatchHint')}</p>
+        <button type="button" class="btn btn-muted" onclick={() => ((query = ''), (collection = ''))}>{t('recipes.clear')}</button>
+      </div>
+    {/if}
+  {/if}
 </div>
+
+{#if ui.newOpen}
+  <NewRecipe onclose={() => (ui.newOpen = false)} />
+{/if}
+
+<style>
+  .list-tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+  .tool-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .sort {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-left: auto;
+  }
+  .sort .select {
+    width: auto;
+  }
+  .recipe-list {
+    list-style: none;
+    display: grid;
+    gap: var(--space-3);
+  }
+  @media (min-width: 640px) {
+    .recipe-list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

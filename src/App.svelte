@@ -5,7 +5,8 @@
   import SettingsView from './components/SettingsView.svelte';
   import { detectLocale, locale, setLocale, t, type MessageKey } from './i18n/index.svelte';
   import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
-  import { settings } from './state/settings.svelte';
+  import { library } from './state/library.svelte';
+import { settings } from './state/settings.svelte';
   import { ui, type Tab } from './state/ui.svelte';
 
   const TABS: { id: Tab; dom: string; panel: string; key: MessageKey }[] = [
@@ -13,7 +14,15 @@
     { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries' },
     { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings' },
   ];
-  const tabs = $derived(TABS.map((tab) => ({ id: tab.id, domId: tab.dom, controls: tab.panel, label: t(tab.key) })));
+  const tabs = $derived(
+    TABS.map((tab) => ({
+      id: tab.id,
+      domId: tab.dom,
+      controls: tab.panel,
+      label: t(tab.key),
+      badge: tab.id === 'recipes' && library.recipes.length ? library.recipes.length : undefined,
+    })),
+  );
   const today = $derived(new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
 
   $effect(() => applyTheme(settings.current.theme));
@@ -41,7 +50,7 @@
   </header>
 
   <nav class="app-tabs">
-    <TabRail {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
+    <TabRail {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => (id === 'recipes' && ui.tab === 'recipes' ? ui.show({ kind: 'list' }) : ui.go(id))} />
   </nav>
 
   <main>
