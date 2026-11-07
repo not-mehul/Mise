@@ -36,16 +36,20 @@ public class ShareIntakePlugin extends Plugin {
     static final int MAX_IMAGES = 10;
     static final int MAX_SIDE = 2000;
 
+    /** Marks a launch intent as read. An extra, not a changed action, so the intent still matches what launched it. */
+    static final String READ = "io.github.notmehul.mise.SHARE_READ";
+
     private JSObject pending;
 
     @Override
     public void load() {
         Intent intent = getActivity().getIntent();
+        // Read once: a recreated activity must not import it again.
+        if (intent == null || intent.getBooleanExtra(READ, false)) return;
         JSObject share = read(intent);
         if (share != null) {
             pending = share;
-            // Read once: a recreated activity must not import it again.
-            intent.setAction(Intent.ACTION_MAIN);
+            intent.putExtra(READ, true);
         }
     }
 
