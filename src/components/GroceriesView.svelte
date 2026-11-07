@@ -1,5 +1,6 @@
 <script lang="ts">
   // The grocery list: one running list by aisle, ticked off in the shop.
+  import { Switch } from 'dusk-dawn';
   import { AISLES, byAisle, formatAmounts, isStaple, listToText, type Aisle, type GroceryItem } from '../domain/groceries';
   import { locale, t, type MessageKey } from '../i18n/index.svelte';
   import { keepAwake } from '../platform/device';
@@ -10,7 +11,6 @@
   import { ui } from '../state/ui.svelte';
   import EmptyState from './ui/EmptyState.svelte';
   import Sheet from './ui/Sheet.svelte';
-  import Switch from './ui/Switch.svelte';
 
   let typed = $state('');
   let editing = $state<string | null>(null);

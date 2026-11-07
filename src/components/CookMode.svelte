@@ -290,7 +290,7 @@
       <div class="step-layout">
         <div class="step-main">
           <h2 class="t-section-label step-number">{t('cook.step', { step: stepNumber })}{#if step.section}<span class="step-section"> · {step.section}</span>{/if}</h2>
-          <p class="step-text" id="stepText">
+          <p class="t-step" id="stepText">
             {#each stepParts(step, recipe.groups, factor, units, locale()) as piece, pi (pi)}{#if piece.timer !== undefined}<mark class="duration">{piece.text}</mark>{:else if piece.amount}<span class="inline-amount">{piece.text}</span>{:else}{piece.text}{/if}{/each}
           </p>
           {#if step.timers.length}
@@ -469,14 +469,6 @@
   }
   .step-number {
     color: var(--accent-amber);
-  }
-  /* Large enough to read from the counter: phase 6 moves this size into dusk-dawn. */
-  .step-text {
-    font-family: var(--font-serif);
-    font-size: clamp(1.625rem, 4.5vw + 0.5rem, 2.5rem);
-    line-height: 1.35;
-    color: var(--text-heading);
-    overflow-wrap: break-word;
   }
   .step-section {
     color: var(--text-dim);
