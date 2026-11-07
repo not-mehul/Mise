@@ -40,6 +40,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Long-press shortcuts: a new recipe, the grocery list (LauncherPlugin). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
             <!-- mise:// links from the other apps (style.md §14.1), read by
                  src/platform/incoming.ts. -->
             <intent-filter>
@@ -89,6 +93,19 @@
             </intent-filter>
 
         </activity>
+
+        <!-- The grocery list on the home screen. -->
+        <receiver
+            android:name=".GroceryWidget"
+            android:exported="true"
+            android:label="@string/widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grocery_widget" />
+        </receiver>
 
         <!-- Rings a kitchen timer at the moment it ends (TimerAlarmPlugin). -->
         <receiver

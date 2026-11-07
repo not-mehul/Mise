@@ -7,6 +7,7 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
+import { listenForShortcuts } from './platform/launcher';
 import { listenForAlarms } from './platform/notify';
 import { isNative } from './platform/output';
 import { listenForShares, readShare, sharedFile } from './platform/shared';
@@ -20,6 +21,7 @@ import { sync } from './state/sync.svelte';
 import { timers } from './state/timers.svelte';
 import { autoBackupIfDue, importBytes } from './state/transfer.svelte';
 import { ui } from './state/ui.svelte';
+import { keepWidgetCurrent } from './state/widget.svelte';
 import './styles/app.css';
 
 async function start(): Promise<void> {
@@ -44,6 +46,12 @@ async function start(): Promise<void> {
     // Leaving Mise writes the sync folder's copy, so another phone sees the change.
     void CapacitorApp.addListener('pause', () => void sync.push());
     void sync.now();
+    // The icon's shortcuts and the grocery widget.
+    void listenForShortcuts((screen) => {
+      if (screen === 'groceries') ui.go('groceries');
+      else ui.newRecipe();
+    });
+    keepWidgetCurrent();
     // A timer's alarm opened from the notification: back to its step.
     void listenForAlarms((alarm) => timers.opened(alarm));
     void timers.rearm();

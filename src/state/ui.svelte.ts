@@ -126,6 +126,14 @@ class UiState {
     this.newOpen = true;
   }
 
+  /** The New recipe sheet, from the icon's shortcut. An open editor is shown instead, so its edits aren't lost. */
+  newRecipe(): void {
+    this.go('recipes');
+    if (this.screen.kind === 'editor') return;
+    if (this.screen.kind === 'cook') this.openRecipe(this.screen.id);
+    this.newOpen = true;
+  }
+
   /** Set when an alarm asks cooking mode to turn to a step; cooking mode clears it. */
   cookJump = $state.raw<CookJump | null>(null);
 

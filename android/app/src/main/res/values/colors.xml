@@ -2,4 +2,10 @@
 <resources>
     <!-- Matches the web UI's background so there's no white flash on launch. -->
     <color name="mise_surface">#0F0D0B</color>
+    <!-- The grocery widget, in dusk-dawn's dusk colours (tokens.css). -->
+    <color name="widget_surface">#E614110E</color>
+    <color name="widget_heading">#F5ECD9</color>
+    <color name="widget_text">#E8E1D5</color>
+    <color name="widget_dim">#A8A29E</color>
+    <color name="widget_accent">#D4A574</color>
 </resources>
