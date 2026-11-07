@@ -80,6 +80,11 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:${versions.androidxCoordinatorLayoutVersion}"
     implementation "androidx.core:core-splashscreen:${versions.coreSplashScreenVersion}"
     implementation project(':capacitor-android')
+    // Photo import: on-device text recognition, Latin model bundled so it
+    // works offline (TextRecognitionPlugin), and EXIF rotation for shared
+    // photos (ShareIntakePlugin).
+    implementation "com.google.mlkit:text-recognition:${versions.mlkitTextRecognitionVersion}"
+    implementation "androidx.exifinterface:exifinterface:${versions.androidxExifInterfaceVersion}"
     testImplementation "junit:junit:${versions.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${versions.androidxJunitVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${versions.androidxEspressoCoreVersion}"

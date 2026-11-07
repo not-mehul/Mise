@@ -1,6 +1,6 @@
 <script lang="ts">
   // One form for checking an import, writing a recipe and editing one (style.md §1: single forms for editing).
-  import { untrack } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { type RecipeDraft } from '../domain/recipe';
   import { t, type MessageKey } from '../i18n/index.svelte';
   import { processPhoto } from '../platform/images';
@@ -14,8 +14,15 @@
   let draft = $state<RecipeDraft>(untrack(() => structuredClone($state.snapshot(initial) as RecipeDraft)));
   let errors = $state<{ title?: string; content?: string }>({});
   let saving = $state(false);
-  /** Photos picked here and not yet saved, deleted again if the editor is left without saving. */
-  const picked: string[] = [];
+  /**
+   * Photos picked here, or brought in by an import, and not yet saved. They
+   * are deleted again if the editor is left without saving, however it is left.
+   */
+  const picked: string[] = untrack(() => (mode === 'check' && initial.photoId ? [initial.photoId] : []));
+  let kept = false;
+  onDestroy(() => {
+    if (!kept) for (const id of picked) void library.dropPhoto(id);
+  });
   const heading: Record<typeof mode, MessageKey> = { check: 'editor.check', edit: 'editor.edit', write: 'editor.write' };
 
   function sort(index: number, to: 'ingredients' | 'steps' | 'notes' | null) {
@@ -39,8 +46,7 @@
     }
   }
 
-  async function cancel() {
-    for (const id of picked) await library.dropPhoto(id);
+  function cancel() {
     ui.closeEditor();
   }
 
@@ -55,6 +61,7 @@
     saving = true;
     try {
       const recipe = await library.save($state.snapshot(draft) as RecipeDraft);
+      kept = true;
       for (const id of picked) if (id !== recipe.photoId) await library.dropPhoto(id);
       ui.notify(t('editor.saved', { title: recipe.title }), 'success');
       ui.closeEditor(recipe.id);

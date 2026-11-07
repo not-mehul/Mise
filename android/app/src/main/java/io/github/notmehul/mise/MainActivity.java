@@ -8,7 +8,9 @@ import com.getcapacitor.PluginHandle;
 /**
  * Capacitor shell for Mise. mise:// links arrive as VIEW intents
  * (AndroidManifest.xml), which the App plugin passes to the page
- * (src/platform/incoming.ts). In cooking mode the volume keys move between
+ * (src/platform/incoming.ts). Links and photos shared from other apps
+ * arrive as SEND intents (ShareIntakePlugin), and photos are read on the
+ * phone (TextRecognitionPlugin). In cooking mode the volume keys move between
  * steps while the setting is on (VolumeKeysPlugin, src/platform/device.ts).
  */
 public class MainActivity extends BridgeActivity {
@@ -16,6 +18,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(VolumeKeysPlugin.class);
+        registerPlugin(TextRecognitionPlugin.class);
+        registerPlugin(ShareIntakePlugin.class);
         super.onCreate(savedInstanceState);
     }
 

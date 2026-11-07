@@ -3,6 +3,7 @@
 import type { UnitMode } from '../domain/ingredient';
 import type { RecipeDraft } from '../domain/recipe';
 import type { MiseLink } from '../platform/incoming';
+import type { Incoming } from '../platform/shared';
 
 export type Tab = 'recipes' | 'groceries' | 'settings';
 
@@ -47,8 +48,8 @@ const TOAST_EXIT_MS = 160;
 
 class UiState {
   tab = $state<Tab>('recipes');
-  /** The last mise:// link another app sent (style.md §14.1); acted on once recipes and import exist. */
-  link = $state.raw<MiseLink | null>(null);
+  /** Something to import, from the share sheet or a mise://import link; the New recipe sheet takes it. */
+  incoming = $state.raw<Incoming | null>(null);
   screen = $state.raw<Screen>({ kind: 'list' });
   /** The "New recipe" sheet. */
   newOpen = $state(false);
@@ -120,9 +121,17 @@ class UiState {
 
   /** A mise:// link: always lands on Recipes, never changes data (style.md §14.1). */
   openLink(link: MiseLink): void {
-    this.link = link;
+    if (link.kind === 'import') return this.importFrom({ kind: 'link', url: link.url });
     this.go('recipes');
-    if (link.kind === 'open' && link.id) this.openRecipe(link.id);
+    if (link.id) this.openRecipe(link.id);
+  }
+
+  /** Opens the New recipe sheet on something to import. Nothing is saved until Save recipe. */
+  importFrom(incoming: Incoming): void {
+    if (this.screen.kind === 'cook') this.openRecipe(this.screen.id);
+    this.go('recipes');
+    this.incoming = incoming;
+    this.newOpen = true;
   }
 
   show(screen: Screen): void {
