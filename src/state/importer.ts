@@ -35,7 +35,7 @@ async function download(url: string): Promise<Blob | null> {
   }
 }
 
-async function attachPhoto(draft: RecipeDraft, file: Blob | null): Promise<void> {
+export async function attachPhoto(draft: RecipeDraft, file: Blob | null): Promise<void> {
   if (!file) return;
   try {
     const { full, thumb } = await processPhoto(file);

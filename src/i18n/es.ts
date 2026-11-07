@@ -122,9 +122,7 @@ const es: Messages = {
   'data.title': "Tus datos",
   'data.export': "Exportar como Markdown",
   'data.backup': "Hacer copia ahora",
-  'data.backupHint': "Un .zip con todas las recetas y fotos, que Mise puede volver a importar.",
-  'data.import': "Importar una copia",
-  'data.importHint': "Una copia .zip o .json de Mise. Gana la versión guardada más reciente de cada receta.",
+  'data.backupHint': 'Un .zip con todas las recetas y fotos, la lista de la compra, el plan y tus ajustes, que Mise puede volver a importar.',
   'data.auto': "En el teléfono, Mise guarda una copia en Documents/Mise/Backups cada semana y conserva las cinco últimas.",
   'data.lastBackup': "Última copia {when}",
   'data.never': "nunca",
@@ -301,6 +299,10 @@ const es: Messages = {
   'editor.removePhotoN': 'Quitar la foto {n}',
   'recipe.photos': 'Fotos',
   'recipe.viewPhoto': 'Ver la foto {n}',
+  'data.openedRecipe': 'Revisa {title} y guárdala',
+  'recipe.shareFile': 'Enviar como archivo',
+  'data.importAny': 'Importar un archivo',
+  'data.importAnyHint': 'Una copia o receta de Mise (.zip, .json), una exportación de Paprika (.paprikarecipes) o JSON de recetas schema.org de Mealie y otras apps. Las copias se combinan y gana la versión más reciente de cada receta.',
 };
 
 export default es;

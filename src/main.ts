@@ -13,8 +13,9 @@ import { applyTheme } from './platform/theme.svelte';
 import { groceries } from './state/groceries.svelte';
 import { library } from './state/library.svelte';
 import { plan } from './state/plan.svelte';
+import { tombstones } from './state/tombstones';
 import { settings } from './state/settings.svelte';
-import { autoBackupIfDue } from './state/transfer';
+import { autoBackupIfDue } from './state/transfer.svelte';
 import { ui } from './state/ui.svelte';
 import './styles/app.css';
 
@@ -25,6 +26,7 @@ async function start(): Promise<void> {
   await setLocale(language === 'system' ? detectLocale() : language).catch(() => undefined);
 
   mount(App, { target: document.getElementById('app')! });
+  await tombstones.init();
   await Promise.all([library.init(), groceries.init(), plan.init()]);
 
   if (isNative) {

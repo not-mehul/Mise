@@ -3,9 +3,10 @@
 // kept in step with IndexedDB.
 // ============================================================
 
-import { db, type Photo } from '../data/db';
+import { db, type Photo, type Tombstone } from '../data/db';
 import type { CookEntry } from '../domain/cook';
 import { newId } from '../domain/ingredient';
+import { tombstones } from './tombstones';
 import { draftToRecipe, normaliseRecipe, type Collection, type Recipe, type RecipeDraft } from '../domain/recipe';
 
 export type Status = 'loading' | 'ready' | 'failed';
@@ -14,6 +15,8 @@ export interface MergeSummary {
   added: number;
   updated: number;
   unchanged: number;
+  /** Deleted here because the other copy deleted them later than they were last changed. */
+  removed: number;
 }
 
 const byNewest = (a: Recipe, b: Recipe) => b.updatedAt.localeCompare(a.updatedAt);
@@ -94,6 +97,7 @@ class Library {
         this.recipes = [...this.recipes, recipe].sort(byNewest);
       },
       forget: async () => {
+        await tombstones.add([id]);
         for (const id of recipe.photoIds) if (!this.recipes.some((r) => r.photoIds.includes(id))) await this.dropPhoto(id);
       },
     };
@@ -178,15 +182,22 @@ class Library {
 
   // ---------- backups ----------
 
-  /** Merges a backup in: new recipes are added, and the most recently saved copy of each wins. */
-  async merge(recipes: Recipe[], collections: Collection[], photos: Map<string, Photo>): Promise<MergeSummary> {
-    const summary: MergeSummary = { added: 0, updated: 0, unchanged: 0 };
+  /**
+   * Merges a backup or a synced copy in: new recipes are added and the most recently
+   * saved copy of each wins. A recipe deleted on either side after its last change
+   * stays deleted (`deleted` = the other copy's deletions; ours are in tombstones).
+   */
+  async merge(recipes: Recipe[], collections: Collection[], photos: Map<string, Photo>, deleted: Tombstone[] = []): Promise<MergeSummary> {
+    const summary: MergeSummary = { added: 0, updated: 0, unchanged: 0, removed: 0 };
     // A working copy for the merge, not reactive state.
     // eslint-disable-next-line svelte/prefer-svelte-reactivity
     const next = new Map(this.recipes.map((r) => [r.id, r]));
+    const dropped: string[] = [];
     await db.transaction('rw', db.recipes, db.collections, db.photos, async () => {
       for (const c of collections) if (!this.collections.some((x) => x.id === c.id)) await db.collections.put(c);
       for (const r of recipes) {
+        const gone = tombstones.at(r.id);
+        if (gone && gone >= r.updatedAt) continue;
         const current = next.get(r.id);
         if (current && current.updatedAt >= r.updatedAt) {
           summary.unchanged++;
@@ -201,8 +212,18 @@ class Library {
           if (photo) await db.photos.put(photo);
         }
       }
+      for (const stone of deleted) {
+        const current = next.get(stone.id);
+        if (!current || current.updatedAt > stone.at) continue;
+        await db.recipes.delete(stone.id);
+        next.delete(stone.id);
+        dropped.push(...current.photoIds);
+        summary.removed++;
+      }
     });
+    await tombstones.merge(deleted);
     this.recipes = [...next.values()].sort(byNewest);
+    for (const id of dropped) if (!this.recipes.some((r) => r.photoIds.includes(id))) await this.dropPhoto(id);
     const known = new Set(this.collections.map((c) => c.id));
     this.collections = [...this.collections, ...collections.filter((c) => !known.has(c.id))].sort((a, b) => a.name.localeCompare(b.name));
     return summary;

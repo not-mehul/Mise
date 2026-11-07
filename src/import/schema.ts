@@ -123,7 +123,8 @@ export function draftFromSchema(r: Json, url: string, site: string | null): Sche
   draft.cookMinutes = cook ? String(cook) : '';
   draft.totalMinutes = total && total !== (prep ?? 0) + (cook ?? 0) ? String(total) : '';
   draft.ingredients = list(r.recipeIngredient ?? r.ingredients)
-    .map(clean)
+    // Mealie and some exporters write each ingredient as an object.
+    .map((x) => (isObject(x) ? clean(x.display ?? x.originalText ?? x.note ?? x.text ?? x.name) : clean(x)))
     .filter(Boolean)
     .join('\n');
   draft.steps = instructions(r.recipeInstructions).join('\n');

@@ -6,7 +6,7 @@
   import { groceries } from '../state/groceries.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
-  import { backupNow, exportAs, importFile } from '../state/transfer';
+  import { backupNow, exportAs, importFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
   import Switch from './ui/Switch.svelte';
 
@@ -155,10 +155,10 @@
       <p class="t-hint">{t('data.lastBackup', { when: settings.current.lastBackupAt ? relativeTime(settings.current.lastBackupAt) : t('data.never') })}</p>
     {/if}
     <label class="btn btn-muted file-btn" class:busy>
-      {t('data.import')}
-      <input type="file" id="importFile" class="visually-hidden" accept=".zip,.json,application/zip,application/json" disabled={busy} onchange={(e) => onImport(e.currentTarget)} />
+      {t('data.importAny')}
+      <input type="file" id="importFile" class="visually-hidden" accept=".zip,.json,.paprikarecipes,.paprikarecipe,application/zip,application/json" disabled={busy} onchange={(e) => onImport(e.currentTarget)} />
     </label>
-    <p class="t-hint">{t('data.importHint')}</p>
+    <p class="t-hint">{t('data.importAnyHint')}</p>
   </div>
 
   <div class="panel">

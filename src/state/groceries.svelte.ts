@@ -6,6 +6,7 @@ import { db } from '../data/db';
 import { addToList, aisleFor, groceryKey, mergeAmount, normaliseItem, type Aisle, type GroceryAddition, type GroceryItem } from '../domain/groceries';
 import { newId, parseIngredient } from '../domain/ingredient';
 import { settings } from './settings.svelte';
+import { tombstones } from './tombstones';
 
 const HISTORY_KEY = 'mise.groceryHistory';
 const HISTORY_MAX = 300;
@@ -110,12 +111,36 @@ class Groceries {
   async remove(ids: string[]): Promise<() => Promise<void>> {
     const gone = this.list.filter((g) => ids.includes(g.id));
     await db.groceries.bulkDelete(gone.map((g) => g.id));
+    await tombstones.add(gone.map((g) => g.id));
     this.list = this.list.filter((g) => !ids.includes(g.id));
     return async () => {
+      await tombstones.drop(gone.map((g) => g.id));
       await db.groceries.bulkPut(gone);
       const known = new Set(this.list.map((g) => g.id));
       this.list = [...this.list, ...gone.filter((g) => !known.has(g.id))];
     };
+  }
+
+  /**
+   * Merges a list from a backup or a synced copy: items not here (by id or by name) are
+   * added unless deleted here, and items the other copy deleted go. Ours win otherwise.
+   */
+  async merge(items: GroceryItem[], deleted: { id: string }[] = [], history: string[] = []): Promise<void> {
+    const gone = new Set(deleted.map((d) => d.id));
+    const keys = new Set(this.list.map((g) => g.key));
+    const ids = new Set(this.list.map((g) => g.id));
+    const fresh = items.filter((g) => !ids.has(g.id) && !keys.has(g.key) && !tombstones.at(g.id) && !gone.has(g.id));
+    const removed = this.list.filter((g) => gone.has(g.id)).map((g) => g.id);
+    await db.transaction('rw', db.groceries, async () => {
+      if (fresh.length) await db.groceries.bulkPut(fresh);
+      if (removed.length) await db.groceries.bulkDelete(removed);
+    });
+    this.list = [...this.list.filter((g) => !gone.has(g.id)), ...fresh];
+    if (history.length) {
+      const known = new Set(this.history.map(groceryKey));
+      this.history = [...this.history, ...history.filter((h) => !known.has(groceryKey(h)))].slice(0, HISTORY_MAX);
+      this.saveHistory();
+    }
   }
 
   setStaple(item: string, on: boolean): void {
@@ -137,6 +162,10 @@ class Groceries {
     if (!names.length) return;
     const keys = new Set(names.map(groceryKey));
     this.history = [...names, ...this.history.filter((h) => !keys.has(groceryKey(h)))].slice(0, HISTORY_MAX);
+    this.saveHistory();
+  }
+
+  private saveHistory(): void {
     try {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(this.history));
     } catch {

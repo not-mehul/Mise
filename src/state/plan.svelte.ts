@@ -5,6 +5,7 @@
 import { db } from '../data/db';
 import { newId } from '../domain/ingredient';
 import { normaliseEntry, type PlanEntry } from '../domain/plan';
+import { tombstones } from './tombstones';
 
 class Plan {
   list = $state.raw<PlanEntry[]>([]);
@@ -28,8 +29,10 @@ class Plan {
   async remove(ids: string[]): Promise<() => Promise<void>> {
     const gone = this.list.filter((e) => ids.includes(e.id));
     await db.plan.bulkDelete(gone.map((e) => e.id));
+    await tombstones.add(gone.map((e) => e.id));
     this.list = this.list.filter((e) => !ids.includes(e.id));
     return async () => {
+      await tombstones.drop(gone.map((e) => e.id));
       await db.plan.bulkPut(gone);
       const known = new Set(this.list.map((e) => e.id));
       this.list = [...this.list, ...gone.filter((e) => !known.has(e.id))];
@@ -54,12 +57,15 @@ class Plan {
     if (ids.length) await this.remove(ids);
   }
 
-  /** Merges entries from a backup or a synced copy: ones not here yet are added. */
-  async merge(entries: PlanEntry[]): Promise<number> {
+  /** Merges entries from a backup or a synced copy: ones not here (or deleted here) are added; ones it deleted go. */
+  async merge(entries: PlanEntry[], deleted: { id: string }[] = []): Promise<number> {
+    const gone = new Set(deleted.map((d) => d.id));
     const known = new Set(this.list.map((e) => e.id));
-    const fresh = entries.filter((e) => !known.has(e.id));
+    const fresh = entries.filter((e) => !known.has(e.id) && !gone.has(e.id) && !tombstones.at(e.id));
+    const removed = this.list.filter((e) => gone.has(e.id)).map((e) => e.id);
     if (fresh.length) await db.plan.bulkPut(fresh);
-    this.list = [...this.list, ...fresh];
+    if (removed.length) await db.plan.bulkDelete(removed);
+    this.list = [...this.list.filter((e) => !gone.has(e.id)), ...fresh];
     return fresh.length;
   }
 

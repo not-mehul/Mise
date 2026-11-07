@@ -72,7 +72,7 @@ describe('the library', () => {
     const json = buildJson([{ ...a, title: 'A (newer)', updatedAt: '2999-01-01T00:00:00.000Z' }, { ...a, id: 'other', title: 'B' }], []);
     const data = await parseBackup(new TextEncoder().encode(json));
     const summary = await library.merge(data.recipes, data.collections, data.photos);
-    expect(summary).toEqual({ added: 1, updated: 1, unchanged: 0 });
+    expect(summary).toEqual({ added: 1, updated: 1, unchanged: 0, removed: 0 });
     expect(library.get(a.id)?.title).toBe('A (newer)');
     expect(library.get('other')?.title).toBe('B');
   });

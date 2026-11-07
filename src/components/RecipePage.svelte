@@ -8,7 +8,7 @@
   import { shareText } from '../platform/share';
   import { library } from '../state/library.svelte';
   import { plan } from '../state/plan.svelte';
-  import { recipeMarkdown } from '../state/transfer';
+  import { recipeMarkdown, shareRecipeFile } from '../state/transfer.svelte';
   import { ui } from '../state/ui.svelte';
   import AddGroceries from './AddGroceries.svelte';
   import PlanDayPicker from './PlanDayPicker.svelte';
@@ -122,6 +122,7 @@
   <div class="tools">
     <button type="button" class="btn btn-muted" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
     <button type="button" class="btn btn-muted" id="btnShare" onclick={share}>{t('recipe.share')}</button>
+    <button type="button" class="btn btn-muted" id="btnShareFile" onclick={() => void shareRecipeFile(recipe)}>{t('recipe.shareFile')}</button>
     <button type="button" class="btn btn-muted" id="btnDelete" onclick={remove}>{t('recipe.delete')}</button>
   </div>
 
