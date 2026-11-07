@@ -8,6 +8,7 @@
   import { library } from '../state/library.svelte';
   import { recipeMarkdown } from '../state/transfer';
   import { ui } from '../state/ui.svelte';
+  import AddGroceries from './AddGroceries.svelte';
   import Thumb from './Thumb.svelte';
 
   let { recipe }: { recipe: Recipe } = $props();
@@ -21,6 +22,7 @@
   let units = $state<UnitMode>('original');
   let have = $state<Record<string, boolean>>({});
   let newCollection = $state('');
+  let adding = $state(false);
   const total = $derived(totalTime(recipe));
 
   const UNIT_MODES: { value: UnitMode; key: MessageKey }[] = [
@@ -93,7 +95,12 @@
         {t('cook.start')}
       </button>
     {/if}
-    <button type="button" class="btn btn-secondary" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
+    {#if recipe.groups.length}
+      <button type="button" class="btn btn-secondary" id="btnAddGroceries" onclick={() => (adding = true)}>{t('groceries.addFromRecipe')}</button>
+    {/if}
+  </div>
+  <div class="tools">
+    <button type="button" class="btn btn-muted" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
     <button type="button" class="btn btn-muted" id="btnShare" onclick={share}>{t('recipe.share')}</button>
     <button type="button" class="btn btn-muted" id="btnDelete" onclick={remove}>{t('recipe.delete')}</button>
   </div>
@@ -219,6 +226,10 @@
   {/if}
 </article>
 
+{#if adding}
+  <AddGroceries {recipe} {factor} {units} onclose={() => (adding = false)} />
+{/if}
+
 <style>
   .recipe-page {
     display: flex;
@@ -249,8 +260,14 @@
     gap: 0 var(--space-4);
     color: var(--text-dim);
   }
-  .actions {
+  .actions:empty {
+    display: none;
+  }
+  .tools {
+    display: flex;
     flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: calc(-1 * var(--space-3));
   }
   .panel {
     margin: 0;
