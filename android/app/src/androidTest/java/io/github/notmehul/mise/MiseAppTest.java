@@ -66,7 +66,7 @@ public class MiseAppTest {
             .putExtra(Intent.EXTRA_TEXT, "Chilli oil eggs\nIngredients\n2 eggs\n1 tbsp chilli oil\nMethod\nFry the eggs in the chilli oil for 3 minutes.\nServe on toast with a pinch of salt and some spring onions.");
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(share)) {
             waitForText(Locator.CSS_SELECTOR, "#recipeEditor h2", "Check the recipe");
-            waitForValue("editIngredients", "1 tbsp chilli oil");
+            waitForIngredients("1 tbsp chilli oil");
         }
     }
 
@@ -85,7 +85,7 @@ public class MiseAppTest {
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(share)) {
             waitForText(Locator.CSS_SELECTOR, "#recipeEditor h2", "Check the recipe");
-            waitForValue("editIngredients", "eggs");
+            waitForIngredients("eggs");
         } finally {
             photo.delete();
         }
@@ -105,13 +105,21 @@ public class MiseAppTest {
         return bitmap;
     }
 
-    /** Polls until the form field with this id holds `expected` (a field's value isn't its text). */
-    private static void waitForValue(String id, String expected) {
+    /** Polls until the editor's ingredient rows (amount and name boxes, one row per line) hold `expected`. */
+    private static void waitForIngredients(String expected) {
+        waitForScript(
+            "return Array.from(document.querySelectorAll('#ingredientRows li')).map(function (li) {"
+                + " return Array.from(li.querySelectorAll('input')).map(function (i) { return i.value; }).filter(Boolean).join(' '); }).join('\\n');",
+            "the ingredient rows", expected);
+    }
+
+    /** Polls until `body` (a script returning a string) returns text containing `expected`. */
+    private static void waitForScript(String body, String what, String expected) {
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         String last = null;
         while (System.currentTimeMillis() < deadline) {
             try {
-                last = onWebView().perform(script("var e = document.getElementById('" + id + "'); return e ? e.value : '';", castOrDie(String.class))).get();
+                last = onWebView().perform(script(body, castOrDie(String.class))).get();
                 if (last != null && last.contains(expected)) return;
             } catch (RuntimeException ignored) {
                 // The page is still loading.
@@ -123,7 +131,7 @@ public class MiseAppTest {
                 throw new AssertionError(interrupted);
             }
         }
-        throw new AssertionError("#" + id + " never held \"" + expected + "\"; last value: " + last);
+        throw new AssertionError(what + " never held \"" + expected + "\"; last value: " + last);
     }
 
     /** Polls until the element exists and its text contains `expected`. */
