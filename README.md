@@ -120,6 +120,11 @@ the same review screen, and nothing is saved until you press *Save recipe*.
   page (`src/import/instagram.ts`). Instagram often refuses automated readers;
   when it does, Mise asks you to paste the caption and keeps the link as the
   source. Videos are not transcribed.
+- **TikTok, YouTube and other apps**: a TikTok video's caption comes from
+  TikTok's public oEmbed, a YouTube video's (or Short's) description from its
+  page, and a Facebook, Threads or Pinterest post from its link preview
+  (`src/import/social.ts`). Lines like "Macros: 520 kcal | 45g P | 50g C | 12g
+  F" become the recipe's macros per serving.
 - **Photos** are read offline by ML Kit text recognition, bundled in the APK
   (`TextRecognitionPlugin.java`). Several photos become one recipe in the order
   you picked them, and two-column pages are read column by column
@@ -195,7 +200,7 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 | `src/App.svelte`, `src/main.ts` | Shell and bootstrap |
 | `src/components/` | The Recipes list, recipe page and editor, the New recipe sheet, Plan, Groceries and Settings; `ui/` holds Sheet, Switch and EmptyState |
 | `src/domain/` | Plain data and rules, no UI: recipes, ingredient lines, quantities, units and conversion, step timers, the plan, pantry matching, voice commands, settings |
-| `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `photo.ts` (reading order for recognised text), `files.ts` (backups, Paprika, recipe JSON) |
+| `src/import/` | Readers that turn something shared into a recipe draft: `text.ts` (pasted text and captions), `web.ts` and `schema.ts` (links), `instagram.ts`, `social.ts` (TikTok, YouTube, link previews), `photo.ts` (reading order for recognised text), `files.ts` (backups, Paprika, recipe JSON) |
 | `src/data/` | The IndexedDB library (Dexie): recipes, collections, photos, groceries, the plan, deletions |
 | `src/state/` | The library, groceries, plan, timers, settings, export/import/backups, folder sync, the widget, and UI state (screens, toast, the Android back stack) |
 | `src/lib/` | Backups (.zip with fflate) and Markdown |

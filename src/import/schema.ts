@@ -4,7 +4,7 @@
 // field for field, so these imports need no guessing.
 // ============================================================
 
-import { emptyDraft, type RecipeDraft } from '../domain/recipe';
+import { emptyDraft, macroValue, type RecipeDraft } from '../domain/recipe';
 import { decodeEntities, htmlToText } from './html';
 
 type Json = Record<string, unknown>;
@@ -130,6 +130,14 @@ export function draftFromSchema(r: Json, url: string, site: string | null): Sche
   draft.steps = instructions(r.recipeInstructions).join('\n');
   draft.notes = clean(r.description);
   draft.tags = tags(r);
+  const n = isObject(r.nutrition) ? r.nutrition : null;
+  if (n) {
+    const pick = (v: unknown) => {
+      const x = macroValue(Array.isArray(v) ? v[0] : v);
+      return x === null ? '' : String(x);
+    };
+    draft.nutrition = { calories: pick(n.calories), protein: pick(n.proteinContent), carbs: pick(n.carbohydrateContent), fat: pick(n.fatContent) };
+  }
   draft.source.text = [draft.title, draft.ingredients, draft.steps].filter(Boolean).join('\n\n');
   return { draft, imageUrl: imageUrl(r.image) };
 }

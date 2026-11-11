@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { cheer } from '../lib/delight';
   // The grocery list: one running list by aisle, ticked off in the shop.
   import { Switch, play } from 'dusk-dawn';
@@ -92,7 +93,7 @@
   {:else}
     <div class="section-head">
       <h2>{t('groceries.label')}</h2>
-      <button type="button" class="btn btn-muted" id="btnShareList" disabled={!groceries.left} onclick={share}>{t('recipe.share')}</button>
+      <button type="button" class="btn-icon" id="btnShareList" aria-label={t('recipe.share')} title={t('recipe.share')} disabled={!groceries.left} onclick={share}><Icon name="share" /></button>
     </div>
   {/if}
 

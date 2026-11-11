@@ -6,9 +6,9 @@
 // Lines it can't place go to `unsorted` for the person to sort.
 // ============================================================
 
-import { stripListMarker } from '../domain/ingredient';
+import { parseIngredient, stripListMarker } from '../domain/ingredient';
 import { parseLeadingQuantity } from '../domain/quantity';
-import { emptyDraft, type RecipeDraft, type SourceKind } from '../domain/recipe';
+import { emptyDraft, type Macro, type RecipeDraft, type SourceKind } from '../domain/recipe';
 import { parseLeadingUnit } from '../domain/units';
 
 type Section = 'intro' | 'ingredients' | 'steps' | 'notes';
@@ -73,7 +73,9 @@ function looksLikeIngredient(line: string): boolean {
   if (text.length > 90) return false;
   const q = parseLeadingQuantity(text);
   if (q) return !/^(?:minutes?|mins?|hours?|degrees|°)/i.test(q.rest);
-  return !!parseLeadingUnit(text) || /^(?:a|an)\s+(?:pinch|dash|handful|splash)\b/i.test(text) || /\bto taste\b/i.test(text);
+  if (parseLeadingUnit(text) || /^(?:a|an)\s+(?:pinch|dash|handful|splash)\b/i.test(text) || /\bto taste\b/i.test(text)) return true;
+  // "Basmati rice - 200g, uncooked": the amount comes after the item.
+  return !looksLikeStep(text) && parseIngredient(text).unit !== null;
 }
 
 // A line that opens with a kitchen verb is an instruction, however short: "Pour 2 cups of water into the pot."
@@ -88,6 +90,59 @@ function looksLikeStep(line: string): boolean {
 /** Splits a long run-on method paragraph into sentences. */
 function sentences(paragraph: string): string[] {
   return paragraph.split(/(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ\d])/u).map((s) => s.trim()).filter(Boolean);
+}
+
+// ---------- macros ----------
+
+const MACRO_WORDS: [Macro, RegExp][] = [
+  ['calories', /^(?:calories|calorie|cals?|kcal|energy|kalorien|energie|calorías|calorias|énergie)$/i],
+  ['protein', /^(?:protein|proteins|prot|p|eiweiß|eiweiss|proteína|proteinas|proteínas|protéines|protéine)$/i],
+  ['carbs', /^(?:carbs?|carbohydrates?|carbohydrate|c|kohlenhydrate|kh|carbohidratos|hidratos|glucides)$/i],
+  ['fat', /^(?:fats?|f|total fat|fett|grasas?|lipides|matières grasses)$/i],
+];
+const NUM = String.raw`(\d+(?:[.,]\d+)?)`;
+const WORD = String.raw`([A-Za-zÀ-ÿß]+(?: fat)?)`;
+// "Protein: 40g", "40g protein", "40 g P", "450 kcal", "Calories 450".
+const MACRO_PAIRS = [
+  new RegExp(`${WORD}\\s*[:=-]?\\s*${NUM}\\s*(?:k?cal|g|grams?)?\\b`, 'giu'),
+  new RegExp(`${NUM}\\s*(k?cal|g|grams?)?\\s*(?:of\\s+)?${WORD}`, 'giu'),
+];
+
+function macroOf(word: string): Macro | null {
+  return MACRO_WORDS.find(([, re]) => re.test(word.trim()))?.[0] ?? null;
+}
+
+/**
+ * The macros on a line ("Macros: 520 kcal | 45g P | 50g C | 12g F"), or null when it
+ * names fewer than two of them or has words that aren't about macros (a recipe line).
+ */
+export function readMacros(line: string): Partial<Record<Macro, string>> | null {
+  const text = line.replace(EMOJI, ' ').replace(/^(?:macros?|nutrition(?: facts)?|per serving|nährwerte|valores nutricionales|valeurs nutritionnelles)[^:]*:\s*/i, '');
+  const found: Partial<Record<Macro, string>> = {};
+  let covered = '';
+  for (const re of MACRO_PAIRS) {
+    for (const m of text.matchAll(re)) {
+      const [word, num, unit] = re === MACRO_PAIRS[0] ? [m[1]!, m[2]!, ''] : [m[3]!, m[1]!, m[2] ?? ''];
+      let macro = macroOf(word);
+      if (!macro && /k?cal/i.test(unit)) macro = 'calories';
+      if (!macro || found[macro]) continue;
+      found[macro] = num.replace(',', '.');
+      covered += m[0];
+    }
+    if (Object.keys(found).length) break;
+  }
+  // "450 kcal" on its own.
+  const kcal = /(\d+(?:[.,]\d+)?)\s*k?cal\b/i.exec(text);
+  if (kcal && !found.calories) {
+    found.calories = kcal[1]!.replace(',', '.');
+    covered += kcal[0];
+  }
+  const count = Object.keys(found).length;
+  if (!count) return null;
+  // Most of the line must be the macros, so "Add 40 g of fat" isn't read as one.
+  const rest = text.replace(/[\d.,:|/•·;()\-–—+%]/g, ' ').replace(/\b(?:k?cal|g|grams?|of|and|per|serving|portion)\b/gi, ' ');
+  const words = rest.split(/\s+/).filter((w) => w && !macroOf(w));
+  return count >= 2 || (count === 1 && words.length === 0 && covered.length >= text.trim().length * 0.6) ? found : null;
 }
 
 export interface ParsedText {
@@ -143,6 +198,12 @@ export function parseRecipeText(input: string, kind: SourceKind = 'text', extra:
         used = true;
       }
       if (used) continue;
+    }
+
+    const macros = section === 'steps' ? null : readMacros(line);
+    if (macros) {
+      for (const [m, v] of Object.entries(macros) as [Macro, string][]) if (!draft.nutrition[m]) draft.nutrition[m] = v;
+      continue;
     }
 
     const clean = line.replace(EMOJI, '').replace(/\s+/g, ' ').trim();

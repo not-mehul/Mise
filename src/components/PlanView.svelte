@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   // The week planner: what you'll cook on each of the next seven days, and the
   // whole week's ingredients to the grocery list in one go.
   import { byDay, dayDate, planDays, type PlanEntry } from '../domain/plan';
@@ -67,9 +68,9 @@
     {/if}
   </div>
   <div class="week-nav" role="group" aria-label={t('plan.weeks')}>
-    <button type="button" class="btn btn-muted" id="btnPrevWeek" disabled={week <= 0} onclick={() => (week -= 1)}>{t('plan.prevWeek')}</button>
+    <button type="button" class="btn-icon" id="btnPrevWeek" aria-label={t('plan.prevWeek')} disabled={week <= 0} onclick={() => (week -= 1)}><Icon name="back" /></button>
     <span class="t-data-small">{label(days[0]!)} – {dayDate(days[6]!).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}</span>
-    <button type="button" class="btn btn-muted" id="btnNextWeek" disabled={week >= 3} onclick={() => (week += 1)}>{t('plan.nextWeek')}</button>
+    <button type="button" class="btn-icon" id="btnNextWeek" aria-label={t('plan.nextWeek')} disabled={week >= 3} onclick={() => (week += 1)}><Icon name="next" /></button>
   </div>
 
   {#if !library.recipes.length}
@@ -86,7 +87,7 @@
         <li class="day" class:past={section.day < today}>
           <div class="day-head">
             <h3 class="t-section-label">{label(section.day)}</h3>
-            <button type="button" class="btn btn-muted add" aria-label={t('plan.addTo', { day: label(section.day) })} onclick={() => (pickFor = section.day)}>+ {t('action.add')}</button>
+            <button type="button" class="btn btn-muted add" aria-label={t('plan.addTo', { day: label(section.day) })} onclick={() => (pickFor = section.day)}><Icon name="plus" size={16} />{t('action.add')}</button>
           </div>
           {#each section.entries as e (e.id)}
             {@const recipe = library.get(e.recipeId)}

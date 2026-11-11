@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { TabRail, ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
+  import { ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
   import IdlePot from './components/IdlePot.svelte';
+  import AppTabs from './components/ui/AppTabs.svelte';
   import IdleDock from './components/ui/IdleDock.svelte';
+  import type { IconName } from './components/ui/Icon.svelte';
   import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
@@ -16,11 +18,11 @@
   import { settings } from './state/settings.svelte';
   import { ui, type Tab } from './state/ui.svelte';
 
-  const TABS: { id: Tab; dom: string; panel: string; key: MessageKey }[] = [
-    { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes' },
-    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan' },
-    { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries' },
-    { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings' },
+  const TABS: { id: Tab; dom: string; panel: string; key: MessageKey; icon: IconName }[] = [
+    { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes', icon: 'recipes' },
+    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan', icon: 'plan' },
+    { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries', icon: 'groceries' },
+    { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings', icon: 'settings' },
   ];
   const tabs = $derived(
     TABS.map((tab) => ({
@@ -28,6 +30,7 @@
       domId: tab.dom,
       controls: tab.panel,
       label: t(tab.key),
+      icon: tab.icon,
       badge: tab.id === 'recipes' ? library.recipes.length || undefined : tab.id === 'groceries' ? groceries.left || undefined : undefined,
     })),
   );
@@ -42,7 +45,7 @@
     }, 60_000);
     return () => clearInterval(id);
   });
-  const today = $derived(clock.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
+  const today = $derived(clock.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'short' }));
 
   $effect(() => applyTheme(settings.current.theme));
 
@@ -67,6 +70,9 @@
   });
 </script>
 
+<!-- Edge to edge: a strip behind the status bar so text never scrolls under the clock. -->
+<div class="status-scrim" aria-hidden="true"></div>
+
 <div class="glow-layer" aria-hidden="true">
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
@@ -83,13 +89,13 @@
       <div class="site-title">
         <p class="eyebrow">{today}</p>
         <h1 class="t-page-title" bind:this={title} use:secretTaps={{ count: 7, onunlock: miseEnPlace }}><em>Mise</em></h1>
-        <p class="t-tagline">{t('app.tagline')}</p>
       </div>
       <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => settings.update({ theme: toggledTheme() })} />
+      <p class="t-tagline">{t('app.tagline')}</p>
     </header>
 
     <nav class="app-tabs">
-      <TabRail {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => (id === 'recipes' && ui.tab === 'recipes' ? ui.show({ kind: 'list' }) : ui.go(id))} />
+      <AppTabs {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => (id === 'recipes' && ui.tab === 'recipes' ? ui.show({ kind: 'list' }) : ui.go(id))} />
     </nav>
 
     <main>

@@ -39,6 +39,7 @@ test('imports a recipe page, then offers the saved one for the same link', async
   // The review screen, with nothing saved yet.
   await expect(page.locator('#recipeEditor h2')).toHaveText('Check the recipe');
   await expect(page.locator('#editTitle')).toHaveValue('Lemon pasta');
+  await page.locator('#ingModeText').click();
   await expect(page.locator('#editIngredients')).toHaveValue('200 g spaghetti\n1 lemon\n30 g parmesan');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 

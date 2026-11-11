@@ -39,8 +39,38 @@ export interface Recipe {
   photoIds: string[];
   /** Each time it was cooked, newest first. */
   log: CookEntry[];
+  /** Macros for one serving. */
+  nutrition: Nutrition;
   createdAt: string;
   updatedAt: string;
+}
+
+export const MACROS = ['calories', 'protein', 'carbs', 'fat'] as const;
+export type Macro = (typeof MACROS)[number];
+/** Per serving: kcal, then grams of protein, carbohydrate and fat. */
+export type Nutrition = Record<Macro, number | null>;
+
+export function emptyNutrition(): Nutrition {
+  return { calories: null, protein: null, carbs: null, fat: null };
+}
+
+export function hasNutrition(n: Nutrition): boolean {
+  return MACROS.some((m) => n[m] !== null);
+}
+
+/** "450", "450 kcal", "32.5 g", "32,5g": the number, or null. */
+export function macroValue(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 && value < 100000 ? Math.round(value * 10) / 10 : null;
+  if (typeof value !== 'string') return null;
+  const m = /(\d+(?:[.,]\d+)?)/.exec(value);
+  return m ? macroValue(Number(m[1]!.replace(',', '.'))) : null;
+}
+
+export function normaliseNutrition(value: unknown): Nutrition {
+  const n = emptyNutrition();
+  if (!value || typeof value !== 'object') return n;
+  for (const m of MACROS) n[m] = macroValue((value as Record<string, unknown>)[m]);
+  return n;
 }
 
 export interface Collection {
@@ -67,12 +97,15 @@ export interface RecipeDraft {
   photoIds: string[];
   /** Lines the parser couldn't place, for the person to sort. */
   unsorted: string[];
+  /** Macros per serving, as typed. */
+  nutrition: Record<Macro, string>;
 }
 
 export function emptyDraft(source: RecipeSource = { kind: 'manual' }): RecipeDraft {
   return {
     id: null, title: '', servings: '', prepMinutes: '', cookMinutes: '', totalMinutes: '',
     ingredients: '', steps: '', tags: '', notes: '', source, collectionIds: [], photoIds: [], unsorted: [],
+    nutrition: { calories: '', protein: '', carbs: '', fat: '' },
   };
 }
 
@@ -184,6 +217,7 @@ export function draftToRecipe(draft: RecipeDraft, existing: Recipe | undefined, 
     photoId: draft.photoIds[0] ?? null,
     photoIds: [...new Set(draft.photoIds)],
     log: existing?.log ?? [],
+    nutrition: normaliseNutrition(draft.nutrition),
     createdAt: existing?.createdAt ?? stamp,
     updatedAt: stamp,
   };
@@ -206,6 +240,7 @@ export function recipeToDraft(recipe: Recipe): RecipeDraft {
     collectionIds: recipe.collectionIds,
     photoIds: [...recipe.photoIds],
     unsorted: [],
+    nutrition: { calories: str(recipe.nutrition.calories), protein: str(recipe.nutrition.protein), carbs: str(recipe.nutrition.carbs), fat: str(recipe.nutrition.fat) },
   };
 }
 
@@ -317,6 +352,7 @@ export function normaliseRecipe(value: unknown): Recipe | null {
     notes: typeof v.notes === 'string' ? v.notes : '',
     ...photosOf(v),
     log: normaliseLog(v.log),
+    nutrition: normaliseNutrition(v.nutrition),
     createdAt: typeof v.createdAt === 'string' ? v.createdAt : stamp,
     updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : stamp,
   };

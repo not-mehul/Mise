@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { matchesSearch, totalTime, type Recipe } from '../domain/recipe';
   import { locale, t } from '../i18n/index.svelte';
   import { cookAgain, cookableWith, haveKeys, sortByLog, type LogSort } from '../domain/pantry';
@@ -80,7 +81,7 @@
   {:else}
     <div class="section-head">
       <h2>{t('recipes.label')}</h2>
-      <button type="button" class="btn btn-primary" id="btnNewRecipe" onclick={() => (ui.newOpen = true)}>{t('recipes.new')}</button>
+      <button type="button" class="btn btn-primary" id="btnNewRecipe" onclick={() => (ui.newOpen = true)}><Icon name="plus" size={16} />{t('recipes.new')}</button>
     </div>
 
     <div class="list-tools">
