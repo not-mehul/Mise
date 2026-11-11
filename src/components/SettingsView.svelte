@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { EGGS, eggsFound } from '../lib/delight';
   import { Switch } from 'dusk-dawn';
   import type { LanguageSetting, ThemeSetting } from '../domain/settings';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
@@ -193,6 +194,7 @@
   <div class="panel">
     <div class="section-head"><h2>{t('settings.about')}</h2></div>
     <p class="t-hint">Mise · {t('settings.version', { version: __APP_VERSION__ })}</p>
+    <p class="t-hint" id="eggCount">{t('settings.eggs', { found: eggsFound(), total: EGGS.length })}</p>
     <p class="t-hint"><b>{t('settings.privacyTerm')}</b> {t('settings.privacy')}</p>
   </div>
 </div>

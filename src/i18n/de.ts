@@ -321,6 +321,22 @@ const de: Messages = {
   'cook.handsFreeRefused': 'Mise kann das Mikrofon nicht nutzen, daher ist freihändig aus.',
   'settings.handsFree': 'Freihändig kochen',
   'settings.handsFreeHint': 'Sage im Kochmodus „weiter“, „zurück“, „wiederholen“, „Timer“, „Zutaten“ oder „stopp“. Mise hört nur zu, solange der Kochmodus offen ist.',
+
+  'egg.found': 'Osterei gefunden: {found} von {total}.',
+  'egg.konami': 'Kekse für die ganze Küche.',
+  'egg.title': 'Mise en place: alles an seinem Platz.',
+  'egg.chef': 'Verstanden, Chef.',
+  'egg.pot': "Die Suppe ist fertig. Perfekt gerührt.",
+  'idle.label': "Ein Topf auf dem Herd",
+  'idle.stir': "Umrühren",
+  'idle.hint': "Einmal umrühren?",
+  'idle.tip1': "Zwischendurch abschmecken.",
+  'idle.tip2': "Nudelwasser salzen wie das Meer.",
+  'idle.tip3': "Lass das Fleisch ruhen. Dich auch.",
+  'idle.tip4': "Ein Spritzer Zitrone rettet fast alles.",
+  'idle.tip5': "Erst das ganze Rezept lesen.",
+  'idle.tip6': "Erst sanft, dann etwas heißer.",
+  'settings.eggs': 'Ostereier: {found} von {total} gefunden',
 };
 
 export default de;

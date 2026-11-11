@@ -21,7 +21,7 @@ export interface CookJump {
   recipeId: string;
   stepId: string;
 }
-export type ToastKind = 'success' | 'error' | 'info';
+export type ToastKind = 'success' | 'error' | 'info' | 'celebrate';
 
 export interface ToastAction {
   label: string;

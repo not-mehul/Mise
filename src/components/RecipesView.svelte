@@ -10,6 +10,8 @@
   import RecipeEditor from './RecipeEditor.svelte';
   import RecipePage from './RecipePage.svelte';
   import EmptyState from './ui/EmptyState.svelte';
+  import { LoadingIndicator } from 'dusk-dawn';
+  import { hatch } from '../lib/delight';
 
   type Sort = 'recent' | 'name' | 'time' | LogSort;
   let query = $state('');
@@ -32,6 +34,14 @@
   const again = $derived(!query.trim() && !collection && sort === 'recent' && !pantryOpen ? cookAgain(library.recipes) : []);
   const recipe = $derived(ui.screen.kind === 'recipe' ? library.get(ui.screen.id) : undefined);
 
+  // An easter egg: call to the pass, and the kitchen answers.
+  let heard = false;
+  $effect(() => {
+    const said = /^\s*yes,?\s+chef\.?\s*$/i.test(query);
+    if (said && !heard) hatch('chef', t('egg.chef'));
+    heard = said;
+  });
+
   // A collection that was deleted stops filtering.
   $effect(() => {
     if (collection && !library.collections.some((c) => c.id === collection)) collection = '';
@@ -52,7 +62,7 @@
       <RecipePage {recipe} />
     {/key}
   {:else if library.status === 'loading'}
-    <p class="t-hint" role="status">{t('status.loading')}</p>
+    <div class="loading"><LoadingIndicator label={t('status.loading')} /></div>
   {:else if library.status === 'failed'}
     <p class="field-error" role="alert">{t('status.failed')}</p>
   {:else if !library.recipes.length}
@@ -130,7 +140,7 @@
 
     {#if pantryOpen && have.length}
       {#if cookable.length}
-        <ul class="recipe-list" id="cookableList">
+        <ul class="recipe-list dd-stagger" id="cookableList">
           {#each cookable as c (c.recipe.id)}
             <li>
               <RecipeCard recipe={c.recipe} onopen={() => open(c.recipe)} />
@@ -142,7 +152,7 @@
         <p class="t-hint">{t('pantry.none')}</p>
       {/if}
     {:else if shown.length}
-      <ul class="recipe-list" id="recipeList">
+      <ul class="recipe-list dd-stagger" id="recipeList">
         {#each shown as r (r.id)}
           <li><RecipeCard recipe={r} onopen={() => open(r)} /></li>
         {/each}
@@ -162,6 +172,11 @@
 {/if}
 
 <style>
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-6) 0;
+  }
   .list-tools {
     display: flex;
     flex-direction: column;

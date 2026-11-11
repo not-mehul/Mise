@@ -46,3 +46,42 @@ for (const theme of ['dark', 'light'] as const) {
     }
   });
 }
+
+test('hides easter eggs, counts them once, and lists the count in Settings', async ({ page }) => {
+  for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+    await page.keyboard.press(key);
+  }
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Cookies for the whole kitchen. Easter egg found: 1 of 4.');
+
+  for (let i = 0; i < 7; i++) await page.locator('.t-page-title').click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Mise en place: everything in its place. Easter egg found: 2 of 4.');
+
+  // Found again, it just plays.
+  for (let i = 0; i < 7; i++) await page.locator('.t-page-title').click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Mise en place: everything in its place.');
+
+  await page.locator('#tabSettings').click();
+  await expect(page.locator('#eggCount')).toHaveText('Easter eggs: 2 of 4 found');
+});
+
+test('left alone, a pot comes to simmer; ten stirs and the soup is on', async ({ page }) => {
+  await page.clock.install();
+  await page.reload();
+  await expect(page.locator('#tabRecipes')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('idle-dock')).toHaveCount(0);
+  await page.clock.runFor(41_000);
+  const dock = page.getByTestId('idle-dock');
+  await expect(dock).toBeVisible();
+  await expect(dock.locator('.idle-line')).toHaveText('Give it a stir?');
+  expect((await new AxeBuilder({ page }).include('[data-testid="idle-dock"]').analyze()).violations).toEqual([]);
+
+  const pot = dock.getByRole('button', { name: 'Stir the pot' });
+  await pot.click();
+  await expect(dock.locator('.idle-line')).toHaveText('Taste as you go.');
+  for (let i = 1; i < 10; i++) await pot.click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText("Soup's on. Stirred to perfection. Easter egg found: 1 of 4.");
+
+  // Anything else sends it away.
+  await page.locator('#tabPlan').click();
+  await expect(dock).toHaveCount(0);
+});

@@ -327,6 +327,22 @@ const en = {
   'cook.handsFreeRefused': 'Mise can’t use the microphone, so hands-free is off.',
   'settings.handsFree': 'Hands-free cooking',
   'settings.handsFreeHint': 'In cooking mode, say “next”, “back”, “repeat”, “timer”, “ingredients” or “stop”. Mise listens only while cooking mode is open.',
+
+  'egg.found': 'Easter egg found: {found} of {total}.',
+  'egg.konami': 'Cookies for the whole kitchen.',
+  'egg.title': 'Mise en place: everything in its place.',
+  'egg.chef': 'Heard, chef.',
+  'egg.pot': "Soup's on. Stirred to perfection.",
+  'idle.label': "A pot on the stove",
+  'idle.stir': "Stir the pot",
+  'idle.hint': "Give it a stir?",
+  'idle.tip1': "Taste as you go.",
+  'idle.tip2': "Salt the pasta water like the sea.",
+  'idle.tip3': "Let the meat rest. You too.",
+  'idle.tip4': "A squeeze of lemon fixes most things.",
+  'idle.tip5': "Read the whole recipe first.",
+  'idle.tip6': "Low and slow, then a little higher.",
+  'settings.eggs': 'Easter eggs: {found} of {total} found',
 } as const;
 
 export default en;
