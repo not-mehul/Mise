@@ -2,7 +2,7 @@
 // animations come from dusk-dawn and all of them respect reduced motion; the
 // toast always says what happened, so nothing is only visual.
 
-import { celebrate, createEggs, type CelebrateOptions } from 'dusk-dawn';
+import { celebrate, createEggs, type CelebrateOptions } from 'dusk-dawn/expressive';
 import { t } from '../i18n/index.svelte';
 import { ui } from '../state/ui.svelte';
 
