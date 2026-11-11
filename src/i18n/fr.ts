@@ -321,6 +321,12 @@ const fr: Messages = {
   'cook.handsFreeRefused': 'Mise ne peut pas utiliser le micro, le mode mains libres est désactivé.',
   'settings.handsFree': 'Cuisiner les mains libres',
   'settings.handsFreeHint': 'En mode cuisine, dites « suivant », « retour », « répète », « minuteur », « ingrédients » ou « arrête ». Mise n’écoute que lorsque le mode cuisine est ouvert.',
+
+  'egg.found': 'Œuf de Pâques trouvé : {found} sur {total}.',
+  'egg.konami': 'Des biscuits pour toute la brigade.',
+  'egg.title': 'Mise en place : chaque chose à sa place.',
+  'egg.chef': 'Oui, chef.',
+  'settings.eggs': 'Œufs de Pâques : {found} sur {total} trouvés',
 };
 
 export default fr;

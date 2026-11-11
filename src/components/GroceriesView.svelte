@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cheer } from '../lib/delight';
   // The grocery list: one running list by aisle, ticked off in the shop.
   import { Switch } from 'dusk-dawn';
   import { AISLES, byAisle, formatAmounts, isStaple, listToText, type Aisle, type GroceryItem } from '../domain/groceries';
@@ -75,6 +76,13 @@
     const text = listToText(groceries.list, t('groceries.label'), (a) => t(aisleKey(a)), locale());
     if ((await shareText(t('groceries.label'), text)) === 'copied') ui.notify(t('groceries.copied'), 'success');
   }
+
+  // Ticking off the last thing on the list is worth a small cheer.
+  async function tick(id: string, box: HTMLElement) {
+    const wasLast = groceries.left === 1 && !groceries.list.find((g) => g.id === id)?.ticked;
+    await groceries.toggle(id);
+    if (wasLast && groceries.left === 0) cheer(box, { count: 40, spread: 0.8 });
+  }
 </script>
 
 <div id="viewGroceries" role="tabpanel" aria-labelledby="tabGroceries">
@@ -131,7 +139,7 @@
             {@const source = from(g)}
             <li class="grocery" class:ticked={g.ticked} data-key={g.key}>
               <label class="tick">
-                <input type="checkbox" checked={g.ticked} onchange={() => groceries.toggle(g.id)} />
+                <input type="checkbox" checked={g.ticked} onchange={(e) => tick(g.id, e.currentTarget)} />
                 <span class="text">
                   <span class="name">{#if amount}<span class="amount t-data">{`${amount} `}</span>{/if}{g.item}</span>
                   {#if g.note}<span class="from t-hint grocery-note">{g.note}</span>{/if}

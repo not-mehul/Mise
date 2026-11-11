@@ -321,6 +321,12 @@ const de: Messages = {
   'cook.handsFreeRefused': 'Mise kann das Mikrofon nicht nutzen, daher ist freihändig aus.',
   'settings.handsFree': 'Freihändig kochen',
   'settings.handsFreeHint': 'Sage im Kochmodus „weiter“, „zurück“, „wiederholen“, „Timer“, „Zutaten“ oder „stopp“. Mise hört nur zu, solange der Kochmodus offen ist.',
+
+  'egg.found': 'Osterei gefunden: {found} von {total}.',
+  'egg.konami': 'Kekse für die ganze Küche.',
+  'egg.title': 'Mise en place: alles an seinem Platz.',
+  'egg.chef': 'Verstanden, Chef.',
+  'settings.eggs': 'Ostereier: {found} von {total} gefunden',
 };
 
 export default de;

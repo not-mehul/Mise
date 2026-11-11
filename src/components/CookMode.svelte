@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cheer } from '../lib/delight';
   // Cooking mode: one step at a time in large type, to be read from a metre
   // away. Swipe, tap the edges, use the arrow keys or (Android) the volume
   // keys to move. The screen stays on while it is open.
@@ -195,6 +196,11 @@
     ui.openRecipe(recipe.id);
   }
 
+  // The last step is done: a little confetti from the title, once per visit (style.md §11.3).
+  function bonAppetit(node: HTMLElement) {
+    cheer(node, { count: 50 });
+  }
+
   async function markCooked() {
     saving = true;
     try {
@@ -335,7 +341,7 @@
         </aside>
       </div>
     {:else}
-      <h2 class="page-title">{t('cook.doneTitle')}</h2>
+      <h2 class="page-title t-emphasized" use:bonAppetit>{t('cook.doneTitle')}</h2>
       <p class="t-hint">{t('cook.doneHint')}</p>
       <div class="field">
         <span class="t-field-label" id="ratingLabel">{t('cook.rating')}</span>

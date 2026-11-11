@@ -327,6 +327,12 @@ const en = {
   'cook.handsFreeRefused': 'Mise can’t use the microphone, so hands-free is off.',
   'settings.handsFree': 'Hands-free cooking',
   'settings.handsFreeHint': 'In cooking mode, say “next”, “back”, “repeat”, “timer”, “ingredients” or “stop”. Mise listens only while cooking mode is open.',
+
+  'egg.found': 'Easter egg found: {found} of {total}.',
+  'egg.konami': 'Cookies for the whole kitchen.',
+  'egg.title': 'Mise en place: everything in its place.',
+  'egg.chef': 'Heard, chef.',
+  'settings.eggs': 'Easter eggs: {found} of {total} found',
 } as const;
 
 export default en;

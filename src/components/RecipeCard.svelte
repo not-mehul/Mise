@@ -8,7 +8,7 @@
   const count = $derived(ingredientCount(recipe));
 </script>
 
-<button type="button" class="recipe-card" onclick={onopen}>
+<button type="button" class="recipe-card dd-pressable dd-lift" onclick={onopen}>
   <span class="card-photo"><Thumb photoId={recipe.photoId} /></span>
   <span class="card-text">
     <span class="t-card-title">{recipe.title}</span>

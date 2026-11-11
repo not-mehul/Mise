@@ -321,6 +321,12 @@ const es: Messages = {
   'cook.handsFreeRefused': 'Mise no puede usar el micrófono, así que manos libres está desactivado.',
   'settings.handsFree': 'Cocinar con manos libres',
   'settings.handsFreeHint': 'En el modo cocina, di “siguiente”, “atrás”, “repite”, “temporizador”, “ingredientes” o “para”. Mise solo escucha con el modo cocina abierto.',
+
+  'egg.found': 'Huevo de Pascua encontrado: {found} de {total}.',
+  'egg.konami': 'Galletas para toda la cocina.',
+  'egg.title': 'Mise en place: cada cosa en su sitio.',
+  'egg.chef': 'Oído, chef.',
+  'settings.eggs': 'Huevos de Pascua: {found} de {total} encontrados',
 };
 
 export default es;

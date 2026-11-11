@@ -11,6 +11,7 @@
   import { library } from '../state/library.svelte';
   import { ui } from '../state/ui.svelte';
   import Sheet from './ui/Sheet.svelte';
+  import { LoadingIndicator } from 'dusk-dawn';
 
   let { onclose }: { onclose: () => void } = $props();
 
@@ -196,7 +197,7 @@
     </div>
   {:else if step === 'reading'}
     <div class="reading" role="status">
-      <span class="dot" aria-hidden="true"></span>
+      <LoadingIndicator label={t('new.reading')} size={56} />
       <p class="t-card-title">{t('new.reading')}</p>
       <p class="t-hint">{t('new.readingHint')}</p>
     </div>
@@ -328,24 +329,5 @@
     gap: var(--space-2);
     padding: var(--space-6) 0;
     text-align: center;
-  }
-  .dot {
-    width: 10px;
-    height: 10px;
-    margin-bottom: var(--space-2);
-    border-radius: 50%;
-    background: var(--accent-amber);
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    50% {
-      opacity: 0.3;
-      transform: scale(0.7);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .dot {
-      animation: none;
-    }
   }
 </style>

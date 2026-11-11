@@ -46,3 +46,20 @@ for (const theme of ['dark', 'light'] as const) {
     }
   });
 }
+
+test('hides easter eggs, counts them once, and lists the count in Settings', async ({ page }) => {
+  for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+    await page.keyboard.press(key);
+  }
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Cookies for the whole kitchen. Easter egg found: 1 of 3.');
+
+  for (let i = 0; i < 7; i++) await page.locator('.t-page-title').click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Mise en place: everything in its place. Easter egg found: 2 of 3.');
+
+  // Found again, it just plays.
+  for (let i = 0; i < 7; i++) await page.locator('.t-page-title').click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Mise en place: everything in its place.');
+
+  await page.locator('#tabSettings').click();
+  await expect(page.locator('#eggCount')).toHaveText('Easter eggs: 2 of 3 found');
+});

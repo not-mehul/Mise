@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { TabRail, ThemeToggle, Toast } from 'dusk-dawn';
+  import { TabRail, ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
   import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import TimerTray from './components/TimerTray.svelte';
+  import { KITCHEN, hatch } from './lib/delight';
   import { detectLocale, locale, setLocale, t, type MessageKey } from './i18n/index.svelte';
   import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
   import { groceries } from './state/groceries.svelte';
@@ -42,6 +43,21 @@
   const today = $derived(clock.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
 
   $effect(() => applyTheme(settings.current.theme));
+
+  // Easter eggs (style.md §11.3). The Konami code bakes a batch of cookies;
+  // tapping the title seven times puts everything in its place.
+  let title = $state<HTMLElement>();
+  $effect(() =>
+    konami(() => {
+      void celebrate({ ...KITCHEN, shapes: ['cookie-9', 'cookie-12', 'cookie-7'], count: 90, spread: 1.4 });
+      hatch('konami', t('egg.konami'));
+    }),
+  );
+  function miseEnPlace() {
+    play(title, 'jelly');
+    for (const [i, el] of [...document.querySelectorAll('.tab-rail [role="tab"]')].entries()) setTimeout(() => play(el, 'pop'), 60 * i);
+    hatch('title', t('egg.title'));
+  }
   $effect(() => {
     const lang = settings.current.language;
     const next = lang === 'system' ? detectLocale() : lang;
@@ -64,7 +80,7 @@
     <header class="site-header">
       <div class="site-title">
         <p class="eyebrow">{today}</p>
-        <h1 class="t-page-title"><em>Mise</em></h1>
+        <h1 class="t-page-title" bind:this={title} use:secretTaps={{ count: 7, onunlock: miseEnPlace }}><em>Mise</em></h1>
         <p class="t-tagline">{t('app.tagline')}</p>
       </div>
       <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => settings.update({ theme: toggledTheme() })} />
