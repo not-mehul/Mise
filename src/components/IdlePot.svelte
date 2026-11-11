@@ -12,7 +12,7 @@
   let stirring = $state(false);
   let toy = $state<HTMLButtonElement>();
   let settle: ReturnType<typeof setTimeout> | undefined;
-  const line = $derived(stirs === 0 ? t('idle.hint') : stirs >= READY ? t('egg.pot') : t(TIPS[(stirs - 1) % TIPS.length] ?? 'idle.hint'));
+  const line = $derived(stirs === 0 ? t('idle.hint') : t(TIPS[(stirs - 1) % TIPS.length] ?? 'idle.hint'));
 
   function stir() {
     stirs += 1;
