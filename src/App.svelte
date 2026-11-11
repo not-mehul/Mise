@@ -36,6 +36,9 @@
   );
   const cooking = $derived(ui.tab === 'recipes' && ui.screen.kind === 'cook' ? ui.screen : null);
   const cookRecipe = $derived(cooking ? library.get(cooking.id) : undefined);
+  // The full header (date, title, tagline) greets you on the recipe list; everywhere
+  // else it shrinks to one line so the screen goes to what you opened.
+  const compact = $derived(!(ui.tab === 'recipes' && ui.screen.kind === 'list'));
   // Ticks each minute, so the date in the header turns over at midnight with the app left open.
   let clock = $state(new Date());
   $effect(() => {
@@ -85,13 +88,13 @@
   {/key}
 {:else}
   <div class="container">
-    <header class="site-header">
+    <header class="site-header" class:compact>
       <div class="site-title">
-        <p class="eyebrow">{today}</p>
+        {#if !compact}<p class="eyebrow">{today}</p>{/if}
         <h1 class="t-page-title" bind:this={title} use:secretTaps={{ count: 7, onunlock: miseEnPlace }}><em>Mise</em></h1>
       </div>
       <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => settings.update({ theme: toggledTheme() })} />
-      <p class="t-tagline">{t('app.tagline')}</p>
+      {#if !compact}<p class="t-tagline">{t('app.tagline')}</p>{/if}
     </header>
 
     <nav class="app-tabs">

@@ -36,7 +36,7 @@
     if (row.heading) return row.name.trim() ? `${row.name.trim()}:` : '';
     const split = splitAmount(row.line);
     if (row.line && split.amount === row.amount && split.name === row.name) return row.line.trim();
-    return joinAmount(row.amount, row.name);
+    return joinAmount(row.amount, row.name.replace(/\s*\n\s*/g, ' '));
   }
 
   // Read the rows again whenever the text changes from outside them
@@ -65,6 +65,15 @@
     document.getElementById(heading ? `ingName${key}` : `ingAmount${key}`)?.focus();
   }
 
+  /** Enter moves on to the next row's amount (or a new row) rather than breaking the line. */
+  function nextOnEnter(e: KeyboardEvent, index: number) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const nextRow = rows[index + 1];
+    if (nextRow) document.getElementById(nextRow.heading ? `ingName${nextRow.key}` : `ingAmount${nextRow.key}`)?.focus();
+    else void add();
+  }
+
   function remove(index: number) {
     rows.splice(index, 1);
     write();
@@ -91,7 +100,8 @@
             <input class="input group" id="ingName{row.key}" aria-label={t('editor.groupName')} placeholder={t('editor.groupPlaceholder')} autocomplete="off" bind:value={row.name} oninput={write} />
           {:else}
             <input class="input amount" id="ingAmount{row.key}" aria-label={t('editor.amountOf', { n: i + 1 })} placeholder={row.line ? '' : '200 g'} autocomplete="off" enterkeyhint="next" bind:value={row.amount} oninput={write} />
-            <input class="input name" id="ingName{row.key}" aria-label={t('editor.ingredientN', { n: i + 1 })} placeholder={t('editor.ingredientPlaceholder')} autocomplete="off" enterkeyhint="next" bind:value={row.name} oninput={write} />
+            <!-- A one-line box that grows, so a long ingredient wraps instead of hiding its end. -->
+            <textarea class="input name" id="ingName{row.key}" rows="1" aria-label={t('editor.ingredientN', { n: i + 1 })} placeholder={t('editor.ingredientPlaceholder')} autocomplete="off" enterkeyhint="next" bind:value={row.name} oninput={write} onkeydown={(e) => nextOnEnter(e, i)}></textarea>
           {/if}
           <button type="button" class="btn-icon" aria-label={t('editor.removeIngredient', { n: i + 1 })} onclick={() => remove(i)}><Icon name="close" size={18} /></button>
         </li>
@@ -150,6 +160,18 @@
   }
   .input {
     min-width: 0;
+  }
+  textarea.name {
+    field-sizing: content;
+    min-height: 44px;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.4;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+  .rows li {
+    align-items: start;
   }
   .adders {
     display: grid;

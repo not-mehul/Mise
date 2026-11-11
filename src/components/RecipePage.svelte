@@ -221,41 +221,41 @@
     </section>
   {/if}
 
-  <section class="panel" aria-labelledby="collectionsHead">
-    <div class="section-head"><h3 id="collectionsHead">{t('recipe.collections')}</h3></div>
-    {#if library.collections.length}
+  <!-- Collections and where it came from: a quiet footer, not another card. -->
+  <footer class="recipe-foot">
+    <section class="foot-collections" aria-labelledby="collectionsHead">
+      <h3 class="t-field-label" id="collectionsHead">{t('recipe.collections')}</h3>
       <div class="chip-row collections">
         {#each library.collections as c (c.id)}
           <button type="button" class="chip" aria-pressed={recipe.collectionIds.includes(c.id)} onclick={() => library.toggleCollection(recipe.id, c.id)}>{c.name}</button>
         {/each}
+        <form
+          class="new-collection"
+          onsubmit={(e) => {
+            e.preventDefault();
+            void addCollection();
+          }}
+        >
+          <input class="input" id="newCollection" placeholder={t('recipe.newCollection')} aria-label={t('recipe.collectionName')} enterkeyhint="done" maxlength="60" bind:value={newCollection} />
+          <button type="submit" class="btn-icon" aria-label={t('recipe.addCollection')} disabled={!newCollection.trim()}><Icon name="plus" /></button>
+        </form>
       </div>
-    {/if}
-    <form
-      class="new-collection"
-      onsubmit={(e) => {
-        e.preventDefault();
-        void addCollection();
-      }}
-    >
-      <input class="input" id="newCollection" placeholder={t('recipe.newCollection')} aria-label={t('recipe.collectionName')} enterkeyhint="done" maxlength="60" bind:value={newCollection} />
-      <button type="submit" class="btn btn-muted" disabled={!newCollection.trim()}>{t('recipe.addCollection')}</button>
-    </form>
-  </section>
-
-  <footer class="source t-hint">
-    <b>{t('recipe.source')}.</b>
-    {#if recipe.source.url}
-      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
-    {:else}
-      {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
+    </section>
+    <p class="source t-hint">
+      <b>{t('recipe.source')}.</b>
+      {#if recipe.source.url}
+        <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
+      {:else}
+        {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
+      {/if}
+    </p>
+    {#if recipe.source.text}
+      <details class="original">
+        <summary class="t-field-label">{t('recipe.original')}</summary>
+        <pre>{recipe.source.text}</pre>
+      </details>
     {/if}
   </footer>
-  {#if recipe.source.text}
-    <details class="original">
-      <summary class="t-field-label">{t('recipe.original')}</summary>
-      <pre>{recipe.source.text}</pre>
-    </details>
-  {/if}
 </article>
 
 {#if viewing}
@@ -518,8 +518,23 @@
     color: var(--text-strong);
     line-height: 1.6;
   }
+  .recipe-foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-soft);
+  }
+  .foot-collections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .foot-collections h3 {
+    margin: 0;
+  }
   .collections {
-    margin-bottom: var(--space-4);
+    align-items: center;
   }
   .cook-log {
     list-style: none;
@@ -553,7 +568,15 @@
   }
   .new-collection {
     display: flex;
-    gap: var(--space-2);
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1 1 10rem;
+    min-width: 10rem;
+  }
+  .new-collection .input {
+    min-height: 36px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .source a {
     color: var(--accent-amber);

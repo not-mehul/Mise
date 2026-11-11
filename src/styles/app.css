@@ -58,6 +58,14 @@ fieldset {
 .site-header .t-tagline {
   grid-column: 1 / -1;
 }
+.site-header.compact {
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.site-header.compact .t-page-title {
+  font-size: 2rem;
+  line-height: 1.1;
+}
 
 .app-tabs {
   margin-bottom: var(--space-6);
