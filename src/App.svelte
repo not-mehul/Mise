@@ -2,6 +2,8 @@
   import { TabRail, ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
+  import IdlePot from './components/IdlePot.svelte';
+  import IdleDock from './components/ui/IdleDock.svelte';
   import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
@@ -104,6 +106,8 @@
     </main>
   </div>
 {/if}
+
+<IdleDock label={t('idle.label')} disabled={!!cooking}><IdlePot /></IdleDock>
 
 <Toast toast={ui.toast} onpause={() => ui.pauseToast()} onresume={() => ui.resumeToast()} onaction={() => ui.actOnToast()} />
 

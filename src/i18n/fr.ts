@@ -326,6 +326,16 @@ const fr: Messages = {
   'egg.konami': 'Des biscuits pour toute la brigade.',
   'egg.title': 'Mise en place : chaque chose à sa place.',
   'egg.chef': 'Oui, chef.',
+  'egg.pot': "La soupe est prête. Remuée à la perfection.",
+  'idle.label': "Une marmite sur le feu",
+  'idle.stir': "Remuer la marmite",
+  'idle.hint': "On remue ?",
+  'idle.tip1': "Goûtez au fur et à mesure.",
+  'idle.tip2': "Salez l’eau des pâtes comme la mer.",
+  'idle.tip3': "Laissez reposer la viande. Vous aussi.",
+  'idle.tip4': "Un filet de citron arrange presque tout.",
+  'idle.tip5': "Lisez toute la recette d’abord.",
+  'idle.tip6': "À feu doux, puis un peu plus fort.",
   'settings.eggs': 'Œufs de Pâques : {found} sur {total} trouvés',
 };
 
