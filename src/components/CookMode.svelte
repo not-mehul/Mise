@@ -4,6 +4,7 @@
   // away. Swipe, tap the edges, use the arrow keys or (Android) the volume
   // keys to move. The screen stays on while it is open.
   import { untrack } from 'svelte';
+  import Icon from './ui/Icon.svelte';
   import { cookPages, resumePlace, stepIngredients, formatClock } from '../domain/cook';
   import { showIngredient, type UnitMode } from '../domain/ingredient';
   import type { Recipe } from '../domain/recipe';
@@ -236,11 +237,7 @@
 
 <main class="cook" id="cookMode" aria-labelledby="cookTitle">
   <header class="cook-bar">
-    <button type="button" class="btn btn-muted" id="btnCookClose" onclick={close}>
-      <!-- Lucide "x" -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-      {t('action.close')}
-    </button>
+    <button type="button" class="btn-icon" id="btnCookClose" aria-label={t('action.close')} title={t('action.close')} onclick={close}><Icon name="close" size={22} /></button>
     <span class="spacer"></span>
     <button type="button" class="btn-icon" id="btnReadAloud" aria-pressed={settings.current.readAloud} aria-label={t('cook.readAloud')} onclick={() => settings.update({ readAloud: !settings.current.readAloud })}>
       <!-- Lucide "volume-2" -->
@@ -252,7 +249,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
       </button>
     {/if}
-    <button type="button" class="btn btn-muted" id="btnAllSteps" onclick={() => (allSteps = true)}>{t('cook.allSteps')}</button>
+    <button type="button" class="btn-icon" id="btnAllSteps" aria-label={t('cook.allSteps')} title={t('cook.allSteps')} onclick={() => (allSteps = true)}><Icon name="steps" size={22} /></button>
   </header>
   <div class="cook-where">
     <h1 class="t-section-label cook-title" id="cookTitle">{recipe.title}</h1>
@@ -345,9 +342,9 @@
       <p class="t-hint">{t('cook.doneHint')}</p>
       <div class="field">
         <span class="t-field-label" id="ratingLabel">{t('cook.rating')}</span>
-        <div class="segmented rating" role="radiogroup" aria-labelledby="ratingLabel">
+        <div class="rating" role="radiogroup" aria-labelledby="ratingLabel">
           {#each [1, 2, 3, 4, 5] as n (n)}
-            <button type="button" role="radio" aria-checked={rating === n} aria-label={t('cook.ratingValue', { count: n })} onclick={() => (rating = rating === n ? null : n)}>{'★'.repeat(n)}</button>
+            <button type="button" class="btn-icon star" class:lit={(rating ?? 0) >= n} role="radio" aria-checked={rating === n} aria-label={t('cook.ratingValue', { count: n })} onclick={() => (rating = rating === n ? null : n)}><Icon name="star" size={28} filled={(rating ?? 0) >= n} /></button>
           {/each}
         </div>
       </div>
@@ -355,7 +352,7 @@
         <span class="t-field-label">{t('cook.note')}</span>
         <textarea class="textarea" id="cookNote" rows="3" maxlength="2000" placeholder={t('cook.notePlaceholder')} bind:value={note}></textarea>
       </label>
-      <div class="btn-row">
+      <div class="done-actions">
         <button type="button" class="btn btn-primary" id="btnMarkCooked" disabled={saving} onclick={markCooked}>{t('cook.markCooked')}</button>
         <button type="button" class="btn btn-muted" id="btnLeaveCook" onclick={leave}>{t('cook.closeWithout')}</button>
       </div>
@@ -414,8 +411,8 @@
     align-items: center;
     gap: var(--space-2);
   }
-  .cook-bar > .btn:first-child {
-    padding-left: 0.75rem;
+  .cook-bar {
+    margin: 0 calc(-1 * var(--space-3));
   }
   .spacer {
     flex: 1;
@@ -554,8 +551,30 @@
     color: var(--text-dim);
     text-decoration: line-through;
   }
-  .rating button {
-    letter-spacing: -0.1em;
+  .rating {
+    display: flex;
+    gap: var(--space-1);
+    margin-left: calc(-1 * var(--space-2));
+  }
+  .rating .star {
+    width: 48px;
+    height: 48px;
+    color: var(--text-faint);
+  }
+  .rating .star.lit {
+    color: var(--accent-amber);
+  }
+  .rating .star :global(svg) {
+    width: 28px;
+    height: 28px;
+  }
+  .done-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .done-actions .btn {
+    width: 100%;
   }
   .step-layout,
   .step-main {

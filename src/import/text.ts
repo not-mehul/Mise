@@ -200,8 +200,9 @@ export function parseRecipeText(input: string, kind: SourceKind = 'text', extra:
       if (used) continue;
     }
 
-    const macros = section === 'steps' ? null : readMacros(line);
-    if (macros) {
+    // Captions often end the method with the macros; in the steps it takes two of them to count.
+    const macros = readMacros(line);
+    if (macros && (section !== 'steps' || Object.keys(macros).length >= 2)) {
       for (const [m, v] of Object.entries(macros) as [Macro, string][]) if (!draft.nutrition[m]) draft.nutrition[m] = v;
       continue;
     }

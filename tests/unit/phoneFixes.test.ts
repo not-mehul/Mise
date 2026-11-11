@@ -65,6 +65,12 @@ describe('macros', () => {
     expect(draft.ingredients).toBe('600g chicken\n200g rice');
   });
 
+  it('takes a macros line out of the method too', () => {
+    const { draft } = parseRecipeText('Bowl\nIngredients\n2 eggs\nMethod\nFry the eggs for 3 minutes.\nMacros per serving: 520 kcal, 45g protein, 50g carbs, 12g fat');
+    expect(draft.steps).toBe('Fry the eggs for 3 minutes.');
+    expect(draft.nutrition.calories).toBe('520');
+  });
+
   it('saves, reloads and exports them', () => {
     const draft = { ...emptyDraft(), title: 'Bowl', ingredients: '1 egg', nutrition: { calories: '450', protein: '32,5 g', carbs: '', fat: 'x' } };
     const recipe = draftToRecipe(draft, undefined);

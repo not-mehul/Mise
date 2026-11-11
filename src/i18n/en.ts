@@ -68,7 +68,7 @@ const en = {
   'new.read': 'Read recipe',
   'new.empty': 'Paste the recipe first.',
   'new.link': 'Link',
-  'new.linkHint': 'A recipe page or an Instagram post. Mise reads it on your phone.',
+  'new.linkHint': 'A recipe page, or a post from Instagram, TikTok, YouTube and more. Mise reads it on your phone.',
   'new.linkLabel': 'Link to the recipe',
   'new.linkInvalid': 'That isn’t a link. Copy the address of the page or post.',
   'new.linkOffline': 'Couldn’t open that page. Check your connection and try again, or paste the recipe.',

@@ -65,7 +65,7 @@ const fr: Messages = {
   'new.read': "Lire la recette",
   'new.empty': "Collez d’abord la recette.",
   'new.link': "Lien",
-  'new.linkHint': "Une page de recette ou une publication Instagram. Mise la lit sur votre téléphone.",
+  'new.linkHint': "Une page de recette ou une publication Instagram, TikTok, YouTube et plus. Mise la lit sur votre téléphone.",
   'new.linkLabel': "Lien vers la recette",
   'new.linkInvalid': "Ce n’est pas un lien. Copiez l’adresse de la page ou de la publication.",
   'new.linkOffline': "Impossible d’ouvrir cette page. Vérifiez la connexion et réessayez, ou collez la recette.",

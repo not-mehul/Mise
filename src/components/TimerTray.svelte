@@ -10,7 +10,7 @@
 </script>
 
 {#if timers.list.length}
-  <section class="timer-tray" id="timerTray" aria-label={t('timer.tray')}>
+  <section class="timer-tray" class:wide={showRecipe} id="timerTray" aria-label={t('timer.tray')}>
     {#each timers.list as tm (tm.id)}
       {@const paused = !tm.done && tm.endsAt === null}
       <div class="timer-chip" class:is-done={tm.done} class:is-paused={paused}>
@@ -47,9 +47,26 @@
     flex-wrap: wrap;
     gap: var(--space-2);
   }
+  /* A chip never pushes the page wider than the screen: the label gives way. */
+  .timer-tray :global(.timer-chip) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .timer-tray.wide :global(.timer-chip) {
+    flex: 1 1 100%;
+  }
+  .timer-tray :global(.timer-chip-label) {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .timer-tray :global(.timer-chip-label),
+  .timer-tray :global(.timer-chip-time) {
+    white-space: nowrap;
+  }
   .timer-recipe {
     color: var(--text-strong);
-    max-width: 12rem;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

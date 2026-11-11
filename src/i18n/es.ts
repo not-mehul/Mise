@@ -65,7 +65,7 @@ const es: Messages = {
   'new.read': "Leer receta",
   'new.empty': "Primero pega la receta.",
   'new.link': "Enlace",
-  'new.linkHint': "Una página de receta o una publicación de Instagram. Mise la lee en tu teléfono.",
+  'new.linkHint': "Una página de receta o una publicación de Instagram, TikTok, YouTube y más. Mise la lee en tu teléfono.",
   'new.linkLabel': "Enlace a la receta",
   'new.linkInvalid': "Eso no es un enlace. Copia la dirección de la página o la publicación.",
   'new.linkOffline': "No se pudo abrir esa página. Revisa la conexión e inténtalo de nuevo, o pega la receta.",

@@ -203,7 +203,7 @@
   .pantry {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--space-3);
     margin-bottom: var(--space-5);
   }

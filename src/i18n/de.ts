@@ -65,7 +65,7 @@ const de: Messages = {
   'new.read': "Rezept lesen",
   'new.empty': "Füge zuerst das Rezept ein.",
   'new.link': "Link",
-  'new.linkHint': "Eine Rezeptseite oder ein Instagram-Beitrag. Mise liest ihn auf deinem Handy.",
+  'new.linkHint': "Eine Rezeptseite oder ein Beitrag aus Instagram, TikTok, YouTube und mehr. Mise liest ihn auf deinem Handy.",
   'new.linkLabel': "Link zum Rezept",
   'new.linkInvalid': "Das ist kein Link. Kopiere die Adresse der Seite oder des Beitrags.",
   'new.linkOffline': "Die Seite ließ sich nicht öffnen. Prüfe die Verbindung und versuche es noch einmal, oder füge das Rezept ein.",

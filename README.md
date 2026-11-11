@@ -184,14 +184,16 @@ Releases are a tag push that builds a signed APK; see [RELEASING.md](RELEASING.m
 
 ## Testing and CI
 
-`.github/workflows/ci.yml` runs on every push:
+`.github/workflows/ci.yml` runs one job, **Check**, on pull requests and on
+pushes to `main`: `npm run check` (dusk-dawn checks, lint, typecheck, unit
+tests), then a production build and the Playwright tests (paste and write
+recipes, scaling, search, collections, backup and restore, cooking mode,
+theme and language, axe on every tab in both themes).
 
-| Job | Covers |
-| --- | --- |
-| Lint, typecheck, unit tests | `npm run check` and a production build |
-| End-to-end | Playwright: paste and write recipes, the Unsorted list, scaling, search, collections, delete and undo, backup and restore, cooking mode on a phone and a wide screen, theme and language, axe on every tab in both themes |
-| Android build | Debug, R8-minified release and test APKs, Android lint |
-| Android emulator (API 36, 37) | Espresso-Web test driving the real WebView, then a launch smoke test of the minified release build. API 37 is non-blocking, as in Ledger |
+The Android build and the emulator tests (Espresso-Web driving the real
+WebView, then a launch smoke test of the minified release build, on API 36)
+run only on demand: **Actions → CI → Run workflow**, with *Android* ticked.
+Every release tag builds the APK as well ([RELEASING.md](RELEASING.md)).
 
 ## Layout
 
