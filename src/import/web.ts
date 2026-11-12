@@ -12,7 +12,8 @@ import { jsonLd, mainText, meta, pageTitle } from './html';
 import { captionFromEmbed, captionFromPage, instagramUrls, isInstagram } from './instagram';
 import { draftFromSchema, findRecipe, microdataRecipe } from './schema';
 import { parseRecipeText } from './text';
-import type { RecipeDraft } from '../domain/recipe';
+import type { RecipeDraft, SourceKind } from '../domain/recipe';
+import { captionFromPreview, captionFromTikTokOembed, captionFromTikTokPage, captionFromYouTube, isTikTok, isYouTube, tikTokOembed, youTubeId, type SocialCaption } from './social';
 
 export type LinkResult =
   | { ok: true; draft: RecipeDraft; imageUrl: string | null; how: 'schema' | 'caption' | 'text' }
@@ -26,7 +27,7 @@ const TIMEOUT_MS = 15000;
 export async function fetchPage(url: string): Promise<string | null> {
   try {
     if (isNative) {
-      const res = await CapacitorHttp.get({ url, headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' }, responseType: 'text', connectTimeout: TIMEOUT_MS, readTimeout: TIMEOUT_MS });
+      const res = await CapacitorHttp.get({ url, headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml,application/json' }, responseType: 'text', connectTimeout: TIMEOUT_MS, readTimeout: TIMEOUT_MS });
       return res.status >= 200 && res.status < 300 && typeof res.data === 'string' ? res.data : null;
     }
     const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
@@ -55,6 +56,15 @@ export function readPage(html: string, url: string): LinkResult {
     const { draft, imageUrl } = draftFromSchema(schema, url, site);
     if (draft.ingredients || draft.steps) return { ok: true, draft, imageUrl: imageUrl ?? meta(html, 'og:image'), how: 'schema' };
   }
+  // A post rather than a recipe page: its caption, from the link preview.
+  const preview = captionFromPreview(html);
+  if (preview) {
+    const result = readCaption(preview.caption, url, site ?? undefined, 'url');
+    if (result.ok && (result.draft.ingredients || result.draft.steps)) {
+      result.imageUrl = preview.imageUrl ?? null;
+      return result;
+    }
+  }
   const text = mainText(html);
   const title = pageTitle(html);
   const { draft } = parseRecipeText([title, text].filter(Boolean).join('\n'), 'url', { url, author: site ?? undefined });
@@ -64,12 +74,35 @@ export function readPage(html: string, url: string): LinkResult {
 }
 
 /** The caption of an Instagram post, read like pasted text. */
-export function readCaption(caption: string, url: string, author?: string): LinkResult {
-  const { draft } = parseRecipeText(caption, 'instagram', { url, author });
+export function readCaption(caption: string, url: string, author?: string, kind: SourceKind = 'instagram'): LinkResult {
+  const { draft } = parseRecipeText(caption, kind, { url, author });
   return { ok: true, draft, imageUrl: null, how: 'caption' };
 }
 
+/** A caption read like pasted text, with its picture; null when it holds no recipe. */
+function fromCaption(found: SocialCaption | null, url: string): LinkResult | null {
+  if (!found) return null;
+  const result = readCaption(found.caption, url, found.author, 'url');
+  if (!result.ok || (!result.draft.ingredients && !result.draft.steps)) return null;
+  result.imageUrl = found.imageUrl ?? null;
+  return result;
+}
+
 export async function importLink(url: string, fetcher: (url: string) => Promise<string | null> = fetchPage): Promise<LinkResult> {
+  if (isTikTok(url)) {
+    const viaOembed = fromCaption(captionFromTikTokOembed((await fetcher(tikTokOembed(url))) ?? ''), url);
+    if (viaOembed) return viaOembed;
+    const html = await fetcher(url);
+    if (html === null) return { ok: false, reason: 'offline', url };
+    return fromCaption(captionFromTikTokPage(html), url) ?? readPage(html, url);
+  }
+  if (isYouTube(url)) {
+    const id = youTubeId(url);
+    const page = id ? `https://www.youtube.com/watch?v=${id}` : url;
+    const html = await fetcher(page);
+    if (html === null) return { ok: false, reason: 'offline', url };
+    return fromCaption(captionFromYouTube(html), page) ?? readPage(html, page);
+  }
   if (isInstagram(url)) {
     const { page, embed } = instagramUrls(url);
     const html = await fetcher(page);

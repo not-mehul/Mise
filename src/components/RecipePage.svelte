@@ -1,7 +1,7 @@
 <script lang="ts">
   import { showIngredient, type UnitMode } from '../domain/ingredient';
   import { groceryKey } from '../domain/groceries';
-  import { linkHost, recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
+  import { MACROS, hasNutrition, linkHost, recipeToDraft, totalTime, type Recipe } from '../domain/recipe';
   import { formatDuration, stepParts } from '../domain/steps';
   import type { CookEntry } from '../domain/cook';
   import { locale, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
@@ -13,6 +13,7 @@
   import AddGroceries from './AddGroceries.svelte';
   import PlanDayPicker from './PlanDayPicker.svelte';
   import Thumb from './Thumb.svelte';
+  import Icon from './ui/Icon.svelte';
   import Sheet from './ui/Sheet.svelte';
 
   let { recipe }: { recipe: Recipe } = $props();
@@ -75,10 +76,15 @@
 </script>
 
 <article class="recipe-page" id="recipePage">
-  <button type="button" class="btn btn-muted back" id="btnBack" onclick={() => ui.show({ kind: 'list' })}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-    {t('recipe.back')}
-  </button>
+  <div class="topbar">
+    <button type="button" class="btn-icon" id="btnBack" aria-label={t('recipe.back')} onclick={() => ui.show({ kind: 'list' })}><Icon name="back" size={22} /></button>
+    <div class="topbar-tools">
+      <button type="button" class="btn-icon" id="btnEdit" aria-label={t('recipe.edit')} title={t('recipe.edit')} onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}><Icon name="edit" /></button>
+      <button type="button" class="btn-icon" id="btnShare" aria-label={t('recipe.share')} title={t('recipe.share')} onclick={share}><Icon name="share" /></button>
+      <button type="button" class="btn-icon" id="btnShareFile" aria-label={t('recipe.shareFile')} title={t('recipe.shareFile')} onclick={() => void shareRecipeFile(recipe)}><Icon name="file" /></button>
+      <button type="button" class="btn-icon" id="btnDelete" aria-label={t('recipe.delete')} title={t('recipe.delete')} onclick={remove}><Icon name="trash" /></button>
+    </div>
+  </div>
 
   {#if recipe.photoId}
     <button type="button" class="hero" aria-label={t('recipe.viewPhoto', { n: 1 })} onclick={() => (viewing = recipe.photoId)}><Thumb photoId={recipe.photoId} alt={recipe.title} full /></button>
@@ -104,26 +110,29 @@
         {#each recipe.tags as tag (tag)}<span class="chip chip-tag">#{tag}</span>{/each}
       </div>
     {/if}
+    {#if hasNutrition(recipe.nutrition)}
+      <section class="macros" id="recipeMacros" aria-labelledby="macrosHead">
+        <h3 class="t-field-label" id="macrosHead">{t('recipe.macros')}</h3>
+        <dl>
+          {#each MACROS as m (m)}
+            <div class="macro">
+              <dt class="t-field-label">{t(`macro.${m}`)}</dt>
+              <dd class="t-data">{recipe.nutrition[m] ?? '–'}<span class="unit">{m === 'calories' ? '' : t('macro.g')}</span></dd>
+            </div>
+          {/each}
+        </dl>
+      </section>
+    {/if}
   </header>
 
-  <div class="btn-row actions">
+  <div class="actions">
     {#if recipe.steps.length}
-      <button type="button" class="btn btn-primary" id="btnCook" onclick={cook}>
-        <!-- Lucide "chef-hat" -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" /><path d="M6 17h12" /></svg>
-        {t('cook.start')}
-      </button>
+      <button type="button" class="btn btn-primary btn-block cook" id="btnCook" onclick={cook}><Icon name="cook" />{t('cook.start')}</button>
     {/if}
-    <button type="button" class="btn btn-secondary" id="btnPlan" onclick={() => (planning = true)}>{t('plan.planIt')}</button>
+    <button type="button" class="btn btn-secondary" id="btnPlan" onclick={() => (planning = true)}><Icon name="calendarPlus" />{t('plan.planIt')}</button>
     {#if recipe.groups.length}
-      <button type="button" class="btn btn-secondary" id="btnAddGroceries" onclick={() => (adding = true)}>{t('groceries.addFromRecipe')}</button>
+      <button type="button" class="btn btn-secondary" id="btnAddGroceries" aria-label={t('groceries.addFromRecipe')} onclick={() => (adding = true)}><Icon name="basketPlus" />{t('tabs.groceries')}</button>
     {/if}
-  </div>
-  <div class="tools">
-    <button type="button" class="btn btn-muted" id="btnEdit" onclick={() => ui.edit(recipeToDraft(recipe), 'edit')}>{t('recipe.edit')}</button>
-    <button type="button" class="btn btn-muted" id="btnShare" onclick={share}>{t('recipe.share')}</button>
-    <button type="button" class="btn btn-muted" id="btnShareFile" onclick={() => void shareRecipeFile(recipe)}>{t('recipe.shareFile')}</button>
-    <button type="button" class="btn btn-muted" id="btnDelete" onclick={remove}>{t('recipe.delete')}</button>
   </div>
 
   {#if recipe.groups.length}
@@ -212,41 +221,41 @@
     </section>
   {/if}
 
-  <section class="panel" aria-labelledby="collectionsHead">
-    <div class="section-head"><h3 id="collectionsHead">{t('recipe.collections')}</h3></div>
-    {#if library.collections.length}
+  <!-- Collections and where it came from: a quiet footer, not another card. -->
+  <footer class="recipe-foot">
+    <section class="foot-collections" aria-labelledby="collectionsHead">
+      <h3 class="t-field-label" id="collectionsHead">{t('recipe.collections')}</h3>
       <div class="chip-row collections">
         {#each library.collections as c (c.id)}
           <button type="button" class="chip" aria-pressed={recipe.collectionIds.includes(c.id)} onclick={() => library.toggleCollection(recipe.id, c.id)}>{c.name}</button>
         {/each}
+        <form
+          class="new-collection"
+          onsubmit={(e) => {
+            e.preventDefault();
+            void addCollection();
+          }}
+        >
+          <input class="input" id="newCollection" placeholder={t('recipe.newCollection')} aria-label={t('recipe.collectionName')} enterkeyhint="done" maxlength="60" bind:value={newCollection} />
+          <button type="submit" class="btn-icon" aria-label={t('recipe.addCollection')} disabled={!newCollection.trim()}><Icon name="plus" /></button>
+        </form>
       </div>
-    {/if}
-    <form
-      class="new-collection"
-      onsubmit={(e) => {
-        e.preventDefault();
-        void addCollection();
-      }}
-    >
-      <input class="input" id="newCollection" placeholder={t('recipe.newCollection')} aria-label={t('recipe.collectionName')} enterkeyhint="done" maxlength="60" bind:value={newCollection} />
-      <button type="submit" class="btn btn-muted" disabled={!newCollection.trim()}>{t('recipe.addCollection')}</button>
-    </form>
-  </section>
-
-  <footer class="source t-hint">
-    <b>{t('recipe.source')}.</b>
-    {#if recipe.source.url}
-      <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
-    {:else}
-      {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
+    </section>
+    <p class="source t-hint">
+      <b>{t('recipe.source')}.</b>
+      {#if recipe.source.url}
+        <a href={recipe.source.url} target="_blank" rel="noopener noreferrer">{recipe.source.author ?? linkHost(recipe.source.url)}</a>
+      {:else}
+        {recipe.source.author ?? t(`recipe.kind.${recipe.source.kind}` as MessageKey)}
+      {/if}
+    </p>
+    {#if recipe.source.text}
+      <details class="original">
+        <summary class="t-field-label">{t('recipe.original')}</summary>
+        <pre>{recipe.source.text}</pre>
+      </details>
     {/if}
   </footer>
-  {#if recipe.source.text}
-    <details class="original">
-      <summary class="t-field-label">{t('recipe.original')}</summary>
-      <pre>{recipe.source.text}</pre>
-    </details>
-  {/if}
 </article>
 
 {#if viewing}
@@ -269,9 +278,15 @@
     flex-direction: column;
     gap: var(--space-5);
   }
-  .back {
-    align-self: flex-start;
-    padding-left: 0.75rem;
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) calc(-1 * var(--space-2));
+  }
+  .topbar-tools {
+    display: flex;
+    gap: var(--space-1);
   }
   .hero {
     display: block;
@@ -319,20 +334,77 @@
     color: var(--text-heading);
     margin: 0;
   }
+  .macros {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .macros h3 {
+    margin: 0;
+  }
+  .macros dl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--border-faint);
+    border-radius: var(--corner-lg);
+    overflow: hidden;
+    margin: 0;
+  }
+  .macro {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-1);
+    min-width: 0;
+  }
+  .macro + .macro {
+    border-left: 1px solid var(--border-faint);
+  }
+  .macro dt {
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .macro dd {
+    margin: 0;
+    color: var(--accent-amber);
+    font-size: 1.125rem;
+  }
+  .macro .unit {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-left: 1px;
+  }
   .meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0 var(--space-4);
     color: var(--text-dim);
   }
-  .actions:empty {
-    display: none;
+  /* Cook across the full width, then plan and groceries as an even pair. */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
   }
-  .tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-top: calc(-1 * var(--space-3));
+  .actions .cook {
+    grid-column: 1 / -1;
+    min-height: 52px;
+  }
+  .actions .btn {
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    white-space: normal;
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+  .actions .btn:only-child,
+  .actions .cook + .btn:last-child {
+    grid-column: 1 / -1;
   }
   .panel {
     margin: 0;
@@ -446,8 +518,23 @@
     color: var(--text-strong);
     line-height: 1.6;
   }
+  .recipe-foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-soft);
+  }
+  .foot-collections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .foot-collections h3 {
+    margin: 0;
+  }
   .collections {
-    margin-bottom: var(--space-4);
+    align-items: center;
   }
   .cook-log {
     list-style: none;
@@ -481,7 +568,15 @@
   }
   .new-collection {
     display: flex;
-    gap: var(--space-2);
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1 1 10rem;
+    min-width: 10rem;
+  }
+  .new-collection .input {
+    min-height: 36px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .source a {
     color: var(--accent-amber);

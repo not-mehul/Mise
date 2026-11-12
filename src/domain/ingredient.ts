@@ -49,7 +49,16 @@ export function parseIngredient(line: string, id: string = newId()): Ingredient 
   let unit: Unit | undefined;
   let unitText: string | null = null;
 
-  const q = parseLeadingQuantity(rest);
+  // "0% fat yoghurt": a number before "%" describes the item, it isn't how much.
+  let q = /^[\d.,]+\s*%/.test(rest) ? null : parseLeadingQuantity(rest);
+  // "Chicken breast, diced - 600g": no amount up front, so take the one at the end.
+  if (!q) {
+    const later = trailingAmount(rest);
+    if (later) {
+      rest = `${later.amount} ${later.rest}`;
+      q = parseLeadingQuantity(rest);
+    }
+  }
   if (q) {
     ({ qty, qtyMax } = q);
     rest = q.rest;
@@ -90,6 +99,60 @@ export function parseIngredient(line: string, id: string = newId()): Ingredient 
   }
 
   return { id, raw, qty, qtyMax, unit: unit?.id ?? null, unitText, item: item || raw, note: notes.filter(Boolean).join(', ') };
+}
+
+const AMOUNT = /(\s[-–—]\s*|,\s*|\s|^)(\d+(?:[.,]\d+)?)\s?([\p{L}µ]+\.?)(?=$|[\s,;)])/gu;
+
+/**
+ * A weight or volume written after the item ("Basmati rice - 200g, uncooked"), moved out of
+ * the text. One after a dash wins; otherwise the first. Counts and "%" are never taken.
+ */
+function trailingAmount(text: string): { amount: string; rest: string } | null {
+  let pick: RegExpExecArray | null = null;
+  for (const m of text.matchAll(AMOUNT)) {
+    if (!m.index) continue;
+    const unit = parseLeadingUnit(m[3]!);
+    if (!unit || unit.rest || (unit.unit.kind !== 'mass' && unit.unit.kind !== 'volume')) continue;
+    if (/[-–—]/.test(m[1]!)) {
+      pick = m;
+      break;
+    }
+    pick ??= m;
+  }
+  if (!pick) return null;
+  const before = text.slice(0, pick.index).trim();
+  const after = text.slice(pick.index! + pick[0].length).trim();
+  const rest = [before, after.replace(/^[,;]\s*/, '')].filter(Boolean).join(after && !/^[,;(]/.test(after) ? ' ' : ', ');
+  return { amount: `${pick[2]}${pick[3]}`, rest: rest.replace(/\s*,\s*,/g, ',').replace(/[\s,]+$/, '') };
+}
+
+/**
+ * One line as the editor's two boxes: how much ("600 g", "1½ cups", "2") and what
+ * ("Chicken breast, diced"). An amount written after the item is moved to the front.
+ * `joinAmount` puts them back together into a line `parseIngredient` reads the same way.
+ */
+export function splitAmount(line: string): { amount: string; name: string } {
+  let rest = stripListMarker(line).replace(/\s+/g, ' ');
+  const percent = /^[\d.,]+\s*%/.test(rest);
+  if (percent || !parseLeadingQuantity(rest)) {
+    const later = trailingAmount(rest);
+    if (later) rest = `${later.amount} ${later.rest}`;
+    else if (percent) return { amount: '', name: rest };
+  }
+  const q = parseLeadingQuantity(rest);
+  if (!q) return { amount: '', name: rest };
+  let amount = rest.slice(0, rest.length - q.rest.length).trim();
+  let name = q.rest;
+  const u = parseLeadingUnit(name);
+  if (u) {
+    amount = `${amount} ${u.written}`;
+    name = u.rest.replace(OF, '');
+  }
+  return { amount, name };
+}
+
+export function joinAmount(amount: string, name: string): string {
+  return [amount.trim(), name.trim()].filter(Boolean).join(' ');
 }
 
 export type UnitMode = 'original' | 'metric' | 'us';

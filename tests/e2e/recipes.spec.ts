@@ -32,6 +32,7 @@ test('pastes a caption, sorts the leftover line and saves the recipe', async ({ 
   await expect(page.locator('.unsorted .line')).toHaveText('Splash of soy sauce');
   await page.locator('.unsorted').getByRole('button', { name: 'Ingredient' }).click();
   await expect(page.locator('.unsorted')).toHaveCount(0);
+  await page.locator('#ingModeText').click();
   await expect(page.locator('#editIngredients')).toHaveValue(/Splash of soy sauce$/);
   await page.locator('#editServings').fill('2');
   await page.locator('#btnSaveRecipe').click();
@@ -61,6 +62,7 @@ test('writes a recipe by hand and asks for what is missing', async ({ page }) =>
   await page.locator('#editTitle').fill('Tomato toast');
   await page.locator('#btnSaveRecipe').click();
   await expect(page.locator('.field-error')).toHaveText('Add at least one ingredient or step.');
+  await page.locator('#ingModeText').click();
   await page.locator('#editIngredients').fill('2 slices bread\n1 tomato\nSalt, to taste');
   await page.locator('#editSteps').fill('Toast the bread.\nRub with tomato and salt.');
   await page.locator('#editTags').fill('breakfast, quick');
@@ -124,4 +126,27 @@ test('exports a backup and imports it again', async ({ page }) => {
   await expect(page.locator('.toast')).toContainText('Imported: 1 new, 0 updated');
   await page.locator('#tabRecipes').click();
   await expect(page.locator('#recipeList')).toContainText('Flatbread');
+});
+
+test('types ingredients as amount and name, with macros per serving', async ({ page }) => {
+  await page.locator('#btnNewRecipe').click();
+  await page.locator('#choiceWrite').click();
+  await page.locator('#editTitle').fill('Rice bowl');
+  await page.locator('#btnAddIngredient').click();
+  await page.locator('[id^="ingAmount"]').last().fill('200 g');
+  await page.locator('[id^="ingName"]').last().fill('Basmati rice, rinsed');
+  await page.locator('#btnAddIngredient').click();
+  await page.locator('[id^="ingName"]').last().fill('0% fat yoghurt');
+  await page.locator('#ingModeText').click();
+  await expect(page.locator('#editIngredients')).toHaveValue('200 g Basmati rice, rinsed\n0% fat yoghurt');
+  await page.locator('#editMacro-calories').fill('450');
+  await page.locator('#editMacro-protein').fill('32');
+  await page.locator('#btnSaveRecipe').click();
+
+  await expect(page.locator('.ingredient').first()).toContainText('200 g');
+  await expect(page.locator('.ingredient').nth(1)).toContainText('0% fat yoghurt');
+  await expect(page.locator('#recipeMacros')).toContainText('450');
+  await expect(page.locator('#recipeMacros')).toContainText('32');
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations).toEqual([]);
 });

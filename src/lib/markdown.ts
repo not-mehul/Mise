@@ -10,6 +10,8 @@ export interface MarkdownLabels {
   serves: (n: number) => string;
   minutes: (n: number) => string;
   source: string;
+  /** "Per serving: 450 kcal · Protein 40 g · …", or '' when there are none. */
+  macros?: (r: Recipe) => string;
 }
 
 export function recipeToMarkdown(r: Recipe, l: MarkdownLabels): string {
@@ -17,6 +19,8 @@ export function recipeToMarkdown(r: Recipe, l: MarkdownLabels): string {
   const meta = [r.servings ? l.serves(r.servings) : '', totalTime(r) ? l.minutes(totalTime(r)!) : ''].filter(Boolean);
   if (meta.length) out.push(meta.join(' · '), '');
   if (r.tags.length) out.push(r.tags.map((t) => `#${t}`).join(' '), '');
+  const macros = l.macros?.(r);
+  if (macros) out.push(macros, '');
   if (r.groups.some((g) => g.items.length)) {
     out.push(`## ${l.ingredients}`, '');
     for (const g of r.groups) {

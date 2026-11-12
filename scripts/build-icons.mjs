@@ -22,7 +22,7 @@ const source = await readFile(new URL('assets/icon-source.svg', root), 'utf8');
 const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
 const SOURCE_SIZE = 512;
 const SOURCE_CENTER = SOURCE_SIZE / 2;
-/** Distance from the centre to the M's furthest corner, in source units. */
+/** Distance from the centre to the mark's furthest point, in source units. */
 const MARK_RADIUS = 160;
 
 // Adaptive icons are 108dp square; launchers mask them to the central 72dp and
@@ -34,7 +34,7 @@ const content = source.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/,
 const mark = content.match(/<g id="mark"[\s\S]*<\/g>/)?.[0];
 if (!mark) throw new Error('assets/icon-source.svg must contain a <g id="mark"> group');
 
-const monochromeMark = mark.replace(/fill="#[0-9a-fA-F]{3,8}"/g, 'fill="#ffffff"');
+const monochromeMark = mark.replace(/(fill|stroke)="#[0-9a-fA-F]{3,8}"/g, '$1="#ffffff"');
 
 const adaptive = (body, px) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${ADAPTIVE_SIZE} ${ADAPTIVE_SIZE}">` +

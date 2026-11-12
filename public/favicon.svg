@@ -1,18 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Master icon (style.md §14: the Dusk bg-grad-mid ground, a serif glyph
-       in accent-amber, a 1px amber hairline frame). `npm run icons` renders
-       every launcher asset from it: #disk is the backdrop, #mark the serif M. -->
+  <!-- Master icon (style.md §14: the Dusk bg-grad-mid ground, a Lucide-style
+       mark in accent-amber, a 1px amber hairline frame). `npm run icons` renders
+       every launcher asset from it. This copy is the browser tab icon. -->
   <g id="disk">
     <rect width="512" height="512" fill="#0f0d0b"/>
     <rect x="40" y="40" width="432" height="432" fill="none" stroke="#d4a574" stroke-width="2" opacity="0.6"/>
   </g>
   <g id="mark">
-    <!-- A Didone-style capital M: hairline left stem and diagonal, heavy right
-         diagonal and stem, bracketed slab serifs. -->
-    <path fill="#d4a574" d="
-      M 140 352 L 140 344 L 156 340 L 156 172 L 140 168 L 140 160 L 206 160
-      L 262 300 L 316 160 L 372 160 L 372 168 L 356 172 L 356 340 L 372 344 L 372 352
-      L 288 352 L 288 344 L 306 340 L 306 206 L 250 352 L 242 352 L 166 196
-      L 166 340 L 184 344 L 184 352 Z"/>
+    <!-- Steam: three wisps, the middle one tallest. -->
+    <g fill="none" stroke="#d4a574" stroke-width="16" stroke-linecap="round">
+      <path d="M200 226 C178 200 222 178 200 146"/>
+      <path d="M256 226 C230 194 282 164 256 120"/>
+      <path d="M312 226 C290 200 334 178 312 146"/>
+    </g>
+    <!-- Rim, bowl and foot. -->
+    <rect x="118" y="248" width="276" height="22" rx="11" fill="#d4a574"/>
+    <path fill="#d4a574" d="M136 282 H376 A120 108 0 0 1 136 282 Z"/>
+    <rect x="214" y="386" width="84" height="16" rx="6" fill="#d4a574"/>
   </g>
 </svg>

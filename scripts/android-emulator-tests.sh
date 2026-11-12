@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Runs on a booted emulator (see .github/workflows/ci.yml):
+# Runs on a booted emulator (the on-demand Android job in .github/workflows/ci.yml):
 #   1. the Espresso-Web instrumented tests against the debug build, and
 #   2. a launch smoke test of the minified release build.
 #
-#   scripts/android-emulator-tests.sh <dir with the mise-apks artifact>
+#   scripts/android-emulator-tests.sh <dir with debug/, release/ and androidTest/debug/ APKs>
 set -euo pipefail
 
 DIR=${1:?usage: android-emulator-tests.sh <apk dir>}

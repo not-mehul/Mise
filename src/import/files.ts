@@ -6,10 +6,11 @@
 // ============================================================
 
 import { gunzipSync, unzip, type Unzipped } from 'fflate';
-import { emptyDraft, type RecipeDraft } from '../domain/recipe';
+import { emptyDraft, type Macro, type RecipeDraft } from '../domain/recipe';
 import { base64ToBytes } from '../lib/base64';
 import { isZip, parseBackup, type BackupData } from '../lib/backup';
 import { draftFromSchema, findRecipe } from './schema';
+import { readMacros } from './text';
 
 export interface ForeignRecipe {
   draft: RecipeDraft;
@@ -43,6 +44,10 @@ export function draftFromPaprika(p: Json): ForeignRecipe {
   draft.steps = str(p.directions);
   draft.notes = [str(p.description), str(p.notes)].filter(Boolean).join('\n\n');
   draft.tags = Array.isArray(p.categories) ? p.categories.map(str).filter(Boolean).join(', ') : '';
+  // Paprika keeps nutrition as free text, one fact per line.
+  for (const line of str(p.nutritional_info).split(/\n|;/)) {
+    for (const [m, v] of Object.entries(readMacros(line) ?? {}) as [Macro, string][]) if (!draft.nutrition[m]) draft.nutrition[m] = v;
+  }
   const photo = str(p.photo_data);
   return { draft, photo: photo ? new Blob([base64ToBytes(photo) as BlobPart], { type: 'image/jpeg' }) : null };
 }

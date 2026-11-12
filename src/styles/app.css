@@ -42,21 +42,42 @@ fieldset {
 }
 
 .site-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-7);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-6);
 }
 .site-title {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
+}
+/* The tagline runs the full width under the title and the toggle. */
+.site-header .t-tagline {
+  grid-column: 1 / -1;
+}
+.site-header.compact {
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.site-header.compact .t-page-title {
+  font-size: 2rem;
+  line-height: 1.1;
 }
 
 .app-tabs {
   margin-bottom: var(--space-6);
+}
+
+.status-scrim {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: var(--inset-top);
+  background: var(--bg-grad-top);
+  pointer-events: none;
 }
 
 .panel {
@@ -80,4 +101,10 @@ fieldset {
   font-style: italic;
   color: var(--text-heading);
   letter-spacing: -0.01em;
+}
+
+.btn-icon:disabled {
+  color: var(--text-faint);
+  opacity: 0.5;
+  cursor: not-allowed;
 }

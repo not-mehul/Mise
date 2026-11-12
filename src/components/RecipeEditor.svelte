@@ -1,17 +1,20 @@
 <script lang="ts">
   // One form for checking an import, writing a recipe and editing one (style.md §1: single forms for editing).
   import { onDestroy, untrack } from 'svelte';
-  import { type RecipeDraft } from '../domain/recipe';
+  import { MACROS, type RecipeDraft } from '../domain/recipe';
   import { t, type MessageKey } from '../i18n/index.svelte';
   import { processPhoto } from '../platform/images';
   import { library } from '../state/library.svelte';
   import { ui } from '../state/ui.svelte';
+  import IngredientRows from './IngredientRows.svelte';
   import Thumb from './Thumb.svelte';
 
   let { draft: initial, mode, owned = [] }: { draft: RecipeDraft; mode: 'check' | 'edit' | 'write'; owned?: string[] } = $props();
 
   // A working copy; the screen's draft stays as it came in.
   const start = untrack(() => structuredClone($state.snapshot(initial) as RecipeDraft));
+  // Drafts kept from before macros existed have none.
+  start.nutrition ??= { calories: '', protein: '', carbs: '', fat: '' };
   let draft = $state<RecipeDraft>(structuredClone(start));
   let errors = $state<{ title?: string; content?: string }>({});
   let saving = $state(false);
@@ -74,7 +77,7 @@
     if (!draft.title.trim()) errors.title = t('editor.needsName');
     if (!draft.ingredients.trim() && !draft.steps.trim()) errors.content = t('editor.needsContent');
     if (errors.title || errors.content) {
-      document.getElementById(errors.title ? 'editTitle' : 'editIngredients')?.focus();
+      (document.getElementById(errors.title ? 'editTitle' : 'editIngredients') ?? document.getElementById('btnAddIngredient'))?.focus();
       return;
     }
     saving = true;
@@ -152,17 +155,29 @@
     </label>
   </div>
 
-  <label class="field">
-    <span class="t-field-label">{t('editor.ingredients')}</span>
-    <textarea class="textarea" id="editIngredients" rows="8" bind:value={draft.ingredients} aria-invalid={!!errors.content}></textarea>
-    {#if errors.content}<p class="field-error">{errors.content}</p>{:else}<p class="field-hint">{t('editor.ingredientsHint')}</p>{/if}
-  </label>
+  <div class="field">
+    <IngredientRows bind:value={draft.ingredients} invalid={!!errors.content} />
+    {#if errors.content}<p class="field-error">{errors.content}</p>{/if}
+  </div>
 
   <label class="field">
     <span class="t-field-label">{t('editor.steps')}</span>
     <textarea class="textarea" id="editSteps" rows="8" bind:value={draft.steps}></textarea>
     <p class="field-hint">{t('editor.stepsHint')}</p>
   </label>
+
+  <fieldset class="field macros">
+    <legend class="t-field-label">{t('editor.macros')}</legend>
+    <div class="numbers">
+      {#each MACROS as m (m)}
+        <label class="field">
+          <span class="t-field-label">{t(`macro.${m}`)} <span class="unit">{m === 'calories' ? t('macro.kcal') : t('macro.g')}</span></span>
+          <input class="input" id="editMacro-{m}" inputmode="decimal" enterkeyhint="next" autocomplete="off" bind:value={draft.nutrition[m]} />
+        </label>
+      {/each}
+    </div>
+    <p class="field-hint">{t('editor.macrosHint')}</p>
+  </fieldset>
 
   <label class="field">
     <span class="t-field-label">{t('editor.tags')}</span>
@@ -231,6 +246,18 @@
     .numbers {
       grid-template-columns: repeat(4, 1fr);
     }
+  }
+  .macros {
+    border: 0;
+    gap: var(--space-3);
+  }
+  .macros legend {
+    margin-bottom: var(--space-3);
+  }
+  .unit {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-faint);
   }
   .textarea {
     line-height: 1.55;

@@ -215,11 +215,19 @@
   .t-hint {
     margin-bottom: 0.75rem;
   }
+  /* Equal-width buttons that share the row, never bunched at the left. */
   .data-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
     gap: var(--space-2);
     margin-bottom: var(--space-4);
+  }
+  .data-actions .btn,
+  .panel > .file-btn,
+  #btnSyncChoose {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
   }
   .file-btn {
     position: relative;
