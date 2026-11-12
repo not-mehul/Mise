@@ -224,6 +224,7 @@ const en = {
   'cook.notePlaceholder': 'Less salt next time',
   'cook.markCooked': 'Mark as cooked',
   'cook.closeWithout': 'Close without logging',
+  'cook.tellNookling': 'Share with your nookling',
   'cook.logged': 'Added to the cook log',
   'timer.start': 'Start {time}',
   'timer.label': 'Step {step}',
