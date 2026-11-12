@@ -82,7 +82,7 @@ Mise is one of seven apps by Mehul Sen that share one design system, [Editorial 
 | [Colophon](https://github.com/not-mehul/Colophon) | Inspect, fix and rebind EPUB editions |
 | [Rosetta](https://github.com/not-mehul/Rosetta) | A quiet library and reader for books, papers and notes |
 | [Mise](https://github.com/not-mehul/Mise) | Recipes from anywhere, cooked one step at a time |
-| [Nookling](https://github.com/not-mehul/Nookling) | A small round friend who is happy whenever you drop by |
+| [Nookling](https://github.com/not-mehul/Nookling) | A small round friend to feed, play with and put to bed |
 
 ## Build from source
 
