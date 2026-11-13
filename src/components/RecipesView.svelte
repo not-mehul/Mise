@@ -3,6 +3,7 @@
   import { matchesSearch, totalTime, type Recipe } from '../domain/recipe';
   import { locale, t } from '../i18n/index.svelte';
   import { cookAgain, cookableWith, haveKeys, sortByLog, type LogSort } from '../domain/pantry';
+  import { kitchen } from '../state/kitchen.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
   import { ui } from '../state/ui.svelte';
@@ -30,7 +31,20 @@
   // "What can I cook?": recipes ranked by how few things you'd still need.
   let pantryOpen = $state(false);
   let haveText = $state('');
-  const have = $derived(haveKeys(haveText));
+  // What's in the kitchen counts as had, with whatever else you type.
+  const have = $derived([...new Set([...kitchen.items.map((k) => k.key), ...haveKeys(haveText)])]);
+  const typed = $derived(haveText.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean));
+
+  function keepTyped() {
+    kitchen.add(typed);
+    haveText = '';
+  }
+
+  function clearKitchen() {
+    const before = [...kitchen.items];
+    kitchen.clear();
+    ui.notify(t('kitchen.cleared'), 'info', { label: t('action.undo'), run: () => kitchen.add(before.map((k) => k.item).reverse()) });
+  }
   const cookable = $derived(cookableWith(library.recipes, have, settings.current.staples));
   const again = $derived(!query.trim() && !collection && sort === 'recent' && !pantryOpen ? cookAgain(library.recipes) : []);
   const recipe = $derived(ui.screen.kind === 'recipe' ? library.get(ui.screen.id) : undefined);
@@ -122,11 +136,31 @@
     <div class="pantry">
       <button type="button" class="btn btn-muted" id="btnWhatCanICook" aria-expanded={pantryOpen} onclick={() => (pantryOpen = !pantryOpen)}>{t('pantry.open')}</button>
       {#if pantryOpen}
+        <section class="kitchen" aria-labelledby="kitchenHead">
+          <div class="kitchen-head">
+            <h3 class="t-section-label" id="kitchenHead">{t('kitchen.title')}</h3>
+            {#if kitchen.items.length}<button type="button" class="btn btn-muted" id="kitchenClear" onclick={clearKitchen}>{t('kitchen.clear')}</button>{/if}
+          </div>
+          {#if kitchen.items.length}
+            <ul class="chip-row" id="kitchenList">
+              {#each kitchen.items as k (k.key)}
+                <li>
+                  <button type="button" class="chip kitchen-chip" aria-label={t('kitchen.remove', { item: k.item })} onclick={() => kitchen.remove([k.key])}>{k.item}<Icon name="close" /></button>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="t-hint">{t('kitchen.empty')}</p>
+          {/if}
+        </section>
         <label class="field">
-          <span class="t-field-label">{t('pantry.have')}</span>
+          <span class="t-field-label">{kitchen.items.length ? t('pantry.haveMore') : t('pantry.have')}</span>
           <input class="input" id="pantryInput" autocomplete="off" enterkeyhint="search" placeholder={t('pantry.placeholder')} bind:value={haveText} />
           <p class="field-hint">{t('pantry.hint')}</p>
         </label>
+        {#if typed.length}
+          <button type="button" class="btn btn-secondary" id="kitchenKeep" onclick={keepTyped}>{t('kitchen.keep', { count: typed.length })}</button>
+        {/if}
       {/if}
     </div>
 
@@ -193,6 +227,9 @@
   }
   .sort {
     display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
     align-items: center;
     gap: var(--space-3);
     margin-left: auto;
@@ -209,6 +246,28 @@
   }
   .pantry .field {
     width: 100%;
+  }
+  .kitchen {
+    display: grid;
+    gap: var(--space-2);
+    width: 100%;
+  }
+  .kitchen-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .kitchen ul {
+    list-style: none;
+  }
+  .kitchen-chip {
+    gap: var(--space-1);
+  }
+  .kitchen-chip :global(svg) {
+    width: 1em;
+    height: 1em;
   }
   .again {
     margin-bottom: var(--space-5);

@@ -12,7 +12,7 @@ export function haveKeys(text: string): string[] {
   return [...new Set(text.split(/[,;\n]+/).map(groceryKey).filter(Boolean))];
 }
 
-function has(key: string, have: string[]): boolean {
+export function has(key: string, have: string[]): boolean {
   const words = ` ${key} `;
   return have.some((h) => words.includes(` ${h} `) || ` ${h} `.includes(words));
 }

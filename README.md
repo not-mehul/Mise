@@ -34,8 +34,9 @@ Mise is a cooking companion for Android. Share a recipe to it from Instagram, Ti
 
 - **Ingredients that understand themselves.** Each line is split into amount, unit, item and note, so recipes **scale** to any number of servings and switch between **metric and US units**, including cups of flour to grams and oven temperatures.
 - **Search, collections and sorts**, plus *What can I cook?* from what you have.
+- **In the kitchen.** Groceries you tick off are kept as what you have in, cooking a recipe uses them up, and *What can I cook?* starts from them.
 - **Several photos per recipe**, sections in the method, nutrition per serving, and a cook log with ratings and notes.
-- **A week's meal plan.** Put recipes on days for the next four weeks and send everything planned to the grocery list in one go.
+- **A week's meal plan.** Put recipes on days for the next four weeks and send everything planned to the grocery list in one go. Steps to start ahead ("soak overnight", "marinate for at least 4 hours") show on the day, and on Android a reminder comes the evening before or hours ahead.
 
 ### Cooking mode
 

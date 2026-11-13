@@ -3,6 +3,7 @@
   // The week planner: what you'll cook on each of the next seven days, and the
   // whole week's ingredients to the grocery list in one go.
   import { byDay, dayDate, planDays, type PlanEntry } from '../domain/plan';
+  import { prepNeeds } from '../domain/prep';
   import { matchesSearch } from '../domain/recipe';
   import { locale, t } from '../i18n/index.svelte';
   import { library } from '../state/library.svelte';
@@ -101,6 +102,11 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                 </button>
               </div>
+              {#if section.day >= today}
+                {#each prepNeeds(recipe) as need (need.stepId)}
+                  <p class="t-hint prep"><strong>{need.overnight ? t('prep.dayBefore') : t('prep.hoursAhead', { count: need.hours })}</strong> {need.text}</p>
+                {/each}
+              {/if}
             {/if}
           {/each}
         </li>
@@ -152,6 +158,7 @@
   }
   .day-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
   }
@@ -160,6 +167,13 @@
     align-items: center;
     gap: var(--space-2);
     min-height: 48px;
+  }
+  .prep {
+    margin: 0 0 var(--space-2);
+    overflow-wrap: anywhere;
+  }
+  .prep strong {
+    color: var(--text-heading);
   }
   .entry-title {
     flex: 1;

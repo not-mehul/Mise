@@ -15,6 +15,7 @@
   import { isSpeaking, speak, stopSpeaking } from '../platform/speech';
   import { listen, voiceAvailable } from '../platform/voice';
   import { loadPlace, savePlace } from '../state/cookPlace';
+  import { kitchen } from '../state/kitchen.svelte';
   import { library } from '../state/library.svelte';
   import { settings } from '../state/settings.svelte';
   import { timers } from '../state/timers.svelte';
@@ -210,9 +211,11 @@
     saving = true;
     try {
       await library.logCook(recipe.id, { servings: recipe.servings ? servings : null, rating, note });
+      // What it used is no longer in the kitchen.
+      const used = kitchen.cooked(recipe);
       savePlace(null);
       ui.openRecipe(recipe.id);
-      ui.notify(t('cook.logged'), 'success');
+      ui.notify(used ? t('kitchen.usedUp', { count: used }) : t('cook.logged'), 'success');
     } catch (err) {
       console.error('Logging the cook failed:', err);
       ui.notify(t('toast.saveFailed'), 'error');

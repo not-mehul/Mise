@@ -8,7 +8,7 @@ import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
 import { listenForShortcuts } from './platform/launcher';
-import { listenForAlarms } from './platform/notify';
+import { listenForAlarms, listenForPrepReminders } from './platform/notify';
 import { isNative } from './platform/output';
 import { listenForShares, readShare, sharedFile } from './platform/shared';
 import { applyTheme } from './platform/theme.svelte';
@@ -22,6 +22,7 @@ import { timers } from './state/timers.svelte';
 import { autoBackupIfDue, importBytes } from './state/transfer.svelte';
 import { ui } from './state/ui.svelte';
 import { keepWidgetCurrent } from './state/widget.svelte';
+import { keepPrepRemindersCurrent } from './state/prep.svelte';
 import './styles/app.css';
 
 async function start(): Promise<void> {
@@ -55,6 +56,9 @@ async function start(): Promise<void> {
     // A timer's alarm opened from the notification: back to its step.
     void listenForAlarms((alarm) => timers.opened(alarm));
     void timers.rearm();
+    // Prep-ahead reminders for planned meals; opening one shows the recipe.
+    keepPrepRemindersCurrent();
+    void listenForPrepReminders((recipeId) => ui.openRecipe(recipeId));
     // mise:// links from the other apps (style.md §14.1).
     void listenForLinks((link) => ui.openLink(link));
     // "Share to Mise" from other apps: a link, a caption or photos.

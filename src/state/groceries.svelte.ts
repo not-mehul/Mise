@@ -5,6 +5,7 @@
 import { db } from '../data/db';
 import { addToList, aisleFor, groceryKey, mergeAmount, normaliseItem, type Aisle, type GroceryAddition, type GroceryItem } from '../domain/groceries';
 import { newId, parseIngredient } from '../domain/ingredient';
+import { kitchen } from './kitchen.svelte';
 import { settings } from './settings.svelte';
 import { tombstones } from './tombstones';
 
@@ -95,8 +96,13 @@ class Groceries {
     this.list = this.list.filter((x) => x.id !== id).map((x) => (x.id === twin.id ? merged : x));
   }
 
+  /** Ticks an item off (it goes into the kitchen) or back on (it comes out again). */
   async toggle(id: string): Promise<void> {
-    await this.patch(id, (g) => ({ ...g, ticked: !g.ticked }));
+    const g = this.list.find((x) => x.id === id);
+    await this.patch(id, (x) => ({ ...x, ticked: !x.ticked }));
+    if (!g) return;
+    if (g.ticked) kitchen.remove([g.key]);
+    else kitchen.add([g.item]);
   }
 
   /** Moves an item to another aisle, and remembers it for next time. */
