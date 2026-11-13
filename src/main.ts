@@ -3,6 +3,7 @@
 // ============================================================
 
 import { App as CapacitorApp } from '@capacitor/app';
+import { dismissOverlay } from 'dusk-dawn';
 import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
@@ -38,6 +39,7 @@ async function start(): Promise<void> {
   if (isNative) {
     // Android back: close the topmost overlay, then return to Recipes, then exit (style.md §14).
     void CapacitorApp.addListener('backButton', () => {
+      if (dismissOverlay()) return;
       if (!ui.back()) void CapacitorApp.exitApp();
     });
     void CapacitorApp.addListener('resume', () => {

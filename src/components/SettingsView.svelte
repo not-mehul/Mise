@@ -1,6 +1,6 @@
 <script lang="ts">
   import { EGGS, eggsFound } from '../lib/delight';
-  import { Switch } from 'dusk-dawn';
+  import { Select, Switch } from 'dusk-dawn';
   import type { LanguageSetting, ThemeSetting } from '../domain/settings';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { volumeKeysAvailable } from '../platform/device';
@@ -91,17 +91,15 @@
     <p class="t-hint">{t('settings.themeHint')}</p>
     <label class="setting-row">
       <span class="t-field-label">{t('settings.language')}</span>
-      <select
-        class="select"
+      <Select
         id="languageSelect"
         value={settings.current.language}
-        onchange={(e) => settings.update({ language: e.currentTarget.value as LanguageSetting })}
-      >
-        <option value="system">{t('settings.languageSystem')}</option>
-        {#each LOCALES as code (code)}
-          <option value={code}>{LOCALE_NAMES[code]}</option>
-        {/each}
-      </select>
+        options={[
+          { value: 'system' as LanguageSetting, label: t('settings.languageSystem') },
+          ...LOCALES.map((code) => ({ value: code as LanguageSetting, label: LOCALE_NAMES[code] })),
+        ]}
+        onchange={(language) => settings.update({ language })}
+      />
     </label>
   </div>
 
@@ -211,7 +209,7 @@
     margin-bottom: 1rem;
     flex-wrap: wrap;
   }
-  .setting-row select {
+  .setting-row :global(.select) {
     width: auto;
     min-width: min(12rem, 100%);
   }

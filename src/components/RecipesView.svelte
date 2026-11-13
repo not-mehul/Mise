@@ -12,13 +12,21 @@
   import RecipeEditor from './RecipeEditor.svelte';
   import RecipePage from './RecipePage.svelte';
   import EmptyState from './ui/EmptyState.svelte';
-  import { LoadingIndicator } from 'dusk-dawn';
+  import { LoadingIndicator, Select } from 'dusk-dawn';
   import { hatch } from '../lib/delight';
 
   type Sort = 'recent' | 'name' | 'time' | LogSort;
   let query = $state('');
   let collection = $state<string>('');
   let sort = $state<Sort>('recent');
+  const sortOptions = $derived<{ value: Sort; label: string }[]>([
+    { value: 'recent', label: t('recipes.sortRecent') },
+    { value: 'name', label: t('recipes.sortName') },
+    { value: 'time', label: t('recipes.sortTime') },
+    { value: 'rating', label: t('recipes.sortRating') },
+    { value: 'cooked', label: t('recipes.sortCooked') },
+    { value: 'stale', label: t('recipes.sortStale') },
+  ]);
 
   const shown = $derived.by(() => {
     let list = library.recipes.filter((r) => (!collection || r.collectionIds.includes(collection)) && (!query.trim() || matchesSearch(r, query)));
@@ -121,14 +129,7 @@
         {/if}
         <label class="sort">
           <span class="t-field-label">{t('recipes.sort')}</span>
-          <select class="select" id="recipeSort" bind:value={sort}>
-            <option value="recent">{t('recipes.sortRecent')}</option>
-            <option value="name">{t('recipes.sortName')}</option>
-            <option value="time">{t('recipes.sortTime')}</option>
-            <option value="rating">{t('recipes.sortRating')}</option>
-            <option value="cooked">{t('recipes.sortCooked')}</option>
-            <option value="stale">{t('recipes.sortStale')}</option>
-          </select>
+          <Select id="recipeSort" bind:value={sort} options={sortOptions} />
         </label>
       </div>
     </div>
@@ -234,7 +235,7 @@
     gap: var(--space-3);
     margin-left: auto;
   }
-  .sort .select {
+  .sort :global(.select) {
     width: auto;
   }
   .pantry {

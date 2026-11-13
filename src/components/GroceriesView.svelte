@@ -141,7 +141,7 @@
             {@const source = from(g)}
             <li class="grocery" class:ticked={g.ticked} data-key={g.key}>
               <label class="tick">
-                <input type="checkbox" checked={g.ticked} onchange={(e) => tick(g.id, e.currentTarget)} />
+                <input type="checkbox" class="check" checked={g.ticked} onchange={(e) => tick(g.id, e.currentTarget)} />
                 <span class="text">
                   <span class="name">{#if amount}<span class="amount t-data">{`${amount} `}</span>{/if}{g.item}</span>
                   {#if g.note}<span class="from t-hint grocery-note">{g.note}</span>{/if}
@@ -247,7 +247,6 @@
     margin-top: 0.2rem;
     width: 22px;
     height: 22px;
-    accent-color: var(--accent-bright);
     flex-shrink: 0;
   }
   .text {
