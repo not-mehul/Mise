@@ -19,6 +19,7 @@
   import { settings } from '../state/settings.svelte';
   import { timers } from '../state/timers.svelte';
   import { ui } from '../state/ui.svelte';
+  import { hasNookling, tellNookling } from '../platform/nookling';
   import TimerTray from './TimerTray.svelte';
   import Sheet from './ui/Sheet.svelte';
 
@@ -38,6 +39,9 @@
 
   let allSteps = $state(false);
   let rating = $state<number | null>(null);
+  /** Nookling is installed: the done page offers to share the dish with the pet. */
+  let nookling = $state(false);
+  void hasNookling().then((has) => (nookling = has));
   let note = $state('');
   let saving = $state(false);
   let pageEl: HTMLElement;
@@ -355,6 +359,9 @@
       <div class="done-actions">
         <button type="button" class="btn btn-primary" id="btnMarkCooked" disabled={saving} onclick={markCooked}>{t('cook.markCooked')}</button>
         <button type="button" class="btn btn-muted" id="btnLeaveCook" onclick={leave}>{t('cook.closeWithout')}</button>
+        {#if nookling}
+          <button type="button" class="btn btn-muted" id="btnTellNookling" onclick={() => void tellNookling(recipe.title)}>{t('cook.tellNookling')}</button>
+        {/if}
       </div>
     {/if}
   </section>

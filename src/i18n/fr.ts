@@ -218,6 +218,7 @@ const fr: Messages = {
   'cook.notePlaceholder': 'Moins de sel la prochaine fois',
   'cook.markCooked': 'Marquer comme cuisinée',
   'cook.closeWithout': 'Fermer sans noter',
+  'cook.tellNookling': 'Partager avec ton nookling',
   'cook.logged': 'Ajoutée au journal',
   'timer.start': 'Lancer {time}',
   'timer.label': 'Étape {step}',

@@ -58,6 +58,7 @@ Mise is a cooking companion for Android. Share a recipe to it from Instagram, Ti
 - **Send a recipe as a file**, photos included, for another Mise to open.
 - **Home-screen shortcuts** straight to the list or a new recipe.
 - **Links from the other apps.** `mise://open?id=<recipe>` opens a recipe and `mise://import?url=<page>` opens the import review for a page.
+- **A dish for your nookling.** With [Nookling](https://github.com/not-mehul/Nookling) installed, the end of cooking mode offers to share the dish: Nookling opens and asks whether to add it to the pet's Pantry. Only the recipe's name is sent.
 - **Four languages**, English, Spanish, French and German, and **Dusk and Dawn themes**.
 - **A little delight.** Confetti when you finish cooking a recipe and when you tick off the last grocery, an idle bowl of soup to stir, and four easter eggs, counted in Settings. All of it respects reduced motion.
 
@@ -71,7 +72,7 @@ Download the signed APK from the [latest release](https://github.com/not-mehul/M
 
 ## The Dusk & Dawn apps
 
-Mise is one of six apps by Mehul Sen that share one design system, [Editorial Dusk & Dawn](https://github.com/not-mehul/dusk-dawn), and a common link scheme, so they can hand things to each other.
+Mise is one of seven apps by Mehul Sen that share one design system, [Editorial Dusk & Dawn](https://github.com/not-mehul/dusk-dawn), and a common link scheme, so they can hand things to each other.
 
 | App | What it is for |
 |---|---|
@@ -81,6 +82,7 @@ Mise is one of six apps by Mehul Sen that share one design system, [Editorial Du
 | [Colophon](https://github.com/not-mehul/Colophon) | Inspect, fix and rebind EPUB editions |
 | [Rosetta](https://github.com/not-mehul/Rosetta) | A quiet library and reader for books, papers and notes |
 | [Mise](https://github.com/not-mehul/Mise) | Recipes from anywhere, cooked one step at a time |
+| [Nookling](https://github.com/not-mehul/Nookling) | A small round friend to feed, play with and put to bed |
 
 ## Build from source
 

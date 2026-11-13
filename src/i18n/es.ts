@@ -218,6 +218,7 @@ const es: Messages = {
   'cook.notePlaceholder': 'Menos sal la próxima vez',
   'cook.markCooked': 'Marcar como cocinada',
   'cook.closeWithout': 'Cerrar sin registrar',
+  'cook.tellNookling': 'Compartir con tu nookling',
   'cook.logged': 'Añadida al registro',
   'timer.start': 'Iniciar {time}',
   'timer.label': 'Paso {step}',

@@ -54,3 +54,13 @@ describe('links between the apps', () => {
     expect(fractionParam(undefined)).toBeNull();
   });
 });
+
+describe('telling Nookling about a dish', () => {
+  it('sends only the dish name, from Mise', async () => {
+    const { cookedLink } = await import('../../src/platform/nookling');
+    const url = cookedLink('  Lentil soup ');
+    expect(url).toBe('nookling://cooked?dish=Lentil+soup&source=mise');
+    expect(parseLink(url)).toMatchObject({ app: 'nookling', action: 'cooked', params: { dish: 'Lentil soup' }, source: 'mise' });
+    expect(isKnownAction(parseLink(url)!)).toBe(true);
+  });
+});
