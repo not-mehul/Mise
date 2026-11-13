@@ -166,7 +166,7 @@
             {@const sub = subRecipe(ing.item)}
             <li>
               <label class="ingredient" class:have={have[ing.id]}>
-                <input type="checkbox" bind:checked={have[ing.id]} />
+                <input type="checkbox" class="check" bind:checked={have[ing.id]} />
                 <span>
                   {#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if}
                   {#if sub}<button type="button" class="item sub-recipe" onclick={(e) => { e.preventDefault(); ui.openRecipe(sub.id); }}>{shown.item}</button>{:else}<span class="item">{shown.item}</span>{/if}{#if shown.note}<span class="note">, {shown.note}</span>{/if}
@@ -460,7 +460,6 @@
     margin-top: 0.2rem;
     width: 20px;
     height: 20px;
-    accent-color: var(--accent-bright);
     flex-shrink: 0;
   }
   .ingredient.have {

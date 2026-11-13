@@ -54,7 +54,7 @@
           {@const shown = showIngredient(ing, source.factor, units, locale())}
           <li>
             <label class="pick-item">
-              <input type="checkbox" bind:checked={picked[key(si, ing)]} />
+              <input type="checkbox" class="check" bind:checked={picked[key(si, ing)]} />
               <span>
                 {#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if}
                 {shown.item}
@@ -101,7 +101,6 @@
     margin-top: 0.2rem;
     width: 20px;
     height: 20px;
-    accent-color: var(--accent-bright);
     flex-shrink: 0;
   }
   .amount {

@@ -286,7 +286,7 @@
             {@const shown = showIngredient(ing, factor, units, locale())}
             <li>
               <label class="gather-item" class:have={gathered[ing.id]}>
-                <input type="checkbox" bind:checked={gathered[ing.id]} />
+                <input type="checkbox" class="check" bind:checked={gathered[ing.id]} />
                 <span>
                   {#if shown.amount}<span class="amount t-data">{shown.amount}</span>{/if}
                   {shown.item}{#if shown.note}<span class="note">, {shown.note}</span>{/if}
@@ -554,7 +554,6 @@
     margin-top: 0.25rem;
     width: 22px;
     height: 22px;
-    accent-color: var(--accent-bright);
     flex-shrink: 0;
   }
   .gather-item.have {

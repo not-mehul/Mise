@@ -20,7 +20,8 @@ test('remembers the theme and language across a reload', async ({ page }) => {
   await page.locator('#tabSettings').click();
   await page.locator('[data-theme-option="light"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.locator('#languageSelect').selectOption('fr');
+  await page.locator('#languageSelect').click();
+  await page.getByRole('option', { name: 'Français' }).click();
   await expect(page.locator('#tabRecipes')).toHaveText(/Recettes/);
 
   await page.reload();
