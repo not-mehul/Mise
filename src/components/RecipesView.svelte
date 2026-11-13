@@ -233,7 +233,6 @@
     max-width: 100%;
     align-items: center;
     gap: var(--space-3);
-    margin-left: auto;
   }
   .sort :global(.select) {
     width: auto;
