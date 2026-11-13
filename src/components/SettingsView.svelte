@@ -112,6 +112,9 @@
       {#if voiceAvailable}
         <Switch id="switchHandsFree" checked={settings.current.handsFree} label={t('settings.handsFree')} hint={t('settings.handsFreeHint')} onchange={(on) => settings.update({ handsFree: on })} />
       {/if}
+      {#if isNative}
+        <Switch id="switchPrepReminders" checked={settings.current.prepReminders} label={t('settings.prepReminders')} hint={t('settings.prepRemindersHint')} onchange={(on) => settings.update({ prepReminders: on })} />
+      {/if}
       {#if volumeKeysAvailable}
         <Switch id="switchVolumeKeys" checked={settings.current.volumeKeys} label={t('settings.volumeKeys')} hint={t('settings.volumeKeysHint')} onchange={(on) => settings.update({ volumeKeys: on })} />
       {/if}
@@ -210,7 +213,7 @@
   }
   .setting-row select {
     width: auto;
-    min-width: 12rem;
+    min-width: min(12rem, 100%);
   }
   .t-hint {
     margin-bottom: 0.75rem;

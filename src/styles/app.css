@@ -86,6 +86,7 @@ fieldset {
 
 .section-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
@@ -107,4 +108,14 @@ fieldset {
   color: var(--text-faint);
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* With large text (200%), buttons and fields wrap their words and stay inside the screen. */
+.btn {
+  max-width: 100%;
+  white-space: normal;
+}
+.select,
+.input {
+  max-width: 100%;
 }

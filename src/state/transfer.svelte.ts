@@ -9,6 +9,7 @@ import { BACKUP_PREFIX, backupsToPrune, isBackupDue, type BackupData, type Backu
 import { recipeToMarkdown, type MarkdownLabels } from '../lib/markdown';
 import type { Recipe } from '../domain/recipe';
 import { datedName, deleteOutput, isNative, listOutputs, saveFile, shareFile, type OutputFile } from '../platform/output';
+import { mergeKitchen } from '../domain/kitchen';
 import { DEFAULT_SETTINGS, normaliseSettings } from '../domain/settings';
 import { MACROS, recipeToDraft } from '../domain/recipe';
 import { groceries } from './groceries.svelte';
@@ -81,10 +82,13 @@ export async function mergeBackup(data: BackupData): Promise<MergeSummary> {
   const theirs = data.settings ? normaliseSettings({ ...DEFAULT_SETTINGS, ...data.settings }) : null;
   if (theirs) {
     const mine = settings.current;
+    const merged = mergeKitchen(mine.kitchen, mine.kitchenGone, theirs.kitchen, theirs.kitchenGone);
     settings.update({
       ...(fresh ? { theme: theirs.theme, language: theirs.language, readAloud: theirs.readAloud, volumeKeys: theirs.volumeKeys, listAwake: theirs.listAwake, handsFree: theirs.handsFree } : {}),
       staples: [...new Set([...mine.staples, ...theirs.staples])],
       aisles: { ...theirs.aisles, ...mine.aisles },
+      kitchen: merged.kitchen,
+      kitchenGone: merged.gone,
     });
   }
   return summary;
