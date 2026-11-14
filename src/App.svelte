@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
+  import type { Snippet } from 'svelte';
+  import { IconTabs, ThemeToggle, Toast, celebrate, konami, play, secretTaps } from 'dusk-dawn';
   import CookMode from './components/CookMode.svelte';
   import GroceriesView from './components/GroceriesView.svelte';
   import IdlePot from './components/IdlePot.svelte';
-  import AppTabs from './components/ui/AppTabs.svelte';
   import IdleDock from './components/ui/IdleDock.svelte';
-  import type { IconName } from './components/ui/Icon.svelte';
+  import Icon from './components/ui/Icon.svelte';
   import PlanView from './components/PlanView.svelte';
   import RecipesView from './components/RecipesView.svelte';
   import SettingsView from './components/SettingsView.svelte';
@@ -18,19 +18,20 @@
   import { settings } from './state/settings.svelte';
   import { ui, type Tab } from './state/ui.svelte';
 
-  const TABS: { id: Tab; dom: string; panel: string; key: MessageKey; icon: IconName }[] = [
-    { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes', icon: 'recipes' },
-    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan', icon: 'plan' },
-    { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries', icon: 'groceries' },
-    { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings', icon: 'settings' },
+  const TABS: { id: Tab; dom: string; panel: string; key: MessageKey }[] = [
+    { id: 'recipes', dom: 'tabRecipes', panel: 'viewRecipes', key: 'tabs.recipes' },
+    { id: 'plan', dom: 'tabPlan', panel: 'viewPlan', key: 'tabs.plan' },
+    { id: 'groceries', dom: 'tabGroceries', panel: 'viewGroceries', key: 'tabs.groceries' },
+    { id: 'settings', dom: 'tabSettings', panel: 'viewSettings', key: 'tabs.settings' },
   ];
+  const ICONS: Record<Tab, Snippet> = { recipes: recipesIcon, plan: planIcon, groceries: groceriesIcon, settings: settingsIcon };
   const tabs = $derived(
     TABS.map((tab) => ({
       id: tab.id,
       domId: tab.dom,
       controls: tab.panel,
       label: t(tab.key),
-      icon: tab.icon,
+      icon: ICONS[tab.id],
       badge: tab.id === 'recipes' ? library.recipes.length || undefined : tab.id === 'groceries' ? groceries.left || undefined : undefined,
     })),
   );
@@ -63,7 +64,7 @@
   );
   function miseEnPlace() {
     play(title, 'jelly');
-    for (const [i, el] of [...document.querySelectorAll('.tab-rail [role="tab"]')].entries()) setTimeout(() => play(el, 'pop'), 60 * i);
+    for (const [i, el] of [...document.querySelectorAll('.icon-tabs [role="tab"]')].entries()) setTimeout(() => play(el, 'pop'), 60 * i);
     hatch('title', t('egg.title'));
   }
   $effect(() => {
@@ -72,6 +73,11 @@
     if (next !== locale()) void setLocale(next);
   });
 </script>
+
+{#snippet recipesIcon()}<Icon name="recipes" size={22} />{/snippet}
+{#snippet planIcon()}<Icon name="plan" size={22} />{/snippet}
+{#snippet groceriesIcon()}<Icon name="groceries" size={22} />{/snippet}
+{#snippet settingsIcon()}<Icon name="settings" size={22} />{/snippet}
 
 <!-- Edge to edge: a strip behind the status bar so text never scrolls under the clock. -->
 <div class="status-scrim" aria-hidden="true"></div>
@@ -98,7 +104,7 @@
     </header>
 
     <nav class="app-tabs">
-      <AppTabs {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => (id === 'recipes' && ui.tab === 'recipes' ? ui.show({ kind: 'list' }) : ui.go(id))} />
+      <IconTabs {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => (id === 'recipes' && ui.tab === 'recipes' ? ui.show({ kind: 'list' }) : ui.go(id))} />
     </nav>
 
     <main>
