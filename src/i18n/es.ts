@@ -19,6 +19,8 @@ const es: Messages = {
   'recipes.sortRecent': "Recientes",
   'recipes.sortName': "Nombre",
   'recipes.sortTime': "Más rápidas",
+  'recipes.count': { one: "{count} receta", other: "{count} recetas" },
+  'recipes.countOf': { one: "{shown} de {count} receta", other: "{shown} de {count} recetas" },
   'recipes.noMatch': "Ninguna receta coincide",
   'recipes.noMatchHint': "Prueba con un ingrediente o borra la búsqueda.",
   'recipes.clear': "Borrar búsqueda",

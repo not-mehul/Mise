@@ -81,8 +81,8 @@ describe('macros', () => {
     const old: Partial<typeof recipe> = { ...recipe };
     delete old.nutrition;
     expect(normaliseRecipe(old)!.nutrition).toEqual(normaliseNutrition(undefined));
-    const md = recipeToMarkdown(recipe, { ingredients: 'Ingredients', method: 'Method', notes: 'Notes', serves: String, minutes: String, source: 'Source', macros: () => 'Per serving: 450 kcal · Protein 32.5 g' });
-    expect(md).toContain('Per serving: 450 kcal · Protein 32.5 g');
+    const md = recipeToMarkdown(recipe, { ingredients: 'Ingredients', method: 'Method', notes: 'Notes' });
+    expect(md).toContain('Calories: 450\nProtein: 32.5 g');
     expect(parseRecipeText(md).draft.nutrition).toMatchObject({ calories: '450', protein: '32.5' });
   });
 

@@ -45,6 +45,16 @@ class Library {
 
   /** Saves the editor's draft as a new or updated recipe. */
   async save(draft: RecipeDraft): Promise<Recipe> {
+    // Collections named in pasted text that didn't exist yet are made now, not on import,
+    // so a draft that is never saved leaves nothing behind.
+    if (draft.newCollections?.length) {
+      const ids = [...draft.collectionIds];
+      for (const name of draft.newCollections) {
+        const c = await this.addCollection(name);
+        if (c && !ids.includes(c.id)) ids.push(c.id);
+      }
+      draft = { ...draft, collectionIds: ids, newCollections: [] };
+    }
     const existing = this.get(draft.id);
     const recipe = draftToRecipe(draft, existing);
     await db.recipes.put($state.snapshot(recipe) as Recipe);

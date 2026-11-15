@@ -51,7 +51,64 @@ test('pastes a caption, sorts the leftover line and saves the recipe', async ({ 
 
   await page.locator('#btnBack').click();
   await expect(page.locator('#recipeList li')).toHaveCount(1);
-  await expect(page.locator('#tabRecipes .badge')).toHaveText('1');
+  // The count is in the list, not on the tab.
+  await expect(page.locator('#recipeCount')).toHaveText('1 recipe');
+  await expect(page.locator('#tabRecipes .badge')).toHaveCount(0);
+});
+
+test('pastes a recipe in the Mise text format and keeps every field', async ({ page }) => {
+  await pasteRecipe(
+    page,
+    `# Lentil soup
+
+Serves: 4
+Prep: 10 min
+Cook: 1 hr 5 min
+Tags: soup, vegan
+Collections: Weeknights
+Source: https://example.com/lentil-soup
+Author: Example Kitchen
+Calories: 320
+
+A thick, warming soup.
+
+## Ingredients
+
+### Soup
+- 200 g red lentils
+- 1 onion, chopped
+
+### To serve
+- 1 lemon
+
+## Method
+
+1. Fry the onion for 5 minutes.
+2. Add the lentils and 1 l water
+   and simmer for 1 hour.
+3. Squeeze over the lemon.
+
+## Notes
+
+Freezes well.`,
+  );
+  await expect(page.locator('#editTitle')).toHaveValue('Lentil soup');
+  await expect(page.locator('#editServings')).toHaveValue('4');
+  await expect(page.locator('#editPrep')).toHaveValue('10');
+  await expect(page.locator('#editCook')).toHaveValue('65');
+  await expect(page.locator('#editTags')).toHaveValue('soup, vegan');
+  await expect(page.locator('#editMacro-calories')).toHaveValue('320');
+  await expect(page.locator('#editSteps')).toHaveValue('Fry the onion for 5 minutes.\nAdd the lentils and 1 l water and simmer for 1 hour.\nSqueeze over the lemon.');
+  await expect(page.locator('#editNotes')).toHaveValue('A thick, warming soup.\n\nFreezes well.');
+  await expect(page.locator('.unsorted')).toHaveCount(0);
+  await page.locator('#btnSaveRecipe').click();
+
+  await expect(page.locator('#recipeTitle')).toHaveText('Lentil soup');
+  await expect(page.locator('.ingredient')).toHaveCount(3);
+  await expect(page.locator('.steps .timer')).toHaveText(['5 minutes', '1 hour']);
+  // The collection didn't exist, so saving made it and filed the recipe in it.
+  await expect(page.locator('.collections .chip', { hasText: 'Weeknights' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('Example Kitchen').first()).toBeVisible();
 });
 
 test('writes a recipe by hand and asks for what is missing', async ({ page }) => {

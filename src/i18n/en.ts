@@ -20,6 +20,8 @@ const en = {
   'recipes.sortRecent': 'Recent',
   'recipes.sortName': 'Name',
   'recipes.sortTime': 'Quickest',
+  'recipes.count': { one: '{count} recipe', other: '{count} recipes' },
+  'recipes.countOf': { one: '{shown} of {count} recipe', other: '{shown} of {count} recipes' },
   'recipes.noMatch': 'No recipe matches that',
   'recipes.noMatchHint': 'Try an ingredient, or clear the search.',
   'recipes.clear': 'Clear search',

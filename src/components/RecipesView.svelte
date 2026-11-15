@@ -174,6 +174,13 @@
       </section>
     {/if}
 
+    {#if !(pantryOpen && have.length)}
+      <!-- What the list holds, or what the search and collection leave of it; the tab carries no count. -->
+      <p class="t-hint count" id="recipeCount" aria-live="polite">
+        {shown.length === library.recipes.length ? t('recipes.count', { count: library.recipes.length }) : t('recipes.countOf', { shown: shown.length, count: library.recipes.length })}
+      </p>
+    {/if}
+
     {#if pantryOpen && have.length}
       {#if cookable.length}
         <ul class="recipe-list dd-stagger" id="cookableList">
@@ -277,6 +284,9 @@
   }
   .missing {
     margin-top: var(--space-1);
+  }
+  .count {
+    margin-bottom: var(--space-3);
   }
   .recipe-list {
     list-style: none;
