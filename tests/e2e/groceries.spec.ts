@@ -63,7 +63,8 @@ test('adds two recipes, merges them by aisle, and shops', async ({ page }) => {
   await addAll(page);
   await page.locator('.toast').getByRole('button', { name: 'View' }).click();
 
-  await expect(page.locator('#tabGroceries .badge')).toHaveText('5');
+  await expect(page.locator('#groceryCount')).toHaveText('5 to buy');
+  await expect(page.locator('#tabGroceries .badge')).toHaveCount(0);
   await expect(page.locator('.aisle h3')).toHaveText(['Dairy and eggs', 'Pantry']);
   await expect(page.locator('[data-key="egg"] .name')).toHaveText('8 eggs');
   await expect(page.locator('[data-key="butter"] .name')).toHaveText('30 g + 2 tbsp butter');

@@ -13,7 +13,6 @@
   import { KITCHEN, hatch } from './lib/delight';
   import { detectLocale, locale, setLocale, t, type MessageKey } from './i18n/index.svelte';
   import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
-  import { groceries } from './state/groceries.svelte';
   import { library } from './state/library.svelte';
   import { settings } from './state/settings.svelte';
   import { ui, type Tab } from './state/ui.svelte';
@@ -32,7 +31,6 @@
       controls: tab.panel,
       label: t(tab.key),
       icon: ICONS[tab.id],
-      badge: tab.id === 'recipes' ? library.recipes.length || undefined : tab.id === 'groceries' ? groceries.left || undefined : undefined,
     })),
   );
   const cooking = $derived(ui.tab === 'recipes' && ui.screen.kind === 'cook' ? ui.screen : null);

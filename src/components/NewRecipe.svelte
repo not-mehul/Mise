@@ -4,10 +4,9 @@
   import { onDestroy, untrack } from 'svelte';
   import { emptyDraft, type Recipe, type RecipeDraft } from '../domain/recipe';
   import { t, type MessageKey } from '../i18n/index.svelte';
-  import { parseRecipeText } from '../import/text';
   import { findUrl, isOnlyUrl } from '../import/web';
   import { canReadPhotos } from '../platform/ocr';
-  import { fromLink, fromPhotos, savedFrom } from '../state/importer';
+  import { fromLink, fromPhotos, fromText, savedFrom } from '../state/importer';
   import { library } from '../state/library.svelte';
   import { ui } from '../state/ui.svelte';
   import Sheet from './ui/Sheet.svelte';
@@ -122,7 +121,7 @@
       void readLink();
       return;
     }
-    const { draft } = pasteFrom ? parseRecipeText(text, 'instagram', { url: pasteFrom }) : parseRecipeText(text);
+    const draft = fromText(text, pasteFrom);
     run++;
     onclose();
     ui.edit(draft, 'check');

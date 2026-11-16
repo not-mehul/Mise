@@ -6,6 +6,7 @@
 
 import { CapacitorHttp } from '@capacitor/core';
 import type { Recipe, RecipeDraft } from '../domain/recipe';
+import { parseMiseText } from '../import/mise';
 import { photosToText } from '../import/photo';
 import { parseRecipeText } from '../import/text';
 import { importLink, normaliseUrl, type LinkResult } from '../import/web';
@@ -69,4 +70,22 @@ export async function fromPhotos(photos: Blob[]): Promise<PhotoResult> {
   // Every page is kept, in the order picked; the first is the cover.
   for (const photo of photos) await attachPhoto(draft, photo);
   return { ok: true, draft };
+}
+
+/**
+ * Pasted or shared text → a draft. Text in the Mise format (Recipes_Guide.md) is read field by
+ * field; anything else by its shape. `from` is the link the text came from (an Instagram caption).
+ */
+export function fromText(text: string, from: string | null = null): RecipeDraft {
+  const kind = from ? 'instagram' : 'text';
+  const extra = from ? { url: from } : {};
+  const mise = parseMiseText(text, kind, extra);
+  if (!mise) return parseRecipeText(text, kind, extra).draft;
+  const { draft, collections } = mise;
+  for (const name of collections) {
+    const found = library.collections.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (found) draft.collectionIds = [...new Set([...draft.collectionIds, found.id])];
+    else (draft.newCollections ??= []).push(name);
+  }
+  return draft;
 }

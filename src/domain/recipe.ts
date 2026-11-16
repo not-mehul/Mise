@@ -99,6 +99,8 @@ export interface RecipeDraft {
   unsorted: string[];
   /** Macros per serving, as typed. */
   nutrition: Record<Macro, string>;
+  /** Collections named in pasted text that don't exist yet; made when the recipe is saved. */
+  newCollections?: string[];
 }
 
 export function emptyDraft(source: RecipeSource = { kind: 'manual' }): RecipeDraft {

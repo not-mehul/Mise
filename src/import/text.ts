@@ -12,7 +12,7 @@ import { emptyDraft, type Macro, type RecipeDraft, type SourceKind } from '../do
 import { parseLeadingUnit } from '../domain/units';
 
 type Section = 'intro' | 'ingredients' | 'steps' | 'notes';
-type Heading = Section | 'skip';
+export type Heading = Section | 'skip';
 
 const HEADINGS: [Heading, RegExp][] = [
   ['ingredients', /^(?:ingredients?|what you(?:'|’)ll need|you(?:'|’)ll need|shopping list|ingredientes|ingrédients|zutaten|einkaufsliste)$/i],
@@ -62,7 +62,7 @@ function timeSegments(line: string): { label: string; minutes: number }[] {
   return out;
 }
 
-function headingOf(line: string): Heading | null {
+export function headingOf(line: string): Heading | null {
   const text = stripListMarker(line).replace(EMOJI, '').replace(/[:：\-–—*_#=]+$/u, '').replace(/^[#*_=\s]+/, '').trim();
   for (const [section, re] of HEADINGS) if (re.test(text)) return section;
   return null;

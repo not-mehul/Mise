@@ -26,7 +26,7 @@ Mise is a cooking companion for Android. Share a recipe to it from Instagram, Ti
 - **Links.** Most recipe sites publish a structured recipe, and Mise reads it field for field, picture included. Pages without one fall back to their main text.
 - **Social posts.** Instagram captions, TikTok captions, YouTube and Shorts descriptions, and Facebook, Threads and Pinterest link previews. Lines like "520 kcal | 45g P | 50g C | 12g F" become the recipe's macros.
 - **Photos** of a cookbook page, read offline by on-device text recognition. Several photos become one recipe, and two-column pages are read column by column.
-- **Pasted text or by hand.** Mise finds the title, servings, times, ingredients and method in English, Spanish, French or German, by their headings or the shape of each line.
+- **Pasted text or by hand.** Mise finds the title, servings, times, ingredients and method in English, Spanish, French or German, by their headings or the shape of each line. Text written in the Mise text format (see [Recipes_Guide.md](Recipes_Guide.md)) fills in every field exactly, tags, collections, source and macros included; Share and Export as Markdown write the same format, so a recipe pastes back in unchanged.
 - **Recipe files**: a Mise backup, a Paprika export or schema.org recipe JSON from Mealie and other apps.
 - **Nothing is saved unseen.** Every import ends on a review screen, and lines Mise couldn't place wait under *Unsorted* for you to sort.
 

@@ -107,10 +107,7 @@ describe('backups', () => {
 describe('markdown', () => {
   it('writes a readable recipe', async () => {
     const r = await library.save({ ...draft('Pancakes', 'Batter:\n200 g flour\n2 eggs'), servings: '4', tags: 'breakfast' });
-    const md = recipeToMarkdown(r, {
-      ingredients: 'Ingredients', method: 'Method', notes: 'Notes', source: 'Source',
-      serves: (n) => `Serves ${n}`, minutes: (n) => `${n} min`,
-    });
-    expect(md).toBe('# Pancakes\n\nServes 4\n\n#breakfast\n\n## Ingredients\n\n### Batter\n\n- 200 g flour\n- 2 eggs\n\n## Method\n\n1. Mix.\n2. Bake 20 minutes.\n');
+    const md = recipeToMarkdown(r, { ingredients: 'Ingredients', method: 'Method', notes: 'Notes' });
+    expect(md).toBe('# Pancakes\n\nServes: 4\nTags: breakfast\n\n## Ingredients\n\n### Batter\n\n- 200 g flour\n- 2 eggs\n\n## Method\n\n1. Mix.\n2. Bake 20 minutes.\n');
   });
 });

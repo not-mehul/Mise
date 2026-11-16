@@ -11,7 +11,7 @@ import type { Recipe } from '../domain/recipe';
 import { datedName, deleteOutput, isNative, listOutputs, saveFile, shareFile, type OutputFile } from '../platform/output';
 import { mergeKitchen } from '../domain/kitchen';
 import { DEFAULT_SETTINGS, normaliseSettings } from '../domain/settings';
-import { MACROS, recipeToDraft } from '../domain/recipe';
+import { recipeToDraft } from '../domain/recipe';
 import { groceries } from './groceries.svelte';
 import { attachPhoto } from './importer';
 import { library, type MergeSummary } from './library.svelte';
@@ -30,14 +30,7 @@ export function markdownLabels(): MarkdownLabels {
     ingredients: t('recipe.ingredients'),
     method: t('recipe.method'),
     notes: t('recipe.notes'),
-    serves: (n) => t('recipe.serves', { count: n }),
-    minutes: (n) => t('recipe.minutes', { count: n }),
-    source: t('recipe.source'),
-    macros: (r) => {
-      const n = r.nutrition;
-      const parts = MACROS.filter((m) => n[m] !== null).map((m) => (m === 'calories' ? `${n[m]} ${t('macro.kcal')}` : `${t(`macro.${m}`)} ${n[m]} ${t('macro.g')}`));
-      return parts.length ? `${t('recipe.macros')}: ${parts.join(' · ')}` : '';
-    },
+    collections: (r) => library.collections.filter((c) => r.collectionIds.includes(c.id)).map((c) => c.name),
   };
 }
 
