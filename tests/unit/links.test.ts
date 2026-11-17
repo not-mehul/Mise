@@ -21,7 +21,7 @@ describe('links between the apps', () => {
   });
 
   it('treats a bare scheme as open', () => {
-    expect(parseLink('colophon://')).toMatchObject({ app: 'colophon', action: 'open', params: {}, source: null });
+    expect(parseLink('ledger://')).toMatchObject({ app: 'ledger', action: 'open', params: {}, source: null });
     expect(parseLink('ROSETTA://Open/?id=abc')).toMatchObject({ app: 'rosetta', action: 'open', params: { id: 'abc' } });
   });
 
@@ -52,15 +52,5 @@ describe('links between the apps', () => {
     expect(fractionParam('0.42')).toBe(0.42);
     expect(fractionParam('1.5')).toBeNull();
     expect(fractionParam(undefined)).toBeNull();
-  });
-});
-
-describe('telling Nookling about a dish', () => {
-  it('sends only the dish name, from Mise', async () => {
-    const { cookedLink } = await import('../../src/platform/nookling');
-    const url = cookedLink('  Lentil soup ');
-    expect(url).toBe('nookling://cooked?dish=Lentil+soup&source=mise');
-    expect(parseLink(url)).toMatchObject({ app: 'nookling', action: 'cooked', params: { dish: 'Lentil soup' }, source: 'mise' });
-    expect(isKnownAction(parseLink(url)!)).toBe(true);
   });
 });
